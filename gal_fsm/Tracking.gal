@@ -1,0 +1,4 @@
+Tracker(Tracking) {
+	* (Tracking)
+	| Closest(A) ? Move($.d) :(Tracking)
+}

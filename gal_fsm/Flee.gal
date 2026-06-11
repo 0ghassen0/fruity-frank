@@ -1,0 +1,4 @@
+Fleeing(Flee) {
+	*(FLee) 
+	| Closest(A) ? Move(Opp($.d)) :(Flee)
+}

@@ -1,0 +1,75 @@
+package engine.gal.conditions;
+
+import engine.core.Model;
+import engine.entities.Entity;
+import engine.geometry.Grid;
+import engine.gal.aut.Category;
+import engine.gal.aut.CategoryMatcher;
+import engine.gal.aut.Direction;
+import engine.gal.aut.GALBot;
+import engine.gal.aut.iGALCondition;
+
+// == STEP ==
+
+/**
+ * The GAL {@code Step(Direction, [n,] Category)} condition: is there an entity of
+ * the given category in the cell {@code n} steps (default 1) away in the given
+ * direction? The direction is resolved against the entity's facing ({@code F},
+ * {@code L}, … become cardinals; {@code H} = the entity's own cell).
+ *
+ * <p>
+ * On success the matched entity is bound to the bot's {@code $} variable. The
+ * special category {@code V} (Void) is structural: true iff the target cell holds
+ * no entity other than the asking one (and binds {@code $} to {@code null}).
+ */
+public final class Step implements iGALCondition {
+
+	private final Direction dir;
+	private final Category cat;
+	private final int n;
+
+	public Step(Direction dir, Category cat) {
+		this(dir, cat, 1);
+	}
+
+	public Step(Direction dir, Category cat, int n) {
+		this.dir = dir;
+		this.cat = cat;
+		this.n = n;
+	}
+
+	@Override
+	public boolean eval(Entity self) {
+		if (!(self.bot() instanceof GALBot bot))
+			return false;
+		Model model = self.model();
+		if (model == null)
+			return false;
+
+		Direction abs = dir.resolve(Direction.ofAngle(self.orientation()));
+		Grid grid = model.grid();
+		Grid.Position target = grid.new Position(self.position().x() + abs.dx() * n,
+				self.position().y() + abs.dy() * n);
+		Grid.Cell cell = grid.cellAt(target);
+
+		if (cat == Category.Void) {
+			bot.select(null);
+			for (Entity other : cell.entities())
+				if (other != self)
+					return false;
+			return true;
+		}
+
+		CategoryMatcher matcher = bot.matcher();
+		if (matcher == null)
+			return false;
+		for (Entity other : cell.entities()) {
+			if (other != self && matcher.matches(cat, self, other)) {
+				bot.select(other);
+				return true;
+			}
+		}
+		bot.select(null);
+		return false;
+	}
+}
