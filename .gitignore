@@ -1,8 +1,5 @@
 /bin/
-.project
-.classpath
 .settings/
 .metadata/
-given.jar
 /docs/
 
