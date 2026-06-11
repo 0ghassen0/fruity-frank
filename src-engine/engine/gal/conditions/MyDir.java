@@ -8,9 +8,9 @@ import engine.gal.aut.iGALCondition;
 
 /**
  * The GAL {@code MyDir(Direction)} condition: true when the entity is currently
- * facing the given direction. A relative argument is resolved against the current
- * facing (so {@code MyDir(F)} is trivially true), an absolute one is compared to
- * the entity's cardinal facing.
+ * facing the given direction. A relative argument is resolved against the
+ * current facing (so {@code MyDir(F)} is trivially true), an absolute one is
+ * compared to the entity's cardinal facing.
  */
 public final class MyDir implements iGALCondition {
 

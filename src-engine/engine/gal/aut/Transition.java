@@ -44,7 +44,9 @@ public class Transition {
 		return false;
 	}
 
-	/** @return the (possibly sentinel) target state, for the automaton to resolve. */
+	/**
+	 * @return the (possibly sentinel) target state, for the automaton to resolve.
+	 */
 	public State tgt() {
 		return tgt;
 	}

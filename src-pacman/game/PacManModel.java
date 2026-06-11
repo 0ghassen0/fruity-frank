@@ -11,17 +11,17 @@ import game.graphics.PacManAvatar;
 // == PACMAN MODEL ==
 
 /**
- * The Pac-Man world. The engine detects collisions; this model decides what they
- * <i>mean</i> by delegating to {@link Rules} (the collision matrix) over the
- * {@link GameState} (score / flags) — keeping all game knowledge out of the
+ * The Pac-Man world. The engine detects collisions; this model decides what
+ * they <i>mean</i> by delegating to {@link Rules} (the collision matrix) over
+ * the {@link GameState} (score / flags) — keeping all game knowledge out of the
  * engine and the outcome rules out of an {@code instanceof} chain.
  */
 public class PacManModel extends Model {
 
 	private final GameState state = new GameState();
 	private final Rules rules = new Rules();
-	private Maze maze;   // optional: walls for the demo arena (null = open world)
-	private Pac player;  // optional: the keyboard Pac, so power can be cleared on timeout
+	private Maze maze; // optional: walls for the demo arena (null = open world)
+	private Pac player; // optional: the keyboard Pac, so power can be cleared on timeout
 
 	public PacManModel(Game game) {
 		super(game);
@@ -54,9 +54,9 @@ public class PacManModel extends Model {
 
 	/**
 	 * Push the frightened state onto the ghosts' avatars (via the two-way
-	 * entity&harr;avatar link) so their look follows the power-pellet timer. This is
-	 * a stopgap: once the ghost runs a GAL automaton, its {@code Flee} state's mode
-	 * will drive the avatar and this can go.
+	 * entity&harr;avatar link) so their look follows the power-pellet timer. This
+	 * is a stopgap: once the ghost runs a GAL automaton, its {@code Flee} state's
+	 * mode will drive the avatar and this can go.
 	 */
 	private void syncGhostMode() {
 		String mode = state.frightened() ? PacManAvatar.FRIGHTENED : Avatar.DEFAULT;

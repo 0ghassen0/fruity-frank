@@ -26,7 +26,9 @@ public final class PacManAutomata {
 	/**
 	 * Chase the player. Mirrors {@code gal_fsm/Tracking.gal}:
 	 *
-	 * <pre>* (Tracking): | Closest(A) ? Move($.d) :(Tracking)</pre>
+	 * <pre>
+	 * * (Tracking): | Closest(A) ? Move($.d) :(Tracking)
+	 * </pre>
 	 */
 	public static Automaton tracking() {
 		State s = state("Tracking");
@@ -36,7 +38,9 @@ public final class PacManAutomata {
 	/**
 	 * Flee the player. Mirrors {@code gal_fsm/Flee.gal}:
 	 *
-	 * <pre>* (Flee): | Closest(A) ? Move(Opp($.d)) :(Flee)</pre>
+	 * <pre>
+	 * * (Flee): | Closest(A) ? Move(Opp($.d)) :(Flee)
+	 * </pre>
 	 */
 	public static Automaton flee() {
 		State s = state("Flee");

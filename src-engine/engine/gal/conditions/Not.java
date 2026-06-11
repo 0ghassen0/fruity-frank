@@ -10,8 +10,8 @@ import engine.gal.aut.iGALCondition;
  *
  * <p>
  * Note: conditions that bind the GAL {@code $} variable (e.g. {@code Closest},
- * {@code Step}) still run their selection side effect when negated — {@code not}
- * inverts only the boolean result, matching GAL semantics.
+ * {@code Step}) still run their selection side effect when negated —
+ * {@code not} inverts only the boolean result, matching GAL semantics.
  */
 public final class Not implements iGALCondition {
 

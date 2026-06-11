@@ -121,7 +121,7 @@ public class Bounding {
 	public Set<iShape> getShapes() {
 		return boundings;
 	}
-	
+
 	public void setAnchor(Coord c) {
 		anchor = c;
 	}

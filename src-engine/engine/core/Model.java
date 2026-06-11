@@ -36,10 +36,10 @@ public abstract class Model implements Ticker.TickListener {
 	protected final ISU isu;
 	/**
 	 * Every entity currently managed by this model. A concurrent set: the motion
-	 * task structurally mutates it (spawn/remove) while the {@code Brain} and render
-	 * tasks iterate it, so it must tolerate concurrent reads without throwing. Reads
-	 * are weakly consistent, which is fine — the simulation already snapshots before
-	 * iterating where a stable view matters.
+	 * task structurally mutates it (spawn/remove) while the {@code Brain} and
+	 * render tasks iterate it, so it must tolerate concurrent reads without
+	 * throwing. Reads are weakly consistent, which is fine — the simulation already
+	 * snapshots before iterating where a stable view matters.
 	 */
 	protected final Set<Entity> entities;
 
@@ -71,15 +71,16 @@ public abstract class Model implements Ticker.TickListener {
 	// SIMULATION
 
 	/**
-	 * One motion tick, sub-stepped to keep fast entities honest. Each stunt does its
-	 * once-per-tick prep (rotation, buffered turns) and reports how many micro-steps
-	 * it needs so no micro exceeds half a cell; the model then advances <i>every</i>
-	 * stunt by the same number of micro-steps {@code n} (the global maximum) in
-	 * lockstep, resolving collisions after each one. This kills tunnelling two ways:
-	 * a fast entity can't skip a wall between leading-edge probes (Step A), and two
-	 * fast entities can't cross between ticks without sharing an overlap test (Step
-	 * B). A world of slow entities yields {@code n == 1} — a single full step plus
-	 * one collision pass, identical to a non-sub-stepped tick.
+	 * One motion tick, sub-stepped to keep fast entities honest. Each stunt does
+	 * its once-per-tick prep (rotation, buffered turns) and reports how many
+	 * micro-steps it needs so no micro exceeds half a cell; the model then advances
+	 * <i>every</i> stunt by the same number of micro-steps {@code n} (the global
+	 * maximum) in lockstep, resolving collisions after each one. This kills
+	 * tunnelling two ways: a fast entity can't skip a wall between leading-edge
+	 * probes (Step A), and two fast entities can't cross between ticks without
+	 * sharing an overlap test (Step B). A world of slow entities yields
+	 * {@code n == 1} — a single full step plus one collision pass, identical to a
+	 * non-sub-stepped tick.
 	 */
 	public void update() {
 		Set<Entity> snapshot = new HashSet<>(entities);

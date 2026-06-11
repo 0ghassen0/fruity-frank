@@ -17,10 +17,10 @@ import oop.graphics.Graphics;
 
 /**
  * Pac-Man's look: gives every live {@link Entity} a {@link PacManAvatar} and
- * paints them through the engine's z-order {@link View}. The avatar is stored on
- * the entity itself ({@link Entity#setAvatar}), so the link is two-way — the view
- * reads the entity to draw it, and the behaviour layer reaches the avatar through
- * the entity to drive its appearance (see {@link Avatar#mode()}).
+ * paints them through the engine's z-order {@link View}. The avatar is stored
+ * on the entity itself ({@link Entity#setAvatar}), so the link is two-way — the
+ * view reads the entity to draw it, and the behaviour layer reaches the avatar
+ * through the entity to drive its appearance (see {@link Avatar#mode()}).
  *
  * <p>
  * The set is reconciled with the model every frame ({@link #sync()}): new
@@ -46,8 +46,9 @@ public class PacManView extends View {
 	}
 
 	/**
-	 * Reconcile with the live entity set: create + attach an avatar for every entity
-	 * that lacks one, and drop the avatar of every entity that has left the world.
+	 * Reconcile with the live entity set: create + attach an avatar for every
+	 * entity that lacks one, and drop the avatar of every entity that has left the
+	 * world.
 	 */
 	public void sync() {
 		for (Entity e : model.entities()) {

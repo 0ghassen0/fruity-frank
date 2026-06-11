@@ -64,7 +64,7 @@ public abstract class Game {
 
 	/**
 	 * @implNote Width and height parameters might get modified to enforce
-	 * (width_ncell * cmPerCell == width_cm)
+	 *           (width_ncell * cmPerCell == width_cm)
 	 */
 	protected Game(double w_cm, double h_cm, boolean torusOnX, boolean torusOnY, double cmPerCell, int pixelPerCm) {
 		assert w_cm > 0 : "Width must be positive";
@@ -92,7 +92,6 @@ public abstract class Game {
 	}
 
 	// GETTER
-
 
 	public Game game() {
 		return this;
@@ -150,8 +149,8 @@ public abstract class Game {
 		ps.println("=== Game State Debug ===");
 		ps.println("Class: " + this.getClass().getSimpleName());
 		ps.println("Grid dimensions: " + getWidth_ncell() + " x " + getHeight_ncell() + " cells");
-		ps.println("Real dimensions: " + String.format("%.2f", getWidth_cm()) + " x " + String.format("%.2f", getHeight_cm())
-				+ " cm");
+		ps.println("Real dimensions: " + String.format("%.2f", getWidth_cm()) + " x "
+				+ String.format("%.2f", getHeight_cm()) + " cm");
 		ps.println("Scale: " + getCmPerCell() + " cm/cell, " + getPixelPerCm() + " pixels/cm");
 		ps.println("Torus: X=" + torusOnXaxis + ", Y=" + torusOnYaxis);
 		ps.println("Pixel dimensions: " + (getWidth_cm() * getPixelPerCm()) + " x " + (getHeight_cm() * getPixelPerCm())

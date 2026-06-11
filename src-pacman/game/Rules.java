@@ -20,7 +20,9 @@ public class Rules {
 	/** How many motion ticks a power pellet keeps the ghosts frightened. */
 	public static final int FRIGHTENED_TICKS = 300;
 
-	/** The outcome of one ordered collision: "{@code self} acts on {@code other}". */
+	/**
+	 * The outcome of one ordered collision: "{@code self} acts on {@code other}".
+	 */
 	@FunctionalInterface
 	public interface Outcome {
 		void apply(PacManModel model, GameState state, Entity self, Entity other);

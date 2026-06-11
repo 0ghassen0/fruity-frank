@@ -8,9 +8,10 @@ import engine.entities.Stunt;
 
 /**
  * A trivial {@link Bot} with a constant linear velocity (cm per tick) and no
- * rotation. Enough to demonstrate movement, torus wrap and collisions in the demo
- * and tests; real AI bots replace it. It pushes its constant command immediately,
- * so the entity must already have its stunt set when the bot is constructed.
+ * rotation. Enough to demonstrate movement, torus wrap and collisions in the
+ * demo and tests; real AI bots replace it. It pushes its constant command
+ * immediately, so the entity must already have its stunt set when the bot is
+ * constructed.
  */
 public class StraightBot extends Bot {
 

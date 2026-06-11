@@ -8,11 +8,11 @@ public class Rect extends Shape {
 	private int angle_degree;
 
 	/**
-	 * Corner offsets relative to the centre, already rotated by {@link #angle_degree}
-	 * and ordered counter-clockwise from the lower-left local corner. Computed lazily
-	 * and cached: it depends only on the (fixed) size and the orientation, so a purely
-	 * translating box reuses it every tick instead of recomputing trig. Invalidated by
-	 * {@link #rotate(int)}.
+	 * Corner offsets relative to the centre, already rotated by
+	 * {@link #angle_degree} and ordered counter-clockwise from the lower-left local
+	 * corner. Computed lazily and cached: it depends only on the (fixed) size and
+	 * the orientation, so a purely translating box reuses it every tick instead of
+	 * recomputing trig. Invalidated by {@link #rotate(int)}.
 	 */
 	private double[][] localCorners;
 	private boolean cornersDirty = true;
@@ -39,8 +39,8 @@ public class Rect extends Shape {
 	// CORNERS
 
 	/**
-	 * @return the rotated, centre-relative corner offsets (the trig is done once per
-	 *         orientation here, then cached). Callers must treat the result as
+	 * @return the rotated, centre-relative corner offsets (the trig is done once
+	 *         per orientation here, then cached). Callers must treat the result as
 	 *         read-only — it is the live cache.
 	 */
 	private double[][] localCorners() {
@@ -70,7 +70,8 @@ public class Rect extends Shape {
 
 	/**
 	 * @implNote Reuses the cached rotated corner offsets and merely translates them
-	 *           to {@code (cx, cy)} — no trigonometry unless the orientation changed.
+	 *           to {@code (cx, cy)} — no trigonometry unless the orientation
+	 *           changed.
 	 */
 	public double[][] cornersAt(double cx, double cy) {
 		double[][] local = localCorners();

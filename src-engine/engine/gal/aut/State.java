@@ -4,21 +4,22 @@ package engine.gal.aut;
 
 /**
  * An FSM state: a {@code mode} (the entity's behaviour label — e.g. "Walking",
- * "Fighting", "frightened" — which also selects the {@link engine.graphics.Avatar}
- * to show) plus an integer {@code id} so one mode can have several numbered states
- * ("Walking_1", "Walking_2", …). Per the GAL spec a bot's current {@link State}
- * drives both its automaton and its appearance.
+ * "Fighting", "frightened" — which also selects the
+ * {@link engine.graphics.Avatar} to show) plus an integer {@code id} so one
+ * mode can have several numbered states ("Walking_1", "Walking_2", …). Per the
+ * GAL spec a bot's current {@link State} drives both its automaton and its
+ * appearance.
  *
  * <p>
- * Immutable, with value equality on {@code (mode, id)} so states can key maps and
- * be compared by content.
+ * Immutable, with value equality on {@code (mode, id)} so states can key maps
+ * and be compared by content.
  */
 public final class State {
 
 	/**
 	 * The GAL destroy state {@code ()}: reaching it means the entity must be
-	 * destroyed. A unique sentinel (negative id, reserved mode) compared by identity
-	 * in {@link Automaton#step}.
+	 * destroyed. A unique sentinel (negative id, reserved mode) compared by
+	 * identity in {@link Automaton#step}.
 	 */
 	public static final State DESTROY = new State("()", -1);
 

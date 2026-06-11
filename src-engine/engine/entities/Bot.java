@@ -6,31 +6,33 @@ import engine.gal.aut.State;
 
 /**
  * Decision-maker for an {@link Entity}. Per the GAL spec a bot is created for a
- * specific entity, carries an FSM {@link State} (whose {@code mode} also names the
- * avatar to show) and a {@code healthPercent}, and is woken periodically via
- * {@link #tick(double)} to choose its next action; {@link #collision} tells it a
- * move was interrupted. It reaches its actuator through the entity
+ * specific entity, carries an FSM {@link State} (whose {@code mode} also names
+ * the avatar to show) and a {@code healthPercent}, and is woken periodically
+ * via {@link #tick(double)} to choose its next action; {@link #collision} tells
+ * it a move was interrupted. It reaches its actuator through the entity
  * ({@link #stunt()}), so there is no separate bot&harr;stunt link to maintain.
  *
  * <p>
  * Keyboard / mouse bots additionally receive raw input forwarded by the engine
- * {@code Controller} through the {@code pressed}/{@code released}/{@code mouse*}
- * hooks. These use primitive signatures, so the engine entity layer keeps no UI
- * (oop) dependency.
+ * {@code Controller} through the
+ * {@code pressed}/{@code released}/{@code mouse*} hooks. These use primitive
+ * signatures, so the engine entity layer keeps no UI (oop) dependency.
  */
 public abstract class Bot {
 
 	/**
 	 * The entity this bot drives. Severed by {@link #detach()} on the entity's
-	 * destruction, so a still-referenced bot (e.g. a controller's player bot) cannot
-	 * keep a dead entity — and its stunt — alive.
+	 * destruction, so a still-referenced bot (e.g. a controller's player bot)
+	 * cannot keep a dead entity — and its stunt — alive.
 	 */
 	protected Entity entity;
 
 	/** Current FSM state; its {@code mode} also names the avatar to show. */
 	protected State state;
 
-	/** 0..100; game-specific health/energy that GAL {@code Got}/{@code Add} read. */
+	/**
+	 * 0..100; game-specific health/energy that GAL {@code Got}/{@code Add} read.
+	 */
 	protected int healthPercent = 100;
 
 	public Bot(Entity entity) {
@@ -48,7 +50,9 @@ public abstract class Bot {
 		return entity == null ? null : entity.stunt();
 	}
 
-	/** Sever the entity link so a retained bot does not keep a dead entity alive. */
+	/**
+	 * Sever the entity link so a retained bot does not keep a dead entity alive.
+	 */
 	public void detach() {
 		this.entity = null;
 	}
@@ -77,8 +81,8 @@ public abstract class Bot {
 
 	/**
 	 * Notify the bot that its motion was interrupted by a collision with
-	 * {@code impactor}: it should abort the current action and may choose a new one,
-	 * now or later. Default no-op.
+	 * {@code impactor}: it should abort the current action and may choose a new
+	 * one, now or later. Default no-op.
 	 */
 	public void collision(Entity impactor, double elapsed) {
 	}

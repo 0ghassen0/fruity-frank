@@ -197,9 +197,10 @@ public abstract class Entity {
 
 	/**
 	 * Reorient the entity to face {@code targetOrientation_degree} absolutely
-	 * (turning by the necessary delta, so bounding shapes rotate consistently). Used
-	 * by the GAL {@code Move}/{@code Turn} actions so an entity's facing tracks the
-	 * direction it heads, which is what relative GAL directions resolve against.
+	 * (turning by the necessary delta, so bounding shapes rotate consistently).
+	 * Used by the GAL {@code Move}/{@code Turn} actions so an entity's facing
+	 * tracks the direction it heads, which is what relative GAL directions resolve
+	 * against.
 	 */
 	public void face(int targetOrientation_degree) {
 		turn(targetOrientation_degree - orientation_degree);

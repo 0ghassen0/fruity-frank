@@ -58,7 +58,6 @@ public class GameApp {
 
 	private static final double PAC_SPEED = 0.2; // cm per motion tick
 	static final double GHOST_SPEED = 0.15;
-	
 
 	/**
 	 * Liveness flag for the self-reposting loops. Flipped to {@code false} when the

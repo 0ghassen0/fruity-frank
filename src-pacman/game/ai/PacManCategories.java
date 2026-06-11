@@ -8,9 +8,9 @@ import game.Categorized;
 // == PACMAN CATEGORIES ==
 
 /**
- * Binds the abstract GAL categories used by the Pac-Man automata to concrete game
- * entities. From a ghost's point of view the adversary ({@code A}) is the player
- * Pac. Non-game props match nothing (guarded by {@link Categorized}).
+ * Binds the abstract GAL categories used by the Pac-Man automata to concrete
+ * game entities. From a ghost's point of view the adversary ({@code A}) is the
+ * player Pac. Non-game props match nothing (guarded by {@link Categorized}).
  */
 public class PacManCategories implements CategoryMatcher {
 

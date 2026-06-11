@@ -3,16 +3,16 @@ package engine.graphics;
 // == CAMERA ==
 
 /**
- * Maps world coordinates (cm) to viewport pixels for a world that is larger than
- * the window. The camera follows a target with a <i>dead-zone</i> (it only scrolls
- * once the target leaves a central box) and eases toward it (lerp), giving the
- * "centred on the player with elasticity" feel the spec asks for.
+ * Maps world coordinates (cm) to viewport pixels for a world that is larger
+ * than the window. The camera follows a target with a <i>dead-zone</i> (it only
+ * scrolls once the target leaves a central box) and eases toward it (lerp),
+ * giving the "centred on the player with elasticity" feel the spec asks for.
  *
  * <p>
  * Torus-aware: {@link #worldToScreen} places a point by its shortest wrapped
- * offset from the camera centre, so the seam is invisible and entities across the
- * wrap render on the correct side. On a non-torus axis the centre is clamped so
- * the viewport never shows past the world edge.
+ * offset from the camera centre, so the seam is invisible and entities across
+ * the wrap render on the correct side. On a non-torus axis the centre is
+ * clamped so the viewport never shows past the world edge.
  */
 public class Camera {
 
@@ -53,7 +53,10 @@ public class Camera {
 		this.tgtY = cmY;
 	}
 
-	/** Ease the centre toward the target by the part of the offset beyond the dead-zone. */
+	/**
+	 * Ease the centre toward the target by the part of the offset beyond the
+	 * dead-zone.
+	 */
 	public void update() {
 		double dx = signed(camX, tgtX, worldW, torusX);
 		double dy = signed(camY, tgtY, worldH, torusY);
@@ -68,7 +71,9 @@ public class Camera {
 		return new int[] { (int) Math.round(viewW / 2.0 + dx * ppc), (int) Math.round(viewH / 2.0 + dy * ppc) };
 	}
 
-	/** @return whether a world point is within the viewport (plus a cell margin). */
+	/**
+	 * @return whether a world point is within the viewport (plus a cell margin).
+	 */
 	public boolean isVisible(double cmX, double cmY, double marginCm) {
 		double dx = Math.abs(signed(camX, cmX, worldW, torusX));
 		double dy = Math.abs(signed(camY, cmY, worldH, torusY));
@@ -93,7 +98,10 @@ public class Camera {
 
 	// HELPERS
 
-	/** Shortest signed delta from {@code from} to {@code to} (torus-wrapped if asked). */
+	/**
+	 * Shortest signed delta from {@code from} to {@code to} (torus-wrapped if
+	 * asked).
+	 */
 	private static double signed(double from, double to, double size, boolean torus) {
 		double d = to - from;
 		if (torus) {
@@ -115,7 +123,9 @@ public class Camera {
 		return 0;
 	}
 
-	/** Wrap (torus) or clamp (so the viewport stays inside the world) the centre. */
+	/**
+	 * Wrap (torus) or clamp (so the viewport stays inside the world) the centre.
+	 */
 	private double settle(double v, double size, boolean torus, int viewPx) {
 		if (torus)
 			return ((v % size) + size) % size;

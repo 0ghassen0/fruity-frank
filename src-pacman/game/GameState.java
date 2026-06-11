@@ -10,8 +10,9 @@ package game;
  * frightened-mode timer, and special events.
  *
  * <p>
- * Keeping it separate from {@link Rules} lets the rules read/write game state as
- * pure data and makes both unit-testable independently of the engine cadence.
+ * Keeping it separate from {@link Rules} lets the rules read/write game state
+ * as pure data and makes both unit-testable independently of the engine
+ * cadence.
  */
 public class GameState {
 
@@ -47,7 +48,10 @@ public class GameState {
 		return frightenedTicks > 0;
 	}
 
-	/** Count down one motion tick of frightened mode; returns true while still active. */
+	/**
+	 * Count down one motion tick of frightened mode; returns true while still
+	 * active.
+	 */
 	public boolean tickFrightened() {
 		if (frightenedTicks > 0)
 			frightenedTicks--;

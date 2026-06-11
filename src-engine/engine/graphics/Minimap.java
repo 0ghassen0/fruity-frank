@@ -25,7 +25,10 @@ public class Minimap {
 		this.sy = panelH / worldHcm;
 	}
 
-	/** @return the panel pixel {@code {x, y}} for a world point (cm), wrapped into the world. */
+	/**
+	 * @return the panel pixel {@code {x, y}} for a world point (cm), wrapped into
+	 *         the world.
+	 */
 	public int[] worldToPanel(double cmX, double cmY) {
 		double wx = ((cmX % worldW) + worldW) % worldW;
 		double wy = ((cmY % worldH) + worldH) % worldH;

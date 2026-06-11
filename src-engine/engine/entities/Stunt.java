@@ -75,8 +75,8 @@ public abstract class Stunt {
 	/**
 	 * Notify the actuator that its entity collided with {@code impactor}, so it can
 	 * react at the motion level (e.g. stop dead rather than keep pushing). Wired by
-	 * {@link Model#resolveCollisions()} after the game's outcome is applied. Default
-	 * no-op; subclasses override to interrupt motion on impact.
+	 * {@link Model#resolveCollisions()} after the game's outcome is applied.
+	 * Default no-op; subclasses override to interrupt motion on impact.
 	 */
 	public void collision(Entity impactor) {
 	}

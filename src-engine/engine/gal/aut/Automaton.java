@@ -13,9 +13,9 @@ import engine.entities.Entity;
 
 /**
  * A GAL finite-state machine: an initial {@link State} and an ordered list of
- * {@link Transition}s. {@link #step(Entity)} fires the first satisfied transition
- * out of the entity's current state (the order is the source order, so earlier
- * transitions have priority), or does nothing and stays put.
+ * {@link Transition}s. {@link #step(Entity)} fires the first satisfied
+ * transition out of the entity's current state (the order is the source order,
+ * so earlier transitions have priority), or does nothing and stays put.
  *
  * <p>
  * The two GAL special targets are resolved here: reaching {@link State#DESTROY}
@@ -76,7 +76,9 @@ public class Automaton {
 		return false;
 	}
 
-	/** @return a uniformly random concrete state (or the initial if none collected). */
+	/**
+	 * @return a uniformly random concrete state (or the initial if none collected).
+	 */
 	private State randomState() {
 		if (states.isEmpty())
 			return initial;

@@ -12,10 +12,10 @@ import engine.gal.aut.iGALAction;
 /**
  * The GAL {@code Move(direction)} action: resolves its {@link DirArg} to a unit
  * step, reorients the entity to face that direction (so subsequent relative
- * directions and the avatar track its heading), then pushes a velocity command at
- * the bot's speed onto the entity's stunt. Motion itself is actuated later by the
- * stunt on the motion tick (push model). Returns {@code false} (action not
- * performed) if there is no stunt to drive.
+ * directions and the avatar track its heading), then pushes a velocity command
+ * at the bot's speed onto the entity's stunt. Motion itself is actuated later
+ * by the stunt on the motion tick (push model). Returns {@code false} (action
+ * not performed) if there is no stunt to drive.
  */
 public final class Move implements iGALAction {
 

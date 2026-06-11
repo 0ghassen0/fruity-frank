@@ -7,14 +7,16 @@ import java.util.List;
 
 /**
  * The demo arena — deliberately <b>larger than the viewport</b> so the engine's
- * scrolling {@link engine.graphics.Camera camera} and {@link engine.graphics.Minimap
- * minimap} are exercised. A torus (no border) tiled with a regular lattice of solid
- * blocks separated by lanes, with gums on the open cells, power pellets in the
- * corners, and far-apart spawns so the GAL ghost has to chase across the world.
+ * scrolling {@link engine.graphics.Camera camera} and
+ * {@link engine.graphics.Minimap minimap} are exercised. A torus (no border)
+ * tiled with a regular lattice of solid blocks separated by lanes, with gums on
+ * the open cells, power pellets in the corners, and far-apart spawns so the GAL
+ * ghost has to chase across the world.
  *
  * <p>
- * Walls are world geometry, not entities: consulted by {@link PacManModel#canOccupy}
- * and drawn by the painter; {@link #isWall} wraps coordinates for the torus.
+ * Walls are world geometry, not entities: consulted by
+ * {@link PacManModel#canOccupy} and drawn by the painter; {@link #isWall} wraps
+ * coordinates for the torus.
  */
 public final class Maze {
 

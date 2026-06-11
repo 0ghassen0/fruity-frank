@@ -17,11 +17,11 @@ import engine.gal.conditions.True;
 // == GAL (hand-built AST builder) ==
 
 /**
- * Static factory facade for assembling GAL automata in Java, standing in for the
- * teachers' {@code .gal} parser until it lands (the parser will produce the same
- * {@link Automaton}/{@link Transition}/… types, so only this file retires). Use
- * with {@code import static engine.gal.aut.Gal.*;} so a built automaton reads like
- * its source.
+ * Static factory facade for assembling GAL automata in Java, standing in for
+ * the teachers' {@code .gal} parser until it lands (the parser will produce the
+ * same {@link Automaton}/{@link Transition}/… types, so only this file
+ * retires). Use with {@code import static engine.gal.aut.Gal.*;} so a built
+ * automaton reads like its source.
  */
 public final class Gal {
 
@@ -35,12 +35,17 @@ public final class Gal {
 		return True.INSTANCE;
 	}
 
-	/** {@code Closest(cat)} — selects the nearest matching entity into {@code $}. */
+	/**
+	 * {@code Closest(cat)} — selects the nearest matching entity into {@code $}.
+	 */
 	public static iGALCondition closest(Category cat) {
 		return new Closest(cat);
 	}
 
-	/** {@code Closest(cat, dir)} — selects the nearest; true iff it is in {@code dir}. */
+	/**
+	 * {@code Closest(cat, dir)} — selects the nearest; true iff it is in
+	 * {@code dir}.
+	 */
 	public static iGALCondition closest(Category cat, Direction dir) {
 		return new Closest(cat, dir);
 	}
@@ -50,12 +55,18 @@ public final class Gal {
 		return new Closest(cat, rangeSteps);
 	}
 
-	/** {@code Closest(cat, dir, range)} — nearest within range; true iff in {@code dir}. */
+	/**
+	 * {@code Closest(cat, dir, range)} — nearest within range; true iff in
+	 * {@code dir}.
+	 */
 	public static iGALCondition closest(Category cat, Direction dir, int rangeSteps) {
 		return new Closest(cat, dir, rangeSteps);
 	}
 
-	/** {@code Step(dir, cat)} — is a {@code cat} entity one step away in {@code dir}? */
+	/**
+	 * {@code Step(dir, cat)} — is a {@code cat} entity one step away in
+	 * {@code dir}?
+	 */
 	public static iGALCondition step(Direction dir, Category cat) {
 		return new Step(dir, cat);
 	}
@@ -89,7 +100,9 @@ public final class Gal {
 
 	// DIRECTION ARGUMENTS
 
-	/** A direction argument, resolved against the entity's facing at action time. */
+	/**
+	 * A direction argument, resolved against the entity's facing at action time.
+	 */
 	public static DirArg dir(Direction d) {
 		return self -> {
 			Direction abs = d.resolve(Direction.ofAngle(self.orientation()));
@@ -97,7 +110,9 @@ public final class Gal {
 		};
 	}
 
-	/** {@code $.d} — the cardinal direction from the entity toward its {@code $}. */
+	/**
+	 * {@code $.d} — the cardinal direction from the entity toward its {@code $}.
+	 */
 	public static DirArg selectedDir() {
 		return self -> {
 			if (!(self.bot() instanceof GALBot b) || b.selected() == null)
@@ -128,7 +143,10 @@ public final class Gal {
 		return new Turn(d);
 	}
 
-	/** {@code Egg(d)} — lay the creator's default offspring on the cell in {@code d}. */
+	/**
+	 * {@code Egg(d)} — lay the creator's default offspring on the cell in
+	 * {@code d}.
+	 */
 	public static iGALAction egg(DirArg d) {
 		return new Egg(d);
 	}
@@ -181,9 +199,10 @@ public final class Gal {
 	}
 
 	/**
-	 * An idle automaton: one state, no transitions — it does nothing forever without
-	 * dying (the GAL {@code Philosopher(Think){ *(Think) }}). The spec's default for
-	 * décor/props so every entity carries an automaton that a game can later swap.
+	 * An idle automaton: one state, no transitions — it does nothing forever
+	 * without dying (the GAL {@code Philosopher(Think){ *(Think) }}). The spec's
+	 * default for décor/props so every entity carries an automaton that a game can
+	 * later swap.
 	 */
 	public static Automaton idle(String name) {
 		return new Automaton(name, new State(name));

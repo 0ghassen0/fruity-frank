@@ -6,11 +6,12 @@ import engine.entities.Entity;
 // == GAL BOT ==
 
 /**
- * A {@link Bot} whose behaviour is a GAL {@link Automaton}. On each {@link #tick}
- * it steps the automaton against its entity; the FSM's transitions read the world
- * via conditions and actuate via the entity's stunt. Carries the GAL {@code $}
- * selection (set by conditions like {@code Closest}) and the per-game
- * {@link CategoryMatcher} that binds abstract categories to entities.
+ * A {@link Bot} whose behaviour is a GAL {@link Automaton}. On each
+ * {@link #tick} it steps the automaton against its entity; the FSM's
+ * transitions read the world via conditions and actuate via the entity's stunt.
+ * Carries the GAL {@code $} selection (set by conditions like {@code Closest})
+ * and the per-game {@link CategoryMatcher} that binds abstract categories to
+ * entities.
  */
 public class GALBot extends Bot {
 
@@ -43,7 +44,10 @@ public class GALBot extends Bot {
 		return matcher;
 	}
 
-	/** The game's entity factory used by {@code Egg}/{@code Throw}; may be {@code null}. */
+	/**
+	 * The game's entity factory used by {@code Egg}/{@code Throw}; may be
+	 * {@code null}.
+	 */
 	public EntityFactory factory() {
 		return factory;
 	}

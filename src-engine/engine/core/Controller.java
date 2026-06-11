@@ -12,11 +12,11 @@ import oop.graphics.Canvas;
  * input <i>means</i>.
  *
  * <p>
- * The game wires it by constructing it with the player bot and registering it on
- * the canvas ({@code canvas.set(controller)}). The bot behind it can be swapped
- * with {@link #setPlayerBot(Bot)} — e.g. when the player entity respawns — so the
- * controller stays registered for the canvas's lifetime while the decision-maker
- * changes underneath it.
+ * The game wires it by constructing it with the player bot and registering it
+ * on the canvas ({@code canvas.set(controller)}). The bot behind it can be
+ * swapped with {@link #setPlayerBot(Bot)} — e.g. when the player entity
+ * respawns — so the controller stays registered for the canvas's lifetime while
+ * the decision-maker changes underneath it.
  */
 public class Controller implements Canvas.KeyListener, Canvas.MouseListener {
 
@@ -27,7 +27,9 @@ public class Controller implements Canvas.KeyListener, Canvas.MouseListener {
 		this.playerBot = bot;
 	}
 
-	/** Point the controller at a different bot (e.g. a freshly respawned player). */
+	/**
+	 * Point the controller at a different bot (e.g. a freshly respawned player).
+	 */
 	public void setPlayerBot(Bot bot) {
 		this.playerBot = bot;
 	}

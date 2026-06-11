@@ -10,13 +10,14 @@ import oop.graphics.VirtualKeyCodes;
 
 /**
  * A keyboard-driven {@link Bot}: it receives key events forwarded by the engine
- * {@link engine.core.Controller} (via {@link Bot#pressed(int, char)}) and decides
- * what they mean — acting as the player's input FSM. Each arrow key names a
- * desired heading (constant velocity, cm per tick); {@code SPACE} stops.
+ * {@link engine.core.Controller} (via {@link Bot#pressed(int, char)}) and
+ * decides what they mean — acting as the player's input FSM. Each arrow key
+ * names a desired heading (constant velocity, cm per tick); {@code SPACE}
+ * stops.
  *
  * <p>
- * It no longer touches the {@code oop} canvas itself; it only references the key
- * codes ({@link VirtualKeyCodes}) to declare the game's controls.
+ * It no longer touches the {@code oop} canvas itself; it only references the
+ * key codes ({@link VirtualKeyCodes}) to declare the game's controls.
  */
 public class KeyboardBot extends Bot {
 

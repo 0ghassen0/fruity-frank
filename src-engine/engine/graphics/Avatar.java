@@ -16,9 +16,10 @@ import oop.graphics.Graphics;
  * An avatar also carries a {@link #mode() mode} — a free-form label set by the
  * behaviour layer (the entity's {@code Bot}, driven by its FSM
  * {@code State(mode, id)}) to choose <i>how</i> the entity looks: a warrior's
- * {@code "Walking"} vs {@code "Fighting"} avatar, a ghost's {@code "frightened"}
- * sprite. This is the appearance the view cannot infer from observable physics
- * (position/velocity); behaviour pushes it via {@link #setMode(String)}.
+ * {@code "Walking"} vs {@code "Fighting"} avatar, a ghost's
+ * {@code "frightened"} sprite. This is the appearance the view cannot infer
+ * from observable physics (position/velocity); behaviour pushes it via
+ * {@link #setMode(String)}.
  */
 public abstract class Avatar {
 
@@ -98,8 +99,8 @@ public abstract class Avatar {
 	}
 
 	/**
-	 * Set the appearance mode. Called by the behaviour layer (the entity's bot,
-	 * via {@code entity.getAvatar()}) when its FSM mode changes; the next
+	 * Set the appearance mode. Called by the behaviour layer (the entity's bot, via
+	 * {@code entity.getAvatar()}) when its FSM mode changes; the next
 	 * {@link #paint(Graphics)} reflects it.
 	 */
 	public void setMode(String mode) {

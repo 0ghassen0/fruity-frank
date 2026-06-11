@@ -32,7 +32,9 @@ public class View {
 	 */
 	private Camera camera;
 
-	/** @return the view's camera, or {@code null} if it renders in absolute pixels. */
+	/**
+	 * @return the view's camera, or {@code null} if it renders in absolute pixels.
+	 */
 	public Camera camera() {
 		return camera;
 	}
