@@ -147,9 +147,10 @@ public class Rect extends Shape {
 		}
 
 		boolean intersects() {
-			double[][] cornersA = a.cornersAt(a.getCenter().x(), a.getCenter().y());
-			ISU.Vector delta = a.getCenter().nearestDeltaTo(b.getCenter());
-			double[][] cornersB = b.cornersAt(a.getCenter().x() + delta.x(), a.getCenter().y() + delta.y());
+			ISU.Coord ca = a.getCenter();
+			double[][] cornersA = a.cornersAt(ca.x(), ca.y());
+			ISU.Vector delta = ca.nearestDeltaTo(b.getCenter());
+			double[][] cornersB = b.cornersAt(ca.x() + delta.x(), ca.y() + delta.y());
 
 			double[][] axes = { getEdgeNormal(cornersA[0], cornersA[1]), getEdgeNormal(cornersA[1], cornersA[2]),
 					getEdgeNormal(cornersB[0], cornersB[1]), getEdgeNormal(cornersB[1], cornersB[2]) };

@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import engine.core.Model;
+import engine.entities.Bot;
 import engine.entities.Entity;
 
 // == AUTOMATON ==
@@ -61,7 +62,8 @@ public class Automaton {
 		for (Transition t : transitions) {
 			if (!t.exec(e))
 				continue;
-			State reached = e.bot().state();
+			Bot bot = e.bot();
+			State reached = bot.state();
 			if (reached == State.DESTROY) {
 				Model m = e.model();
 				if (m != null)
@@ -69,7 +71,7 @@ public class Automaton {
 				else
 					e.destroy();
 			} else if (reached == State.RANDOM) {
-				e.bot().state(randomState());
+				bot.state(randomState());
 			}
 			return true;
 		}

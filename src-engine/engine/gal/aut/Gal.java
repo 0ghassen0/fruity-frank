@@ -1,5 +1,6 @@
 package engine.gal.aut;
 
+import engine.entities.Entity;
 import engine.gal.actions.Egg;
 import engine.gal.actions.Explode;
 import engine.gal.actions.Move;
@@ -115,9 +116,12 @@ public final class Gal {
 	 */
 	public static DirArg selectedDir() {
 		return self -> {
-			if (!(self.bot() instanceof GALBot b) || b.selected() == null)
+			if (!(self.bot() instanceof GALBot b))
 				return new int[] { 0, 0 };
-			var delta = self.center().nearestDeltaTo(b.selected().center());
+			Entity sel = b.selected();
+			if (sel == null)
+				return new int[] { 0, 0 };
+			var delta = self.center().nearestDeltaTo(sel.center());
 			Direction c = Direction.cardinal(delta.x(), delta.y());
 			return new int[] { c.dx(), c.dy() };
 		};
