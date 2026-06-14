@@ -9,17 +9,8 @@ import oop.graphics.Graphics;
  * Each Avatar belongs to a z-layer ({@link #zOrder}) that determines which
  * group it is drawn in relative to other layers (lower = drawn first). Within a
  * layer, avatars are sorted by {@link #sOrder()}, which defaults to 0.0 but can
- * be overridden — typically to return the entity's Y position for pseudo-depth
- * sorting in top-down games.
+ * be overridden
  *
- * <p>
- * An avatar also carries a {@link #mode() mode} — a free-form label set by the
- * behaviour layer (the entity's {@code Bot}, driven by its FSM
- * {@code State(mode, id)}) to choose <i>how</i> the entity looks: a warrior's
- * {@code "Walking"} vs {@code "Fighting"} avatar, a ghost's
- * {@code "frightened"} sprite. This is the appearance the view cannot infer
- * from observable physics (position/velocity); behaviour pushes it via
- * {@link #setMode(String)}.
  */
 public abstract class Avatar {
 
@@ -92,6 +83,11 @@ public abstract class Avatar {
 	// -------------------------------------------------------------------------
 	// Mode (behaviour-driven appearance)
 	// -------------------------------------------------------------------------
+
+	/** @return the game entity this avatar represents. */
+	public Entity entity() {
+		return entity;
+	}
 
 	/** @return the current appearance mode (see the class javadoc). */
 	public String mode() {
