@@ -1,5 +1,6 @@
 package engine.core;
 
+import engine.debug.Debug;
 import oop.tasks.Task;
 import oop.tasks.Runtime;
 import oop.tasks.Runnable;
@@ -30,6 +31,17 @@ public class Ticker {
 
 	private Task tickerTask;
 	private boolean running;
+
+	/** Optional debug config; {@code null} = no instrumentation (the default). */
+	private Debug debug;
+
+	/**
+	 * Attach a {@link Debug} so this ticker records inter-tick intervals when
+	 * {@link Debug#showTickStats()} is on. Pass {@code null} to detach.
+	 */
+	public void setDebug(Debug debug) {
+		this.debug = debug;
+	}
 
 	/**
 	 * @param targetTps desired ticks per second (e.g. 20, 60, 120)
@@ -106,6 +118,10 @@ public class Ticker {
 			// Anchor the clock on the very first tick.
 			if (lastTickTime < 0)
 				lastTickTime = now;
+
+			// Debug: record the interval since the previous tick (opt-in, off by default).
+			if (debug != null && debug.showTickStats())
+				debug.tickStats().markAndSample();
 
 			// Notify the game model.
 			listener.onTick(tickDurationSeconds);

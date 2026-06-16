@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import engine.ai.Brain;
 import engine.core.Controller;
 import engine.core.Ticker;
+import engine.debug.Debug;
 import engine.entities.BasicStunt;
 import engine.entities.Entity;
 import engine.gal.aut.GALBot;
@@ -97,6 +98,18 @@ public class GameApp {
 		PacManPainter painter = new PacManPainter(view, maze, cellPx, game.getCmPerCell(), null);
 		Brain brain = new Brain(model);
 
+		// Opt-in engine debug overlays. Everything is OFF by default; flip the setters
+		// you want on. Injected into the painter (HUD + per-entity overlays) and the
+		// motion ticker (inter-tick timing).
+		Debug debug = new Debug();
+		debug.setPixelPerCm(game.getPixelPerCm()); // fallback mapping when no camera
+		 //debug.setShowTickStats(true);
+		 //debug.setShowPaintStats(true);
+		 debug.setShowFps(true);
+		 //debug.setShowHitboxes(true);
+		 //debug.setShowStates(true);
+		painter.setDebug(debug); // also forwards to the view
+
 		Runtime.boot(new Dimension(pxW, pxH), new Runnable() {
 			@Override
 			public void run() {
@@ -105,7 +118,9 @@ public class GameApp {
 				canvas.set((Canvas.KeyListener) controller);
 				canvas.set((Canvas.MouseListener) controller);
 
-				new Ticker(MOTION_TPS).start(model); // Ticker -> Model.update()
+				Ticker motionTicker = new Ticker(MOTION_TPS);
+				motionTicker.setDebug(debug); // inter-tick timing on the simulation
+				motionTicker.start(model); // Ticker -> Model.update()
 				new Ticker(AI_TPS).start(brain); // Brain -> ghost.think()
 				new Ticker(SPAWN_TPS).start(new Spawner(model, game, maze, controller));
 

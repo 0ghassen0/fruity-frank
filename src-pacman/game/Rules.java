@@ -48,8 +48,8 @@ public class Rules {
 				m.remove(ghost);
 				s.addScore(200);
 			} else {
-				s.killPac();
-				m.remove(pac);
+				//s.killPac();
+				//m.remove(pac);
 			}
 		});
 		// ghost-ghost, ghost-gum, boss-* … : no rule registered -> no effect.

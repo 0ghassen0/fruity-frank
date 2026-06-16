@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
 
+import engine.debug.Debug;
+import engine.debug.DebugOverlay;
 import oop.graphics.Graphics;
 
 /**
@@ -28,9 +30,21 @@ public class View {
 	/**
 	 * Optional camera mapping world coordinates to viewport pixels (world larger
 	 * than the window). {@code null} means no camera — avatars render in absolute
-	 * pixels, the legacy full-screen behaviour.
+	 * pixels
 	 */
 	private Camera camera;
+
+	/** Optional debug config */
+	private Debug debug;
+
+	/**
+	 * Attach a {@link Debug} so per-entity overlays (hitbox AABBs, automaton
+	 * states) are drawn after the avatars when those flags are on. Pass
+	 * {@code null} to detach.
+	 */
+	public void setDebug(Debug debug) {
+		this.debug = debug;
+	}
 
 	/**
 	 * @return the view's camera, or {@code null} if it renders in absolute pixels.
@@ -89,6 +103,26 @@ public class View {
 			for (Avatar avatar : layer)
 				avatar.paint(g);
 		}
+		if (debug != null && debug.anyOverlay())
+			paintDebugOverlays(g);
+	}
+
+	/**
+	 * Draw the world-space debug overlays (hitbox AABBs and automaton states) on
+	 * top of every avatar.
+	 */
+	private void paintDebugOverlays(Graphics g) {
+		double ppc = debug.pixelPerCm();
+		for (List<Avatar> layer : layers.values())
+			for (Avatar avatar : layer) {
+				engine.entities.Entity e = avatar.entity();
+				if (e == null)
+					continue;
+				if (debug.showHitboxes())
+					DebugOverlay.drawHitbox(g, e, camera, ppc);
+				if (debug.showStates())
+					DebugOverlay.drawState(g, e, camera, ppc);
+			}
 	}
 
 	// -------------------------------------------------------------------------

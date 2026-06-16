@@ -1,5 +1,11 @@
-/bin/
-.settings/
-.metadata/
-/docs/
+# Eclipse
 .classpath
+.project
+.settings/
+
+# Compilation
+bin/
+*.class
+
+# Autres
+docs/
