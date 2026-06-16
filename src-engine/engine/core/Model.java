@@ -34,13 +34,7 @@ public abstract class Model implements Ticker.TickListener {
 	protected final Grid grid;
 	/** The cm-based coordinate system paired with {@link #grid}. */
 	protected final ISU isu;
-	/**
-	 * Every entity currently managed by this model. A concurrent set: the motion
-	 * task structurally mutates it (spawn/remove) while the {@code Brain} and
-	 * render tasks iterate it, so it must tolerate concurrent reads without
-	 * throwing. Reads are weakly consistent, which is fine — the simulation already
-	 * snapshots before iterating where a stable view matters.
-	 */
+
 	protected final Set<Entity> entities;
 
 	// CONSTRUCTOR
