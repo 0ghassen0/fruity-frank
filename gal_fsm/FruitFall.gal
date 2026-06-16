@@ -1,0 +1,9 @@
+FruitFall(Stable){
+  * (Stable):
+  | Step(S,V) ? Move(S) :(Falling)
+  | True ?               :(Stable)
+
+  * (Falling):
+  | Step(S,V) ? Move(S) :(Falling)
+  | True ?               :(Stable)
+}
