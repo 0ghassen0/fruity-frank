@@ -1,28 +1,28 @@
-package franck.graphics;
+package frank.graphics;
 
 import engine.entities.Entity;
 import engine.geometry.ISU;
 import engine.graphics.Avatar;
 import engine.graphics.View;
-import franck.Category;
-import franck.entities.Enemy;
-import franck.entities.Fruit;
-import franck.entities.GrassHigh;
+import frank.entities.Enemy;
+import frank.entities.Fruit;
+import frank.entities.GrassHigh;
+import frank.game.Category;
 import oop.graphics.BufferedImage;
 import oop.graphics.Graphics;
 
-public class FranckAvatar extends Avatar {
+public class FrankAvatar extends Avatar {
 
 	private static final long ANIM_NS = 150_000_000L;
 	private static final int E = 0, W = 1, N = 2, S = 3;
 
 	private final int pixelPerCm, cellPx;
 	private final Category category;
-	private final FranckSprites sprites;
+	private final FrankSprites sprites;
 	private int facing = E;
 
-	public FranckAvatar(Entity entity, View view, int z, int pixelPerCm, int cellPx, Category category,
-			FranckSprites sprites) {
+	public FrankAvatar(Entity entity, View view, int z, int pixelPerCm, int cellPx, Category category,
+			FrankSprites sprites) {
 		super(entity, view, z);
 		this.pixelPerCm = pixelPerCm;
 		this.cellPx = cellPx;

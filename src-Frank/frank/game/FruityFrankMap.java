@@ -1,4 +1,4 @@
-package franck;
+package frank.game;
 
 import java.util.ArrayList;
 import java.util.HashSet;

@@ -1,11 +1,11 @@
-package franck.graphics;
+package frank.graphics;
 
-import franck.entities.Enemy;
-import franck.entities.Fruit;
+import frank.entities.Enemy;
+import frank.entities.Fruit;
 import oop.graphics.BufferedImage;
 import oop.graphics.Graphics;
 
-public final class FranckSprites {
+public final class FrankSprites {
 
 	private static final String PLAYER = "sprites/Fruity_Frank-player.png"; // 100x76
 	private static final String ENEMY = "sprites/Fruity_Frank-enemies.png"; // 148x136

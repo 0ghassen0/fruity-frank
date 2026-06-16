@@ -1,7 +1,8 @@
-package franck.graphics;
+package frank.graphics;
 
 import java.util.EnumMap;
-import franck.Category;
+
+import frank.game.Category;
 
 public final class Palette {
 

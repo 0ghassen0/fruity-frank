@@ -1,4 +1,4 @@
-package franck.ai;
+package frank.ai;
 
 import static engine.gal.aut.Gal.automaton;
 import static engine.gal.aut.Gal.closest;
@@ -12,9 +12,9 @@ import engine.gal.aut.Automaton;
 import engine.gal.aut.Category;
 import engine.gal.aut.State;
 
-public final class FranckAutomata {
+public final class FrankAutomata {
 
-    private FranckAutomata() {}
+    private FrankAutomata() {}
 
     /** Poursuite directe de Frank. */
     public static Automaton enemyChase() {

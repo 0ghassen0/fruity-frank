@@ -1,4 +1,4 @@
-package franck;
+package frank.game;
 
 import engine.entities.Entity;
 

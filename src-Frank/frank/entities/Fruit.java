@@ -1,11 +1,11 @@
-package franck.entities;
+package frank.entities;
 
 import engine.core.Game;
 import engine.entities.Bounding;
 import engine.entities.Entity;
 import engine.shapes.Circle;
-import franck.Categorized;
-import franck.Category;
+import frank.game.Categorized;
+import frank.game.Category;
 
 public class Fruit extends Entity implements Categorized {
 

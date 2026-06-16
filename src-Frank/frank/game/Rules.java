@@ -1,8 +1,8 @@
-package franck;
+package frank.game;
 
 import java.util.EnumMap;
 import engine.entities.Entity;
-import franck.entities.Frank;
+import frank.entities.Frank;
 
 public class Rules {
 

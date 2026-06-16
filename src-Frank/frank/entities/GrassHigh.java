@@ -1,12 +1,12 @@
-package franck.entities;
+package frank.entities;
 
 import engine.core.Game;
 import engine.entities.Bounding;
 import engine.entities.Entity;
 import engine.geometry.ISU;
 import engine.shapes.Rect;
-import franck.Categorized;
-import franck.Category;
+import frank.game.Categorized;
+import frank.game.Category;
 
 public class GrassHigh extends Entity implements Categorized {
 

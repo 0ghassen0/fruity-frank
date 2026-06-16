@@ -1,4 +1,4 @@
-package franck.graphics;
+package frank.graphics;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -9,18 +9,18 @@ import engine.entities.Entity;
 import engine.graphics.Avatar;
 import engine.graphics.Camera;
 import engine.graphics.View;
-import franck.Category;
+import frank.game.Category;
 import oop.graphics.Graphics;
 
-public class FranckView extends View {
+public class FrankView extends View {
 
     private final Game game;
     private final Model model;
-    private final FranckSprites sprites;
+    private final FrankSprites sprites;
     private final int cellPx;
     private final Set<Entity> tracked = new HashSet<>();
 
-    public FranckView(Game game, Model model, FranckSprites sprites) {
+    public FrankView(Game game, Model model, FrankSprites sprites) {
         this.game = game; this.model = model; this.sprites = sprites;
         this.cellPx = (int) Math.round(game.getCmPerCell() * game.getPixelPerCm());
         sync();
@@ -31,7 +31,7 @@ public class FranckView extends View {
             if (e.getAvatar() != null) continue;
             if (Category.of(e) == Category.WALL) continue;
             Category cat = Category.of(e);
-            FranckAvatar a = new FranckAvatar(e, this, zOrderFor(cat),
+            FrankAvatar a = new FrankAvatar(e, this, zOrderFor(cat),
                     game.getPixelPerCm(), cellPx, cat, sprites);
             e.setAvatar(a); add(a); tracked.add(e);
         }

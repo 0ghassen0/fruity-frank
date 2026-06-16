@@ -1,24 +1,24 @@
-package franck.graphics;
+package frank.graphics;
 
 import engine.entities.Entity;
 import engine.graphics.Camera;
 import engine.graphics.Painter;
-import franck.Category;
-import franck.FruityFrankMap;
-import franck.FruityFrankModel;
-import franck.entities.Frank;
+import frank.entities.Frank;
+import frank.game.Category;
+import frank.game.FruityFrankMap;
+import frank.game.FruityFrankModel;
 import oop.graphics.Canvas;
 import oop.graphics.Graphics;
 
-public class FranckPainter extends Painter {
+public class FrankPainter extends Painter {
 
-	private final FranckView view;
+	private final FrankView view;
 	private final FruityFrankMap map;
 	private final FruityFrankModel model;
 	private final int cellPx;
 	private final double cmPerCell;
 
-	public FranckPainter(FranckView view, FruityFrankMap map, FruityFrankModel model, int cellPx, double cmPerCell) {
+	public FrankPainter(FrankView view, FruityFrankMap map, FruityFrankModel model, int cellPx, double cmPerCell) {
 		super(view);
 		this.view = view;
 		this.map = map;

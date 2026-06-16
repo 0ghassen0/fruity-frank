@@ -1,10 +1,10 @@
-package franck.bots;
+package frank.bots;
 
 import engine.entities.Bot;
 import engine.entities.Entity;
 import engine.entities.Stunt;
-import franck.FruityFrankModel;
-import franck.entities.Frank;
+import frank.entities.Frank;
+import frank.game.FruityFrankModel;
 import oop.graphics.VirtualKeyCodes;
 
 public class FrankBot extends Bot {

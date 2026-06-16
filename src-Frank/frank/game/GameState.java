@@ -1,4 +1,4 @@
-package franck;
+package frank.game;
 
 public class GameState {
     private int score;

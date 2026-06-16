@@ -1,4 +1,4 @@
-package franck;
+package frank.game;
 
 import java.awt.Dimension;
 
@@ -9,13 +9,13 @@ import engine.debug.Debug;
 import engine.entities.BasicStunt;
 import engine.gal.aut.GALBot;
 import engine.graphics.Camera;
-import franck.ai.FranckAutomata;
-import franck.ai.FranckCategories;
-import franck.bots.FrankBot;
-import franck.entities.*;
-import franck.graphics.FranckPainter;
-import franck.graphics.FranckSprites;
-import franck.graphics.FranckView;
+import frank.ai.FrankAutomata;
+import frank.ai.FrankCategories;
+import frank.bots.FrankBot;
+import frank.entities.*;
+import frank.graphics.FrankPainter;
+import frank.graphics.FrankSprites;
+import frank.graphics.FrankView;
 import oop.graphics.Canvas;
 import oop.tasks.Runnable;
 import oop.tasks.Runtime;
@@ -69,13 +69,13 @@ public class GameApp {
 		int cellPx = (int) Math.round(game.getCmPerCell() * game.getPixelPerCm());
 		int pxW = VIEW_COLS * cellPx, pxH = VIEW_ROWS * cellPx + 24;
 
-		FranckSprites sprites = new FranckSprites();
-		FranckView view = new FranckView(game, model, sprites);
+		FrankSprites sprites = new FrankSprites();
+		FrankView view = new FrankView(game, model, sprites);
 		Camera cam = new Camera(game.getWidth_cm(), game.getHeight_cm(), game.torusOnX(), game.torusOnY(), pxW,
 				pxH - 24, game.getPixelPerCm());
 		view.setCamera(cam);
 
-		FranckPainter painter = new FranckPainter(view, map, model, cellPx, game.getCmPerCell());
+		FrankPainter painter = new FrankPainter(view, map, model, cellPx, game.getCmPerCell());
 		Brain brain = new Brain(model);
 		Debug debug = new Debug();
 		debug.setPixelPerCm(game.getPixelPerCm()); // fallback mapping when no camera
@@ -84,6 +84,7 @@ public class GameApp {
 		debug.setShowFps(true);
 		debug.setShowHitboxes(true);
 		debug.setShowStates(true);
+		debug.setShowEntityNames(true);
 		painter.setDebug(debug); // also forwards to the view
 
 		Runtime.boot(new Dimension(pxW, pxH), new Runnable() {
@@ -115,8 +116,8 @@ public class GameApp {
 	private static void spawnEnemy(FruityFrankModel model, FruityFrank game, int x, int y, Enemy.EnemyType type) {
 		Enemy enemy = new Enemy("Enemy_" + type + "@" + x + "," + y, game, x, y, type);
 		enemy.setStunt(new BasicStunt(enemy));
-		var automaton = (type == Enemy.EnemyType.PURPLE) ? FranckAutomata.enemyFlee() : FranckAutomata.enemyChase();
-		enemy.setBot(new GALBot(enemy, automaton, ENEMY_SPEED, new FranckCategories()));
+		var automaton = (type == Enemy.EnemyType.PURPLE) ? FrankAutomata.enemyFlee() : FrankAutomata.enemyChase();
+		enemy.setBot(new GALBot(enemy, automaton, ENEMY_SPEED, new FrankCategories()));
 		model.add(enemy);
 	}
 

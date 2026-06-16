@@ -1,4 +1,4 @@
-package franck;
+package frank.game;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,7 @@ import engine.entities.BasicStunt;
 import engine.entities.Entity;
 import engine.geometry.Grid;
 import engine.geometry.ISU;
-import franck.entities.*;
+import frank.entities.*;
 
 public class FruityFrankModel extends Model {
 
