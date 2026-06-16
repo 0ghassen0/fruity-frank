@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import engine.ai.Brain;
 import engine.core.Controller;
 import engine.core.Ticker;
+import engine.debug.Debug;
 import engine.entities.BasicStunt;
 import engine.gal.aut.GALBot;
 import engine.graphics.Camera;
@@ -76,6 +77,14 @@ public class GameApp {
 
 		FranckPainter painter = new FranckPainter(view, map, model, cellPx, game.getCmPerCell());
 		Brain brain = new Brain(model);
+		Debug debug = new Debug();
+		debug.setPixelPerCm(game.getPixelPerCm()); // fallback mapping when no camera
+		debug.setShowTickStats(true);
+		debug.setShowPaintStats(true);
+		debug.setShowFps(true);
+		debug.setShowHitboxes(true);
+		debug.setShowStates(true);
+		painter.setDebug(debug); // also forwards to the view
 
 		Runtime.boot(new Dimension(pxW, pxH), new Runnable() {
 			@Override
