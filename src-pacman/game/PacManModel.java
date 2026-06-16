@@ -8,6 +8,7 @@ import engine.graphics.Avatar;
 import game.entities.Pac;
 import game.graphics.PacManAvatar;
 
+
 // == PACMAN MODEL ==
 
 /**
