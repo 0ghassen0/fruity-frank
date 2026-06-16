@@ -1,7 +1,6 @@
 package game;
 
 import java.util.EnumMap;
-
 import engine.entities.Entity;
 import game.entities.Gum;
 import game.entities.Pac;

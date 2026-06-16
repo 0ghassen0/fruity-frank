@@ -1,0 +1,55 @@
+package franck;
+
+import java.util.EnumMap;
+import engine.entities.Entity;
+import franck.entities.Frank;
+
+public class Rules {
+
+	@FunctionalInterface
+	public interface Outcome {
+		void apply(FruityFrankModel m, GameState s, Entity self, Entity other);
+	}
+
+	private final EnumMap<Category, EnumMap<Category, Outcome>> table = new EnumMap<>(Category.class);
+
+	public Rules() {
+		// Frank touche un ennemi → perd une vie
+		on(Category.FRANK, Category.ENEMY, (m, s, frank, enemy) -> {
+			Frank f = (Frank) frank;
+			f.loseLife();
+			s.killedByEnemy();
+			if (f.isDead())
+				s.setGameOver();
+			m.remove(frank);
+		});
+
+		// Cerise projectile touche un ennemi → ennemi meurt
+		on(Category.CHERRY_PROJECTILE, Category.ENEMY, (m, s, proj, enemy) -> {
+			m.remove(enemy);
+			m.remove(proj);
+			s.addScore(300);
+		});
+	}
+
+	public void resolve(FruityFrankModel model, GameState state, Entity a, Entity b) {
+		if (apply(model, state, a, b))
+			return;
+		apply(model, state, b, a);
+	}
+
+	private void on(Category self, Category other, Outcome o) {
+		table.computeIfAbsent(self, k -> new EnumMap<>(Category.class)).put(other, o);
+	}
+
+	private boolean apply(FruityFrankModel m, GameState s, Entity self, Entity other) {
+		var row = table.get(Category.of(self));
+		if (row == null)
+			return false;
+		var o = row.get(Category.of(other));
+		if (o == null)
+			return false;
+		o.apply(m, s, self, other);
+		return true;
+	}
+}

@@ -4,6 +4,7 @@ import engine.entities.Entity;
 import engine.geometry.ISU;
 import engine.graphics.Avatar;
 import engine.graphics.View;
+import game.graphics.Palette;
 import game.Category;
 import game.entities.Gum;
 
