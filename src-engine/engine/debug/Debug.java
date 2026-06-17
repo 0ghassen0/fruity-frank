@@ -32,6 +32,7 @@ public final class Debug {
 
 	private volatile boolean showHitboxes = false;
 	private volatile boolean showStates = false;
+	private volatile boolean showEntityNames = false;
 
 	// METRICS (rolling window)
 
@@ -92,6 +93,14 @@ public final class Debug {
 	}
 
 	public void setShowStates(boolean on) {
+		this.showStates = on;
+	}
+
+	public boolean showEntityNames() {
+		return showStates;
+	}
+
+	public void setShowEntityNames(boolean on) {
 		this.showStates = on;
 	}
 
