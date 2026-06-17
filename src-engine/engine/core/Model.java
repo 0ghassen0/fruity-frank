@@ -1,7 +1,10 @@
 package engine.core;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,6 +40,22 @@ public abstract class Model implements Ticker.TickListener {
 
 	protected final Set<Entity> entities;
 
+	// Per-tick scratch buffers
+
+	/** Snapshot of entities for the current {@link #update()} tick. */
+	private final ArrayList<Entity> tickBuffer = new ArrayList<>();
+	/** Snapshot of entities for the current {@link #resolveCollisions()} pass. */
+	private final ArrayList<Entity> collisionSnapshot = new ArrayList<>();
+	/** Stable index of each entity within {@link #collisionSnapshot}. */
+	private final Map<Entity, Integer> collisionIndex = new HashMap<>();
+	/**
+	 * Candidate colliding pairs, encoded as {@code (loIndex << 32) | hiIndex}. A
+	 * long holds a pair of ints (32 bits * 2) -> indexes of collisionSnapshot
+	 */
+	private final ArrayList<Long> candidatePairs = new ArrayList<>();
+	/** De-duplicates pairs that surface via more than one shared cell. */
+	private final HashSet<Long> seenPairs = new HashSet<>();
+
 	// CONSTRUCTOR
 
 	protected Model(Game game) {
@@ -69,18 +88,14 @@ public abstract class Model implements Ticker.TickListener {
 	 * its once-per-tick prep (rotation, buffered turns) and reports how many
 	 * micro-steps it needs so no micro exceeds half a cell; the model then advances
 	 * <i>every</i> stunt by the same number of micro-steps {@code n} (the global
-	 * maximum) in lockstep, resolving collisions after each one. This kills
-	 * tunnelling two ways: a fast entity can't skip a wall between leading-edge
-	 * probes (Step A), and two fast entities can't cross between ticks without
-	 * sharing an overlap test (Step B). A world of slow entities yields
-	 * {@code n == 1} — a single full step plus one collision pass, identical to a
-	 * non-sub-stepped tick.
+	 * maximum) in lockstep, resolving collisions after each one.
 	 */
 	public void update() {
-		Set<Entity> snapshot = new HashSet<>(entities);
+		tickBuffer.clear();
+		tickBuffer.addAll(entities);
 
 		int n = 1;
-		for (Entity e : snapshot) {
+		for (Entity e : tickBuffer) {
 			Stunt s = e.stunt();
 			if (s != null) {
 				s.beginTick(this);
@@ -89,7 +104,7 @@ public abstract class Model implements Ticker.TickListener {
 		}
 
 		for (int i = 0; i < n; i++) {
-			for (Entity e : snapshot) {
+			for (Entity e : tickBuffer) {
 				Stunt s = e.stunt();
 				if (s != null)
 					s.advance(this, i, n);
@@ -113,18 +128,55 @@ public abstract class Model implements Ticker.TickListener {
 	 * Detect every pair of currently intersecting entities and hand each confirmed
 	 * collision to {@link #onCollision(Entity, Entity)} for the game to resolve.
 	 *
+	 * <p>
+	 * Broad phase : cell occupoancy
+	 * 
+	 * <p>
+	 * narrow phase : reject or accept candidates (onCollision() defined by the
+	 * game)
 	 */
 	public void resolveCollisions() {
-		Entity[] snapshot = entities.toArray(new Entity[0]);
-		for (int i = 0; i < snapshot.length; i++) {
-			for (int j = i + 1; j < snapshot.length; j++) {
-				Entity a = snapshot[i];
-				Entity b = snapshot[j];
-				if (a.intersects(b)) {
-					onCollision(a, b); // game outcome first (may remove/destroy a or b)
-					notifyCollision(a, b); // then each survivor's bot/stunt reacts
-					notifyCollision(b, a);
+		collisionSnapshot.clear();
+		collisionIndex.clear();
+		for (Entity e : entities) {
+			collisionIndex.put(e, collisionSnapshot.size());
+			collisionSnapshot.add(e);
+		}
+
+		// --- Broad phase: candidate pairs are cell co-occupants ---
+		candidatePairs.clear();
+		seenPairs.clear();
+		for (Entity a : collisionSnapshot) {
+			int ia = collisionIndex.get(a);
+			for (Grid.Cell cell : a.getHitbox().occupiedCells()) {
+				for (Entity b : cell.entities()) {
+					Integer ibObj = collisionIndex.get(b);
+					if (ibObj == null)
+						continue; // occupant not in this snapshot
+					int ib = ibObj;
+					if (ia >= ib)
+						continue; // emit each unordered pair once, as (lo, hi)
+					long key = ((long) ia << 32) | (ib & 0xffffffffL);
+					if (seenPairs.add(key))
+						candidatePairs.add(key); // first time this pair surfaces
 				}
+			}
+		}
+
+		// --- Deterministic order: ascending (ia, ib) ---
+		Collections.sort(candidatePairs);
+
+		// --- Narrow phase + resolution ---
+		for (long key : candidatePairs) {
+			Entity a = collisionSnapshot.get((int) (key >>> 32));
+			Entity b = collisionSnapshot.get((int) key);
+			// Skip if a prior outcome this pass already removed either entity.
+			if (!entities.contains(a) || !entities.contains(b))
+				continue;
+			if (a.intersects(b)) {
+				onCollision(a, b); // game outcome first (may remove/destroy a or b)
+				notifyCollision(a, b); // then each survivor's bot/stunt reacts
+				notifyCollision(b, a);
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 package frank.game;
 
 import java.awt.Dimension;
+import java.util.Scanner;
 
 import engine.ai.Brain;
 import engine.core.Controller;
@@ -29,6 +30,16 @@ public class GameApp {
 	private static volatile boolean running = true;
 
 	public static void main(String[] args) {
+		long pid = ProcessHandle.current().pid();
+
+		System.out.println("Process ID: " + pid);
+		System.out.println("Press Enter to continue...");
+
+		Scanner scanner = new Scanner(System.in);
+		scanner.nextLine();
+
+		System.out.println("Continuing...");
+
 		FruityFrankMap map = new FruityFrankMap();
 		FruityFrank game = new FruityFrank(map.cols(), map.rows());
 		FruityFrankModel model = new FruityFrankModel(game, map);
@@ -84,7 +95,7 @@ public class GameApp {
 		debug.setShowFps(true);
 		debug.setShowHitboxes(true);
 		debug.setShowStates(true);
-		debug.setShowEntityNames(true);
+		// debug.setShowEntityNames(true);
 		painter.setDebug(debug); // also forwards to the view
 
 		Runtime.boot(new Dimension(pxW, pxH), new Runnable() {

@@ -97,11 +97,11 @@ public final class Debug {
 	}
 
 	public boolean showEntityNames() {
-		return showStates;
+		return showEntityNames;
 	}
 
 	public void setShowEntityNames(boolean on) {
-		this.showStates = on;
+		this.showEntityNames = on;
 	}
 
 	public double pixelPerCm() {
