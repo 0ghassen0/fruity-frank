@@ -10,11 +10,7 @@ import java.util.Deque;
  *
  * <p>
  * Samples older than a fixed time window (default 1&nbsp;s) are evicted, so the
- * reported figures reflect <i>recent</i> behaviour: a one-off hitch at startup
- * does not pollute {@code max} forever. All methods are {@code synchronized}
- * because the producer (e.g. the ticker task) and the consumer (the render
- * task) run on different threads — see the multi-threaded note on
- * {@code engine.core.Model#entities}.
+ * reported figures reflect <i>recent</i> behaviour.
  */
 public final class Stats {
 

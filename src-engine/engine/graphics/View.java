@@ -122,6 +122,8 @@ public class View {
 					DebugOverlay.drawHitbox(g, e, camera, ppc);
 				if (debug.showStates())
 					DebugOverlay.drawState(g, e, camera, ppc);
+				if (debug.showEntityNames())
+					DebugOverlay.drawName(g, e, camera, ppc);
 			}
 	}
 

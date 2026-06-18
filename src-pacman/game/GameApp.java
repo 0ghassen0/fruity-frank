@@ -103,11 +103,11 @@ public class GameApp {
 		// motion ticker (inter-tick timing).
 		Debug debug = new Debug();
 		debug.setPixelPerCm(game.getPixelPerCm()); // fallback mapping when no camera
-		 //debug.setShowTickStats(true);
-		 //debug.setShowPaintStats(true);
+		 debug.setShowTickStats(true);
+		 debug.setShowPaintStats(true);
 		 debug.setShowFps(true);
-		 //debug.setShowHitboxes(true);
-		 //debug.setShowStates(true);
+		 debug.setShowHitboxes(true);
+		 debug.setShowStates(true);
 		painter.setDebug(debug); // also forwards to the view
 
 		Runtime.boot(new Dimension(pxW, pxH), new Runnable() {
