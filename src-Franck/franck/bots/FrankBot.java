@@ -58,7 +58,10 @@ public class FrankBot extends Bot {
         if (stunt == null) return;
         switch (keyCode) {
             case VirtualKeyCodes.VK_RIGHT, VirtualKeyCodes.VK_LEFT,
-                 VirtualKeyCodes.VK_UP,    VirtualKeyCodes.VK_DOWN -> stunt.drive(0, 0);
+                 VirtualKeyCodes.VK_UP,    VirtualKeyCodes.VK_DOWN -> {
+                	 entity.setCoord(entity.position().toISUCoordCentered());
+                	 stunt.drive(0, 0);
+                 }
         }
     }
 }

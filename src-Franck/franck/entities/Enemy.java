@@ -21,7 +21,7 @@ public class Enemy extends Entity implements Categorized {
     public Enemy(String name, Game game, int x, int y, EnemyType type) {
         super(name, game);
         this.type = type;
-        setStep(isu.new Vector(1.0, 1.0));
+        //setStep(isu.new Vector(1.0, 1.0));
         setSize(grid.new Dimension(1, 1).toISUDimension());
         setPosition(grid.new Position(x, y));
         setBounding(game);
