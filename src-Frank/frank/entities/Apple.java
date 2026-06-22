@@ -11,6 +11,7 @@ public class Apple extends Entity implements Categorized {
 
     private boolean falling = false;
     private int fallDelay = -1; // -1 = pas armé
+    private int lowDelay = -1;  // -1 = pas en train d'écraser une ligne fine
 
     public Apple(Game game, int x, int y) {
         super("Apple@" + x + "," + y, game);
@@ -27,6 +28,29 @@ public class Apple extends Entity implements Categorized {
         setBounding(b);
     }
 
+    // LOW
+    public boolean isLowArmed() {
+        return lowDelay >= 0;
+    }
+
+    public void armLow(int ticks) {
+        if (lowDelay < 0)
+            lowDelay = ticks;
+    }
+
+    public void disarmLow() {
+        lowDelay = -1;
+    }
+
+    public void tickLowDelay() {
+        if (lowDelay > 0)
+            lowDelay--;
+    }
+
+    public boolean lowDelayDone() {
+        return lowDelay == 0;
+    }
+    
     public boolean isFalling()        { return falling; }
     public void setFalling(boolean f) { falling = f; }
 
