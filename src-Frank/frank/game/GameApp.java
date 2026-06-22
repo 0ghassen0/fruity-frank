@@ -32,6 +32,8 @@ public class GameApp {
 	private static final int MOTION_TPS = 30, AI_TPS = 8, SPAWN_TPS = 2, RENDER_MS = 33;
 	private static final int VIEW_COLS = 15, VIEW_ROWS = 11;
 	private static final double FRANK_SPEED = 1.0, ENEMY_SPEED = 0.6;
+	public static Debug debug = new Debug();
+	public static FrankPainter painter;
 
 	private static volatile boolean running = true;
 
@@ -95,17 +97,10 @@ public class GameApp {
 				pxH - 24, game.getPixelPerCm());
 		view.setCamera(cam);
 
-		FrankPainter painter = new FrankPainter(view, map, model, cellPx, game.getCmPerCell());
+		painter = new FrankPainter(view, map, model, cellPx, game.getCmPerCell());
 		Brain brain = new Brain(model);
-		Debug debug = new Debug();
-		debug.setPixelPerCm(game.getPixelPerCm()); // fallback mapping when no camera
-		debug.setShowTickStats(true);
-		debug.setShowPaintStats(true);
-		debug.setShowFps(true);
-		debug.setShowHitboxes(true);
-		debug.setShowStates(true);
-		// debug.setShowEntityNames(true);
-		painter.setDebug(debug); // also forwards to the view
+		
+		debug.setPixelPerCm(game.getPixelPerCm());
 
 		Runtime.boot(new Dimension(pxW, pxH), new Runnable() {
 			@Override
