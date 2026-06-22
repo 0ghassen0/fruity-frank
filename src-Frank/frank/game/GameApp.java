@@ -114,7 +114,7 @@ public class GameApp {
 				canvas.set((Canvas.MouseListener) controller);
 				new Ticker(MOTION_TPS).start(model);
 				new Ticker(AI_TPS).start(brain);
-				new Ticker(SPAWN_TPS).start(new Spawner(model, game, map, controller));
+				new Ticker(SPAWN_TPS).start(new Spawner(model, game, map, controller, cam));
 				Runtime.post(new RenderLoop(canvas), RENDER_MS);
 			}
 		}, true);
@@ -198,20 +198,29 @@ public class GameApp {
 		private final FruityFrank game;
 		private final FruityFrankMap map;
 		private final Controller controller;
+		private final Camera camera;
 
-		Spawner(FruityFrankModel m, FruityFrank g, FruityFrankMap mp, Controller c) {
-			model = m;
-			game = g;
-			map = mp;
-			controller = c;
+		Spawner(FruityFrankModel m, FruityFrank g, FruityFrankMap mp, Controller c, Camera cam) {
+		    model = m;
+		    game = g;
+		    map = mp;
+		    controller = c;
+		    camera = cam;
 		}
 
 		@Override
 		public void onTick(double dt) {
-			if (!model.state().isGameOver() && model.state().frankDied()) {
-				model.state().clearDeath();
-				controller.setPlayerBot(spawnFrank(model, game, map));
-			}
+		    if (!model.state().isGameOver() && model.state().frankDied()) {
+		        model.state().clearDeath();
+
+		        FrankBot bot = spawnFrank(model, game, map);
+		        controller.setPlayerBot(bot);
+
+		        Frank frank = model.player();
+		        if (frank != null && camera != null) {
+		            camera.smoothCenterOn(frank.center().x(), frank.center().y());
+		        }
+		    }
 		}
 	}
 
