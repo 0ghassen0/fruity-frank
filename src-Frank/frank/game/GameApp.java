@@ -20,6 +20,8 @@ import frank.graphics.FrankView;
 import oop.graphics.Canvas;
 import oop.tasks.Runnable;
 import oop.tasks.Runtime;
+import java.util.ArrayList;
+import engine.entities.Entity;
 
 public class GameApp {
 
@@ -68,7 +70,8 @@ public class GameApp {
 		}
 
 		FrankBot frankBot = spawnFrank(model, game, map);
-		Controller controller = new Controller(frankBot);
+		FrankController controller = new FrankController(frankBot, model);
+		controller.setRestartAction(() -> resetLevel(model, game, map, controller));
 
 		Enemy.EnemyType[] types = { Enemy.EnemyType.RED, // creuse + poursuit
 				Enemy.EnemyType.GREEN, // poursuit dans tunnels
@@ -117,6 +120,60 @@ public class GameApp {
 		}, true);
 	}
 
+	private static void resetLevel(
+	        FruityFrankModel model,
+	        FruityFrank game,
+	        FruityFrankMap map,
+	        Controller controller
+	) {
+	    for (Entity e : new ArrayList<>(model.entities())) {
+	        model.remove(e);
+	    }
+
+	    model.state().reset();
+
+	    for (FruityFrankMap.Cell c : map.grassCells()) {
+	        model.add(new GrassLow(game, c.col(), c.row()));
+	        model.add(new GrassHigh(game, c.col(), c.row()));
+	    }
+
+	    Fruit.FruitType[] ft = Fruit.FruitType.values();
+	    int ti = 0;
+	    for (FruityFrankMap.Cell c : map.fruitCells()) {
+	        model.add(new Fruit(game, c.col(), c.row(), ft[ti++ % ft.length]));
+	    }
+
+	    for (FruityFrankMap.Cell c : map.cherryCells()) {
+	        model.add(new Cherry(game, c.col(), c.row()));
+	    }
+
+	    model.state().setFruitsRemaining(
+	        map.fruitCells().size() + map.cherryCells().size()
+	    );
+
+	    for (FruityFrankMap.Cell c : map.appleCells()) {
+	        Apple apple = new Apple(game, c.col(), c.row());
+	        apple.setStunt(new BasicStunt(apple));
+	        model.add(apple);
+	    }
+
+	    FrankBot frankBot = spawnFrank(model, game, map);
+	    controller.setPlayerBot(frankBot);
+
+	    Enemy.EnemyType[] types = {
+	        Enemy.EnemyType.RED,
+	        Enemy.EnemyType.GREEN,
+	        Enemy.EnemyType.PURPLE,
+	        Enemy.EnemyType.ORANGE
+	    };
+
+	    int ei = 0;
+	    for (FruityFrankMap.Cell c : map.enemySpawns()) {
+	        spawnEnemy(model, game, c.col(), c.row(), types[ei % types.length]);
+	        ei++;
+	    }
+	}
+	
 	private static FrankBot spawnFrank(FruityFrankModel model, FruityFrank game, FruityFrankMap map) {
 		FruityFrankMap.Cell sp = map.frankSpawn();
 		Frank frank = new Frank("Frank", game, sp.col(), sp.row());

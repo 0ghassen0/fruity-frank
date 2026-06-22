@@ -63,19 +63,11 @@ public class FrankPainter extends Painter {
 		Frank frank = model.player();
 		if (frank != null) {
 			g.setColor(g.getColor(255, 255, 120, 0));
-			for (int i = 0; i < frank.lives(); i++)
-				g.fillOval(canvas.getWidth() - 24 - i * 16, 6, 12, 12);
+			for (int i = 0; i < model.state().lives(); i++)
+			    g.fillOval(canvas.getWidth() - 24 - i * 16, 6, 12, 12);
 		}
 		
-		if (model.state().isVictory()) {
-		    g.setColor(g.getColor(255, 255, 255, 0));
-		    g.drawString("VICTOIRE !", canvas.getWidth() / 2 - 40, canvas.getHeight() / 2);
-		}
-
-		if (model.state().isGameOver()) {
-		    g.setColor(g.getColor(255, 255, 0, 0));
-		    g.drawString("GAME OVER", canvas.getWidth() / 2 - 40, canvas.getHeight() / 2);
-		}
+		paintEndMenu(canvas, g);
 
 		paintCountdown(canvas, g);
 		
@@ -91,7 +83,7 @@ public class FrankPainter extends Painter {
 					: new int[] { (int) e.center().x(), (int) e.center().y() };
 			if (Category.of(e) == Category.FRANK && e instanceof Frank f) {
 				g.setColor(g.getColor(255, 255, 80, 80));
-				g.drawString(f.name() + " vies:" + f.lives(), s[0] - 20, s[1] - cellPx / 2 - 4);
+				g.drawString(f.name() + " vies:" + model.state().lives(), s[0] - 20, s[1] - cellPx / 2 - 4);
 				g.setColor(g.getColor(220, 255, 255, 0));
 			} else if (Category.of(e) == Category.ENEMY || Category.of(e) == Category.APPLE) {
 				g.drawString(e.name(), s[0] - 20, s[1] - cellPx / 2 - 4);
@@ -111,6 +103,30 @@ public class FrankPainter extends Painter {
 
 	    int w = 90;
 	    int h = 110;
+
+	    int x = (canvas.getWidth() - w) / 2;
+	    int y = (canvas.getHeight() - h) / 2;
+
+	    g.drawImage(img, x, y, w, h);
+	}
+	
+	private void paintEndMenu(Canvas canvas, Graphics g) {
+	    if (!model.state().isEnded())
+	        return;
+
+	    if (!model.state().canShowEndMenu())
+	        return;
+
+	    BufferedImage img = view.sprites().gameOverMenu();
+
+	    if (img == null)
+	        return;
+
+	    int originalW = img.getWidth();
+	    int originalH = img.getHeight();
+
+	    int w = Math.min(canvas.getWidth() - 20, originalW);
+	    int h = originalH * w / originalW;
 
 	    int x = (canvas.getWidth() - w) / 2;
 	    int y = (canvas.getHeight() - h) / 2;

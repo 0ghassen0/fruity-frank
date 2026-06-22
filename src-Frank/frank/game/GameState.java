@@ -3,7 +3,9 @@ package frank.game;
 public class GameState {
     private int score;
     private int highScore;
-
+    private int lives = 3;
+    
+    
     private boolean gameOver;
     private boolean frankDied;
 
@@ -11,7 +13,15 @@ public class GameState {
     private boolean victory;
     
     private int countdownTicks = 90;
+    
+    private static final int END_SCREEN_DELAY = 30; // 1 seconde à 30 TPS
+    private int endScreenTicks = -1;
 
+    
+    public int lives() {
+    	return this.lives;
+    }
+    
     public int score() {
         return score;
     }
@@ -48,15 +58,26 @@ public class GameState {
 
     public void setGameOver() {
         gameOver = true;
+        startEndScreenDelay();
     }
 
     public void killedByEnemy() {
-        frankDied = true;
-    }
+        if (gameOver || victory)
+            return;
 
+        loseLife();
+
+        if (lives <= 0) {
+            setGameOver();
+        } else {
+            frankDied = true;
+        }
+    }
     public void setFruitsRemaining(int n) {
         fruitsRemaining = Math.max(0, n);
         victory = fruitsRemaining == 0;
+        if (victory)
+            startEndScreenDelay();
     }
 
     public void collectFruit() {
@@ -68,7 +89,13 @@ public class GameState {
         if (fruitsRemaining <= 0) {
             fruitsRemaining = 0;
             victory = true;
+            startEndScreenDelay();
         }
+    }
+    
+    public void loseLife() {
+        if (lives > 0)
+            lives--;
     }
     
     public boolean isCountingDown() {
@@ -88,5 +115,38 @@ public class GameState {
         if (countdownTicks > 0)
             return 1;
         return 0;
+    }
+    
+    private void startEndScreenDelay() {
+        if (endScreenTicks < 0)
+            endScreenTicks = END_SCREEN_DELAY;
+    }
+
+    public void tickEndScreenDelay() {
+        if (endScreenTicks > 0)
+            endScreenTicks--;
+    }
+
+    public boolean canShowEndMenu() {
+        return endScreenTicks == 0;
+    }
+
+    public boolean isEnded() {
+        return gameOver || victory;
+    }
+    
+    public void reset() {
+        score = 0;
+        lives = 3;
+
+        gameOver = false;
+        frankDied = false;
+
+        fruitsRemaining = 0;
+        victory = false;
+
+        countdownTicks = 90;
+
+        endScreenTicks = -1;
     }
 }

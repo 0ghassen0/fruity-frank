@@ -63,8 +63,10 @@ public class FruityFrankModel extends Model {
 
 	@Override
 	public void update() {
-	    if (state.isGameOver() || state.isVictory())
+	    if (state.isEnded()) {
+	        state.tickEndScreenDelay();
 	        return;
+	    }
 
 	    if (state.isCountingDown()) {
 	        state.tickCountdown();
@@ -338,15 +340,10 @@ public class FruityFrankModel extends Model {
 	         * Important : la pomme ne disparaît PAS après avoir tué.
 	         */
 	        for (Entity occ : new ArrayList<>(below.entities())) {
-	            if (occ instanceof Frank f) {
-	                f.loseLife();
-	                state.killedByEnemy();
-
-	                if (f.isDead())
-	                    state.setGameOver();
-
-	                remove(f);
-	            }
+	        	if (occ instanceof Frank f) {
+	        	    state.killedByEnemy();
+	        	    remove(f);
+	        	}
 
 	            if (occ instanceof Enemy en) {
 	                remove(en);
