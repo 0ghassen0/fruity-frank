@@ -74,6 +74,10 @@ public class FrankBot extends Bot {
             }
         }
 
+        // Mémorise la direction pressée (sert au tir de cerise et à l'orientation).
+        if (entity instanceof Frank f)
+            f.setFacing((int) Math.signum(dvx), (int) Math.signum(dvy));
+
         ISU.Vector current = stunt.velocity();
         boolean moving = current != null && (current.x() != 0 || current.y() != 0);
         boolean perpendicular = moving && (current.x() != 0) != (dvx != 0);

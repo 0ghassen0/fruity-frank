@@ -161,8 +161,10 @@ public class FruityFrankModel extends Model {
 			return;
 
 		double cell = game.getCmPerCell();
-		int dir = player.facingDx();
-		boolean wantsH = (dir != 0) && (player.facingDy() == 0);
+		ISU.Vector v = player.getLinearSpeed();
+		boolean horizontal = v != null && v.x() != 0 && v.y() == 0;
+		int dir = horizontal ? (int) Math.signum(v.x()) : 0;
+		boolean wantsH = horizontal;
 
 		for (Entity e : new ArrayList<>(entities())) {
 			if (!(e instanceof Apple apple))
@@ -418,23 +420,21 @@ public class FruityFrankModel extends Model {
 			return false;
 
 		if (e instanceof Frank frank) {
-			Apple apple = null;
+			boolean hasApple = false;
 			for (Entity o : grid().cellAt(target).entities())
-				if (o instanceof Apple a) {
-					apple = a;
+				if (o instanceof Apple) {
+					hasApple = true;
 					break;
 				}
 
-			if (apple != null) {
-				int dx = target.x() - frank.position().x();
-				int dy = target.y() - frank.position().y();
-				if (dy != 0)
-					return false;
+			if (hasApple) {
+				ISU.Vector toTarget = frank.center().nearestDeltaTo(target.toISUCoordCentered());
+				int dx = (int) Math.signum(toTarget.x());
+				int dy = (int) Math.signum(toTarget.y());
+				if (dy != 0 || dx == 0)
+					return false; // pas de poussée verticale
 				Grid.Position beyond = grid().new Position(target.x() + dx, target.y());
-				boolean ok = canReceiveApple(beyond);
-				System.out.println("[PUSH] Frank veut pousser pomme, case derrière libre ? " + ok + " (beyond="
-						+ beyond.x() + "," + beyond.y() + ")");
-				return ok;
+				return canReceiveApple(beyond);
 			}
 		}
 

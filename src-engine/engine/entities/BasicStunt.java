@@ -1,7 +1,6 @@
 package engine.entities;
 
 import engine.core.Model;
-import engine.geometry.Grid;
 import engine.geometry.ISU;
 
 // == BASIC STUNT ==
@@ -27,8 +26,12 @@ public class BasicStunt extends Stunt {
 	// Single-slot buffered turn (only the most recent request is kept).
 	private double reqVx, reqVy;
 	private boolean hasReq;
-	private boolean stopAtNextCell = false;
-	private Grid.Position cellAtStopRequest;
+	// Stop-at-centre request (set on key release): coast to the next lane centre in
+	// the CURRENT travel direction and halt there. The target is derived from the
+	// live direction on each step, so it follows a buffered turn (Frank stops at the
+	// next cell in the direction he ends up going) instead of being pinned to the
+	// direction held when the key was released.
+	private boolean stopPending = false;
 
 	public BasicStunt(Entity owner) {
 		super(owner);
@@ -41,6 +44,7 @@ public class BasicStunt extends Stunt {
 		reqVx = vx;
 		reqVy = vy;
 		hasReq = true;
+		stopPending = false; // a fresh steering press supersedes a pending stop
 	}
 
 	@Override
@@ -50,6 +54,17 @@ public class BasicStunt extends Stunt {
 
 	@Override
 	public void drive(double vx, double vy) {
+		stopPending = false; // a fresh user command supersedes a pending stop
+		setVelocity(vx, vy);
+	}
+
+	/**
+	 * Set the active velocity without touching a pending stop. Used when the engine
+	 * itself changes direction (applying a buffered turn): a turn must not cancel
+	 * the player's pending stop, otherwise a tapped perpendicular key would leave
+	 * Frank moving forever in the new direction.
+	 */
+	private void setVelocity(double vx, double vy) {
 		clearRequest(); // a direct command supersedes any buffered turn
 		super.drive(vx, vy);
 	}
@@ -61,15 +76,12 @@ public class BasicStunt extends Stunt {
 
 	@Override
 	public void beginTick(Model model) {
-		super.beginTick(model); // count down any timed-action busy timer
+		super.beginTick(model);
 		blocked = false;
-		// Continuous rotation first, so translation uses the updated orientation.
 		double omega = owner.getAngularSpeed_degree();
 		if (omega != 0)
 			owner.turn((int) Math.round(omega));
 
-		// A buffered turn (player pressed perpendicular mid-cell) takes effect once
-		// the entity reaches a crossing — then it snaps onto the new lane's centre.
 		applyBufferedTurnAtCrossing(model);
 	}
 
@@ -89,6 +101,12 @@ public class BasicStunt extends Stunt {
 			return;
 		ISU.Vector micro = isu.new Vector(mx, my);
 
+		// Capture the stop target from the position BEFORE the step, in the current
+		// travel direction: this honours a buffered turn already applied this tick,
+		// and pins the centre being approached so the one just passed is clamped to
+		// rather than skipped.
+		ISU.Coord stopCentre = stopPending ? nextCentreAhead(micro) : null;
+
 		if (stepHitsWall(model, micro)) {
 			snapToLaneCellAlong(micro);
 			blocked = true;
@@ -97,17 +115,47 @@ public class BasicStunt extends Stunt {
 
 		owner.translate(micro);
 
-		// ---- NEW: check if we entered a new cell and need to stop ----
-		if (stopAtNextCell) {
-			Grid.Position currentCell = owner.position();
-			if (!currentCell.equals(cellAtStopRequest)) {
-				// We've entered the next cell – snap to its centre and stop
-				snapToLaneCellAlong(micro);
-				drive(0, 0); // stop moving
-				stopAtNextCell = false; // clear the flag
-				blocked = true; // skip any further micro‑steps this tick
-			}
+		if (stopCentre != null && reachedCentre(stopCentre, micro)) {
+			clampOntoCentre(stopCentre, micro);
+			drive(0, 0); // halt (clears the stop flag)
+			blocked = true;
 		}
+	}
+
+	/** @return the next cell centre at or ahead of the current position along {@code step}. */
+	private ISU.Coord nextCentreAhead(ISU.Vector step) {
+		ISU.Coord c = owner.center();
+		double cm = c.getISU().getCmPerCell();
+		boolean alongX = step.x() != 0;
+		double dir = Math.signum(alongX ? step.x() : step.y());
+		double pos = alongX ? c.x() : c.y();
+		// Cell centres sit at (k + 0.5) * cm. The Coord constructor normalizes the
+		// value back into the world, handling a torus wrap past the seam.
+		double k = pos / cm - 0.5;
+		double targetK = dir > 0 ? Math.ceil(k - 1e-9) : Math.floor(k + 1e-9);
+		double targetVal = (targetK + 0.5) * cm;
+		return alongX ? c.getISU().new Coord(targetVal, c.y()) : c.getISU().new Coord(c.x(), targetVal);
+	}
+
+	/**
+	 * @return whether the centre has been reached or passed along {@code step}
+	 *         (torus-aware: the signed remaining distance flips once passed).
+	 */
+	private boolean reachedCentre(ISU.Coord centre, ISU.Vector step) {
+		boolean alongX = step.x() != 0;
+		double dir = Math.signum(alongX ? step.x() : step.y());
+		ISU.Vector delta = owner.center().nearestDeltaTo(centre);
+		double d = alongX ? delta.x() : delta.y();
+		return dir > 0 ? d <= 1e-9 : d >= -1e-9;
+	}
+
+	/** Clamp the travel-axis coordinate exactly onto {@code centre} (a pull-back, never forward). */
+	private void clampOntoCentre(ISU.Coord centre, ISU.Vector step) {
+		ISU.Coord here = owner.center();
+		boolean alongX = step.x() != 0;
+		double nx = alongX ? centre.x() : here.x();
+		double ny = alongX ? here.y() : centre.y();
+		owner.setCoord(here.getISU().new Coord(nx, ny));
 	}
 
 	// WALL CLEARANCE
@@ -208,22 +256,22 @@ public class BasicStunt extends Stunt {
 
 		double vx = reqVx;
 		double vy = reqVy;
-		drive(vx, vy); // clears the buffer and sets the new active command
+		setVelocity(vx, vy); // sets the new direction but keeps any pending stop alive
 	}
 
 	/**
-	 * Request that the entity stops as soon as it enters the next cell. If already
-	 * stopped, does nothing.
+	 * Request that the entity coasts to the next lane centre and halts there. The
+	 * centre is resolved per micro-step from the live travel direction (see
+	 * {@link #advance}/{@link #nextCentreAhead}) and reached by normal motion, so
+	 * releasing the key grants no free forward distance and the stop correctly
+	 * follows a buffered turn. If already stopped, does nothing.
 	 */
 	public void requestStopAtNextCell() {
 		if (owner == null)
 			return;
 		ISU.Vector speed = owner.getLinearSpeed();
-		if (speed == null || (speed.x() == 0 && speed.y() == 0)) {
-			// Not moving – nothing to do
-			return;
-		}
-		stopAtNextCell = true;
-		cellAtStopRequest = owner.position(); // current cell before moving on
+		if (speed == null || (speed.x() == 0 && speed.y() == 0))
+			return; // not moving – nothing to do
+		stopPending = true;
 	}
 }
