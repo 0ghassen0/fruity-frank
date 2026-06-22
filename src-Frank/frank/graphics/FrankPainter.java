@@ -9,6 +9,7 @@ import frank.game.FruityFrankMap;
 import frank.game.FruityFrankModel;
 import oop.graphics.Canvas;
 import oop.graphics.Graphics;
+import oop.graphics.BufferedImage;
 
 public class FrankPainter extends Painter {
 
@@ -76,6 +77,8 @@ public class FrankPainter extends Painter {
 		    g.drawString("GAME OVER", canvas.getWidth() / 2 - 40, canvas.getHeight() / 2);
 		}
 
+		paintCountdown(canvas, g);
+		
 		if (model.debugMode())
 			debugOverlay(g);
 	}
@@ -94,5 +97,24 @@ public class FrankPainter extends Painter {
 				g.drawString(e.name(), s[0] - 20, s[1] - cellPx / 2 - 4);
 			}
 		}
+	}
+	
+	private void paintCountdown(Canvas canvas, Graphics g) {
+	    if (!model.state().isCountingDown())
+	        return;
+
+	    int n = model.state().countdownNumber();
+	    BufferedImage img = view.sprites().countdownDigit(n);
+
+	    if (img == null)
+	        return;
+
+	    int w = 90;
+	    int h = 110;
+
+	    int x = (canvas.getWidth() - w) / 2;
+	    int y = (canvas.getHeight() - h) / 2;
+
+	    g.drawImage(img, x, y, w, h);
 	}
 }

@@ -10,7 +10,8 @@ public final class FrankSprites {
 	private static final String PLAYER = "sprites/Fruity_Frank-player.png"; // 100x76
 	private static final String ENEMY = "sprites/Fruity_Frank-enemies.png"; // 148x136
 	private static final String ITEMS = "sprites/Fruity_Frank-Items.png"; // 124x64
-
+	private static final String DIGITS = "sprites/sprites321-removebg-preview.png";
+	
 	// Géométrie EXACTE mesurée sur les images :
 	// premier sprite à (4,5), taille 20x15, pas horizontal 24, pas vertical 20
 	private static final int OX = 4, OY = 5; // origine
@@ -20,7 +21,8 @@ public final class FrankSprites {
 	private final BufferedImage[] frank = new BufferedImage[12]; // 4 col x 3 lignes
 	private final BufferedImage[] enemy = new BufferedImage[24]; // 6 col x 4 lignes
 	private final BufferedImage[] item = new BufferedImage[15]; // 5 col x 3 lignes
-
+	private final BufferedImage[] digits = new BufferedImage[10];
+	
 	private boolean loaded = false;
 
 	public void ensureLoaded(Graphics g) {
@@ -30,6 +32,7 @@ public final class FrankSprites {
 		BufferedImage ps = g.load(PLAYER);
 		BufferedImage es = g.load(ENEMY);
 		BufferedImage is = g.load(ITEMS);
+		BufferedImage ds = g.load(DIGITS);
 
 		// FRANK : 4 colonnes × 3 lignes
 		for (int r = 0; r < 3; r++)
@@ -46,9 +49,31 @@ public final class FrankSprites {
 			for (int c = 0; c < 5; c++)
 				item[r * 5 + c] = cell(is, c, r);
 
+		// DIGITS : image avec 0 1 2 3 4 sur la première ligne,
+		// puis 5 6 7 8 9 sur la deuxième ligne.
+		if (ds != null) {
+		    digits[0] = ds.getSubimage(5, 18, 75, 95);
+		    digits[1] = ds.getSubimage(92, 18, 75, 95);
+		    digits[2] = ds.getSubimage(182, 18, 75, 95);
+		    digits[3] = ds.getSubimage(272, 18, 75, 95);
+		    digits[4] = ds.getSubimage(360, 18, 65, 95);
+
+		    digits[5] = ds.getSubimage(5, 145, 75, 95);
+		    digits[6] = ds.getSubimage(92, 145, 75, 95);
+		    digits[7] = ds.getSubimage(182, 145, 75, 95);
+		    digits[8] = ds.getSubimage(272, 145, 75, 95);
+		    digits[9] = ds.getSubimage(360, 145, 65, 95);
+		}
+		
 		loaded = true;
 	}
 
+	public BufferedImage digit(int n) {
+	    if (n < 0 || n > 9)
+	        return null;
+	    return digits[n];
+	}
+	
 	/** Découpe le sprite (colonne c, ligne r) avec la géométrie exacte mesurée. */
 	private BufferedImage cell(BufferedImage sheet, int c, int r) {
 		int x = OX + c * STEP_X;
@@ -117,5 +142,10 @@ public final class FrankSprites {
 
 	public boolean isLoaded() {
 		return loaded;
+	}
+	public BufferedImage countdownDigit(int n) {
+	    if (n < 1 || n > 3)
+	        return null;
+	    return digits[n];
 	}
 }

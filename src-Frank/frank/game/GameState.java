@@ -9,6 +9,8 @@ public class GameState {
 
     private int fruitsRemaining;
     private boolean victory;
+    
+    private int countdownTicks = 90;
 
     public int score() {
         return score;
@@ -67,5 +69,24 @@ public class GameState {
             fruitsRemaining = 0;
             victory = true;
         }
+    }
+    
+    public boolean isCountingDown() {
+        return countdownTicks > 0;
+    }
+
+    public void tickCountdown() {
+        if (countdownTicks > 0)
+            countdownTicks--;
+    }
+
+    public int countdownNumber() {
+        if (countdownTicks > 60)
+            return 3;
+        if (countdownTicks > 30)
+            return 2;
+        if (countdownTicks > 0)
+            return 1;
+        return 0;
     }
 }

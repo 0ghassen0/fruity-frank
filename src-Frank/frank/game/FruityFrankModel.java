@@ -63,17 +63,22 @@ public class FruityFrankModel extends Model {
 
 	@Override
 	public void update() {
-		if (state.isGameOver() || state.isVictory())
-		    return;
+	    if (state.isGameOver() || state.isVictory())
+	        return;
 
-		super.update();
-		tick++;
-		digGrass();
-		updateGrassFade();
-		pushApples();
-		collectUnderFrank();
-		updateAppleFall();
-		removeBadCherryProjectiles();
+	    if (state.isCountingDown()) {
+	        state.tickCountdown();
+	        return;
+	    }
+
+	    super.update();
+	    tick++;
+	    digGrass();
+	    updateGrassFade();
+	    pushApples();
+	    collectUnderFrank();
+	    updateAppleFall();
+	    removeBadCherryProjectiles();
 	}
 
 	// ============================================================
