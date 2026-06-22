@@ -1,4 +1,4 @@
 Fleeing(Flee) {
 	*(FLee) 
-	| Closest(A) ? Move(Opp($.d)) :(Flee)
+	| Closest(A) ? Move(opposite($.d)) :(Flee)
 }

@@ -20,6 +20,12 @@ import frank.graphics.FrankView;
 import oop.graphics.Canvas;
 import oop.tasks.Runnable;
 import oop.tasks.Runtime;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import engine.gal.aut.Automaton;
+import engine.gal.aut.GALBot;
+import gal.ast.GalCompiler;
 
 public class GameApp {
 
@@ -71,9 +77,12 @@ public class GameApp {
 				Enemy.EnemyType.PURPLE, // fuit
 				Enemy.EnemyType.ORANGE // creuse + poursuit
 		};
+
+		Map<String, Automaton> galAutomata = loadGalAutomata();
+
 		int ei = 0;
 		for (FruityFrankMap.Cell c : map.enemySpawns()) {
-			spawnEnemy(model, game, c.col(), c.row(), types[ei % types.length]);
+			spawnEnemy(model, game, c.col(), c.row(), types[ei % types.length], galAutomata);
 			ei++;
 		}
 
@@ -124,12 +133,17 @@ public class GameApp {
 		return bot;
 	}
 
-	private static void spawnEnemy(FruityFrankModel model, FruityFrank game, int x, int y, Enemy.EnemyType type) {
-		Enemy enemy = new Enemy("Enemy_" + type + "@" + x + "," + y, game, x, y, type);
-		enemy.setStunt(new BasicStunt(enemy));
-		var automaton = (type == Enemy.EnemyType.PURPLE) ? FrankAutomata.enemyFlee() : FrankAutomata.enemyChase();
-		enemy.setBot(new GALBot(enemy, automaton, ENEMY_SPEED, new FrankCategories()));
-		model.add(enemy);
+	private static void spawnEnemy(FruityFrankModel model, FruityFrank game, int x, int y, Enemy.EnemyType type,
+	        Map<String, Automaton> galAutomata) {
+	    Enemy enemy = new Enemy("Enemy_" + type + "@" + x + "," + y, game, x, y, type);
+	    enemy.setStunt(new BasicStunt(enemy));
+
+	    Automaton automaton = (type == Enemy.EnemyType.PURPLE)
+	            ? galAutomata.getOrDefault("Fleeing", FrankAutomata.enemyFlee())
+	            : galAutomata.getOrDefault("Tracker", FrankAutomata.enemyChase());
+
+	    enemy.setBot(new GALBot(enemy, automaton, ENEMY_SPEED, new FrankCategories()));
+	    model.add(enemy);
 	}
 
 	private static class Spawner implements Ticker.TickListener {
@@ -168,5 +182,27 @@ public class GameApp {
 			canvas.repaint();
 			Runtime.post(this, RENDER_MS);
 		}
+	}
+	
+	private static Map<String, Automaton> loadGalAutomata() {
+	    Map<String, Automaton> automata = new LinkedHashMap<>();
+
+	    String[] files = {
+	            "gal_fsm/Tracking.gal",
+	            "gal_fsm/Flee.gal",
+	            "gal_fsm/EnemyRandom.gal",
+	            "gal_fsm/FruitFall.gal"
+	    };
+
+	    for (String file : files) {
+	        try {
+	            automata.putAll(GalCompiler.fromFile(file));
+	        } catch (Exception e) {
+	            System.err.println("GAL ignoré: " + file + " -> " + e.getMessage());
+	        }
+	    }
+
+	    System.out.println("Automates GAL chargés: " + automata.keySet());
+	    return automata;
 	}
 }
