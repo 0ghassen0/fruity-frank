@@ -117,8 +117,11 @@ public class FrankPainter extends Painter {
 	    if (!model.state().canShowEndMenu())
 	        return;
 
-	    BufferedImage img = view.sprites().gameOverMenu();
-
+	    BufferedImage img = model.state().isVictory()
+	            ? view.sprites().victoryMenu()
+	            : view.sprites().gameOverMenu();
+	    
+	    
 	    if (img == null)
 	        return;
 
