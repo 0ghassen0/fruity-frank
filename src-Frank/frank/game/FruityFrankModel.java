@@ -24,6 +24,7 @@ public class FruityFrankModel extends Model {
 	private static final double CHERRY_SPEED = 4.0;
 	private static final int FALL_DELAY_TICKS = 30; // ~1 s à 30 TPS
 	private static final int FALL_STEP_TICKS = 3; // vitesse de chute : 1 case / 3 ticks
+	private static final int LOW_DELAY_TICKS = 15; // pause sur une ligne fine avant écrasement
 
 	public FruityFrankModel(Game game, FruityFrankMap map) {
 		super(game);
@@ -31,6 +32,7 @@ public class FruityFrankModel extends Model {
 		this.map = map;
 	}
 
+	
 	public void setPlayer(Frank p) {
 		this.player = p;
 	}
@@ -61,6 +63,9 @@ public class FruityFrankModel extends Model {
 
 	@Override
 	public void update() {
+		if (state.isGameOver() || state.isVictory())
+		    return;
+
 		super.update();
 		tick++;
 		digGrass();
@@ -204,22 +209,31 @@ public class FruityFrankModel extends Model {
 	// ============================================================
 
 	private void collectUnderFrank() {
-		if (player == null || !entities().contains(player))
-			return;
-		Grid.Cell cell = grid().cellAt(player.position());
-		List<Entity> got = new ArrayList<>();
-		for (Entity e : cell.entities())
-			if (e instanceof Fruit || e instanceof Cherry)
-				got.add(e);
-		for (Entity e : got) {
-			remove(e);
-			if (e instanceof Fruit f)
-				state.addScore(pointsForFruit(f));
-			if (e instanceof Cherry) {
-				player.pickCherry();
-				state.addScore(50);
-			}
-		}
+	    if (player == null || !entities().contains(player))
+	        return;
+
+	    Grid.Cell cell = grid().cellAt(player.position());
+	    List<Entity> got = new ArrayList<>();
+
+	    for (Entity e : cell.entities()) {
+	        if (e instanceof Fruit || e instanceof Cherry)
+	            got.add(e);
+	    }
+
+	    for (Entity e : got) {
+	        remove(e);
+
+	        if (e instanceof Fruit f) {
+	            state.addScore(pointsForFruit(f));
+	            state.collectFruit();
+	        }
+
+	        if (e instanceof Cherry) {
+	            player.pickCherry();
+	            state.addScore(50);
+	            state.collectFruit();
+	        }
+	    }
 	}
 
 	// ============================================================
@@ -227,69 +241,120 @@ public class FruityFrankModel extends Model {
 	// ============================================================
 
 	private void updateAppleFall() {
-		for (Entity e : new ArrayList<>(entities())) {
-			if (!(e instanceof Apple apple))
-				continue;
+	    for (Entity e : new ArrayList<>(entities())) {
+	        if (!(e instanceof Apple apple))
+	            continue;
 
-			Grid.Position pos = apple.position();
-			Grid.Position south = grid().new Position(pos.x(), pos.y() + 1);
+	        Grid.Position pos = apple.position();
+	        Grid.Position south = grid().new Position(pos.x(), pos.y() + 1);
 
-			// SUPPORT = ce qui RETIENT la pomme.
-			// Le GrassLow (1cm) ne retient PAS : la pomme l'écrase en tombant.
-			boolean supported = map.isWall(south.x(), south.y()) || cellHas(south, GrassHigh.class) // gros gazon =
-																									// support
-					|| cellHas(south, Apple.class) // autre pomme = support
-					|| cellHas(south, Fruit.class); // fruit = support
-			// NOTE : GrassLow n'est PAS dans la liste → la pomme tombe à travers/dessus
+	        /*
+	         * Support solide :
+	         * - mur / bord
+	         * - GrassHigh = ligne épaisse
+	         * - autre pomme
+	         * - fruit / cerise
+	         *
+	         * Si la pomme rencontre ça, elle s'arrête.
+	         */
+	        boolean supported =
+	                map.isWall(south.x(), south.y())
+	                || cellHas(south, GrassHigh.class)
+	                || cellHas(south, Apple.class)
+	                || cellHas(south, Fruit.class)
+	                || cellHas(south, Cherry.class);
 
-			if (supported) {
-				apple.disarm();
-				apple.setFalling(false);
-				continue;
-			}
+	        if (supported) {
+	            apple.disarm();
+	            apple.disarmLow();
+	            apple.setFalling(false);
+	            continue;
+	        }
 
-			// Pas de support : armer le délai d'~1s
-			if (!apple.isArmed()) {
-				apple.arm(FALL_DELAY_TICKS);
-				continue;
-			}
+	        /*
+	         * Ligne fine :
+	         * GrassLow n'est pas un vrai support solide.
+	         * La pomme s'arrête un petit moment dessus,
+	         * puis elle l'écrase et continue à tomber.
+	         */
+	        if (cellHas(south, GrassLow.class)) {
+	            apple.setFalling(true);
 
-			apple.tickDelay();
-			if (!apple.delayDone())
-				continue;
+	            if (!apple.isLowArmed()) {
+	                apple.armLow(LOW_DELAY_TICKS);
+	                continue;
+	            }
 
-			apple.setFalling(true);
-			if (tick % FALL_STEP_TICKS != 0)
-				continue; // ralentit la chute
+	            apple.tickLowDelay();
 
-			// La pomme tombe dans la case du dessous
-			Grid.Cell below = grid().cellAt(south);
-			boolean killed = false;
-			for (Entity occ : new ArrayList<>(below.entities())) {
-				if (occ instanceof Frank f) {
-					f.loseLife();
-					state.killedByEnemy();
-					if (f.isDead())
-						state.setGameOver();
-					remove(f);
-					killed = true;
-				}
-				if (occ instanceof Enemy en) {
-					remove(en);
-					state.addScore(500);
-					killed = true;
-				}
-				// Le petit gazon est ÉCRASÉ par la pomme qui tombe dessus
-				if (occ instanceof GrassLow gl)
-					remove(gl);
-			}
-			if (killed) {
-				remove(apple);
-				continue;
-			}
+	            if (!apple.lowDelayDone())
+	                continue;
 
-			apple.setPosition(south);
-		}
+	            // Le délai est terminé : la pomme écrase la ligne fine.
+	            for (Entity occ : new ArrayList<>(grid().cellAt(south).entities())) {
+	                if (occ instanceof GrassLow)
+	                    remove(occ);
+	            }
+
+	            apple.disarmLow();
+	            // Pas de continue ici : la pomme va descendre dans cette case plus bas.
+	        }
+
+	        /*
+	         * Aucun support :
+	         * Si la pomme vient de perdre son support, elle attend avant de tomber.
+	         * C'est le cas où Frank creuse sous la pomme.
+	         */
+	        if (!apple.isFalling()) {
+	            if (!apple.isArmed()) {
+	                apple.arm(FALL_DELAY_TICKS);
+	                continue;
+	            }
+
+	            apple.tickDelay();
+
+	            if (!apple.delayDone())
+	                continue;
+
+	            apple.setFalling(true);
+	        }
+
+	        /*
+	         * Ralentissement de la chute :
+	         * la pomme descend d'une case seulement tous les FALL_STEP_TICKS.
+	         */
+	        if (tick % FALL_STEP_TICKS != 0)
+	            continue;
+
+	        Grid.Cell below = grid().cellAt(south);
+
+	        /*
+	         * Collision avec les entités dans la case du dessous.
+	         * Important : la pomme ne disparaît PAS après avoir tué.
+	         */
+	        for (Entity occ : new ArrayList<>(below.entities())) {
+	            if (occ instanceof Frank f) {
+	                f.loseLife();
+	                state.killedByEnemy();
+
+	                if (f.isDead())
+	                    state.setGameOver();
+
+	                remove(f);
+	            }
+
+	            if (occ instanceof Enemy en) {
+	                remove(en);
+	                state.addScore(500);
+	            }
+
+	            if (occ instanceof GrassLow) {
+	                remove(occ);
+	            }
+	        }
+
+	        apple.setPosition(south);
+	    }
 	}
 	// ============================================================
 	// PROJECTILES CERISE

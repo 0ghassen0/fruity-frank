@@ -27,10 +27,12 @@ public class Frank extends Entity implements Categorized {
         b.add(new Circle(center.mkCopy(), 0.35 * game.getCmPerCell()));
         setBounding(b);
     }
-
+    
+    
     public int  lives()       { return lives; }
     public void loseLife()    { lives--; }
     public boolean isDead()   { return lives <= 0; }
+    public static void resetLives() {lives = 3;}
     public boolean hasCherry(){ return hasCherry; }
     public void pickCherry()  { hasCherry = true; }
     public void useCherry()   { hasCherry = false; }

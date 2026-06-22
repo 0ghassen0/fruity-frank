@@ -57,6 +57,10 @@ public class GameApp {
 		for (FruityFrankMap.Cell c : map.cherryCells())
 			model.add(new Cherry(game, c.col(), c.row()));
 
+		model.state().setFruitsRemaining(
+			    map.fruitCells().size() + map.cherryCells().size()
+			);
+		
 		for (FruityFrankMap.Cell c : map.appleCells()) {
 			Apple apple = new Apple(game, c.col(), c.row());
 			apple.setStunt(new BasicStunt(apple)); // pour le push glissant ; toujours pas de bot
