@@ -57,6 +57,9 @@ public class FrankView extends View {
     }
 
     public Model model() { return model; }
+    public FrankSprites sprites() {
+    	return this.sprites;
+    }
 
     private int zOrderFor(Category cat) {
         return switch (cat) {

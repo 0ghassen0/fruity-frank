@@ -63,17 +63,28 @@ public class FruityFrankModel extends Model {
 
 	@Override
 	public void update() {
-		if (state.isGameOver() || state.isVictory())
+		
+		if (state.isStartMenu())
 		    return;
+		
+	    if (state.isEnded()) {
+	        state.tickEndScreenDelay();
+	        return;
+	    }
 
-		super.update();
-		tick++;
-		digGrass();
-		updateGrassFade();
-		pushApples();
-		collectUnderFrank();
-		updateAppleFall();
-		removeBadCherryProjectiles();
+	    if (state.isCountingDown()) {
+	        state.tickCountdown();
+	        return;
+	    }
+
+	    super.update();
+	    tick++;
+	    digGrass();
+	    updateGrassFade();
+	    pushApples();
+	    collectUnderFrank();
+	    updateAppleFall();
+	    removeBadCherryProjectiles();
 	}
 
 	// ============================================================
@@ -350,15 +361,10 @@ public class FruityFrankModel extends Model {
 	         * avoir écrasé.
 	         */
 	        for (Entity occ : new ArrayList<>(below.entities())) {
-	            if (occ instanceof Frank f) {
-	                f.loseLife();
-	                state.killedByEnemy();
-
-	                if (f.isDead())
-	                    state.setGameOver();
-
-	                remove(f);
-	            }
+	        	if (occ instanceof Frank f) {
+	        	    state.killedByEnemy();
+	        	    remove(f);
+	        	}
 
 	            if (occ instanceof Enemy en) {
 	                remove(en);

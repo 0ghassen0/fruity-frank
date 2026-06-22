@@ -18,11 +18,12 @@ import frank.graphics.FrankView;
 import oop.graphics.Canvas;
 import oop.tasks.Runnable;
 import oop.tasks.Runtime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import engine.entities.Entity;
 import engine.gal.aut.Automaton;
-import engine.gal.aut.GALBot;
 import gal.ast.GalCompiler;
 
 public class GameApp {
@@ -97,7 +98,8 @@ public class GameApp {
 
 		// Frank
 		FrankBot frankBot = spawnFrank(model, game, map);
-		Controller controller = new Controller(frankBot);
+		FrankController controller = new FrankController(frankBot, model);
+		controller.setRestartAction(() -> resetLevel(model, game, map, controller));
 
 		// Ennemis : types lus depuis la config
 		// format dans le fichier :
@@ -148,12 +150,68 @@ public class GameApp {
 				canvas.set((Canvas.MouseListener) controller);
 				new Ticker(MOTION_TPS).start(model);
 				new Ticker(AI_TPS).start(brain);
-				new Ticker(SPAWN_TPS).start(new Spawner(model, game, map, controller));
+				new Ticker(SPAWN_TPS).start(new Spawner(model, game, map, controller, cam));
 				Runtime.post(new RenderLoop(canvas), RENDER_MS);
 			}
 		}, true);
 	}
 
+	private static void resetLevel(
+	        FruityFrankModel model,
+	        FruityFrank game,
+	        FruityFrankMap map,
+	        Controller controller
+	) {
+	    for (Entity e : new ArrayList<>(model.entities())) {
+	        model.remove(e);
+	    }
+
+	    model.state().reset();
+
+	    for (FruityFrankMap.Cell c : map.grassCells()) {
+	        model.add(new GrassLow(game, c.col(), c.row()));
+	        model.add(new GrassHigh(game, c.col(), c.row()));
+	    }
+
+	    Fruit.FruitType[] ft = Fruit.FruitType.values();
+	    int ti = 0;
+	    for (FruityFrankMap.Cell c : map.fruitCells()) {
+	        model.add(new Fruit(game, c.col(), c.row(), ft[ti++ % ft.length]));
+	    }
+
+	    for (FruityFrankMap.Cell c : map.cherryCells()) {
+	        model.add(new Cherry(game, c.col(), c.row()));
+	    }
+
+	    model.state().setFruitsRemaining(
+	        map.fruitCells().size() + map.cherryCells().size()
+	    );
+
+	    for (FruityFrankMap.Cell c : map.appleCells()) {
+	        Apple apple = new Apple(game, c.col(), c.row());
+	        apple.setStunt(new BasicStunt(apple));
+	        model.add(apple);
+	    }
+
+	    FrankBot frankBot = spawnFrank(model, game, map);
+	    controller.setPlayerBot(frankBot);
+
+	    Enemy.EnemyType[] types = {
+	        Enemy.EnemyType.RED,
+	        Enemy.EnemyType.GREEN,
+	        Enemy.EnemyType.PURPLE,
+	        Enemy.EnemyType.ORANGE
+	    };
+
+	    Map<String, Automaton> galAutomata = loadGalAutomata();
+
+	    int ei = 0;
+	    for (FruityFrankMap.Cell c : map.enemySpawns()) {
+	        spawnEnemy(model, game, c.col(), c.row(), types[ei % types.length], galAutomata);
+	        ei++;
+	    }
+	}
+	
 	private static FrankBot spawnFrank(FruityFrankModel model, FruityFrank game, FruityFrankMap map) {
 		FruityFrankMap.Cell sp = map.frankSpawn();
 		Frank frank = new Frank("Frank", game, sp.col(), sp.row());
@@ -183,20 +241,29 @@ public class GameApp {
 		private final FruityFrank game;
 		private final FruityFrankMap map;
 		private final Controller controller;
+		private final Camera camera;
 
-		Spawner(FruityFrankModel m, FruityFrank g, FruityFrankMap mp, Controller c) {
-			model = m;
-			game = g;
-			map = mp;
-			controller = c;
+		Spawner(FruityFrankModel m, FruityFrank g, FruityFrankMap mp, Controller c, Camera cam) {
+		    model = m;
+		    game = g;
+		    map = mp;
+		    controller = c;
+		    camera = cam;
 		}
 
 		@Override
 		public void onTick(double dt) {
-			if (!model.state().isGameOver() && model.state().frankDied()) {
-				model.state().clearDeath();
-				controller.setPlayerBot(spawnFrank(model, game, map));
-			}
+		    if (!model.state().isGameOver() && model.state().frankDied()) {
+		        model.state().clearDeath();
+
+		        FrankBot bot = spawnFrank(model, game, map);
+		        controller.setPlayerBot(bot);
+
+		        Frank frank = model.player();
+		        if (frank != null && camera != null) {
+		            camera.smoothCenterOn(frank.center().x(), frank.center().y());
+		        }
+		    }
 		}
 	}
 
