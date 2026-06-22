@@ -1,7 +1,6 @@
 package frank.game;
 
 import java.awt.Dimension;
-import java.util.Scanner;
 
 import engine.ai.Brain;
 import engine.core.Controller;
@@ -23,62 +22,94 @@ import oop.tasks.Runtime;
 
 public class GameApp {
 
-	private static final int MOTION_TPS = 30, AI_TPS = 8, SPAWN_TPS = 2, RENDER_MS = 33;
-	private static final int VIEW_COLS = 15, VIEW_ROWS = 11;
-	private static final double FRANK_SPEED = 1.0, ENEMY_SPEED = 0.6;
+	// Ces constantes NE CHANGENT PAS selon la carte → restent en dur
+	private static final int MOTION_TPS = 30;
+	private static final int AI_TPS = 8;
+	private static final int SPAWN_TPS = 2;
+	private static final int RENDER_MS = 33;
+
+	// Ces valeurs viennent de la config → plus de static final
+	private static int viewCols;
+	private static int viewRows;
+	private static double frankSpeed;
+	private static double enemySpeed;
 
 	private static volatile boolean running = true;
 
 	public static void main(String[] args) {
-		long pid = ProcessHandle.current().pid();
 
-		System.out.println("Process ID: " + pid);
-		System.out.println("Press Enter to continue...");
+		// Charge la config depuis le fichier passé en argument,
+		// ou "config/game.cfg" par défaut
+		String configPath = (args.length > 0) ? args[0] : "game.cfg";
+		GameConfig cfg = new GameConfig(configPath);
+		System.out.println("[DEBUG] dossier de travail = " + new java.io.File(".").getAbsolutePath());
+		System.out.println("[DEBUG] game.cfg existe ? " + new java.io.File("game.cfg").exists());
 
-		Scanner scanner = new Scanner(System.in);
-		scanner.nextLine();
+		// Lit les paramètres depuis la config (avec valeurs par défaut)
+		viewCols = cfg.getInt("view_cols", 15);
+		viewRows = cfg.getInt("view_rows", 11);
+		frankSpeed = cfg.getDouble("frank_speed", 1.0);
+		enemySpeed = cfg.getDouble("enemy_speed", 0.6);
 
-		System.out.println("Continuing...");
+		System.out.println("[GameApp] viewCols=" + viewCols + " viewRows=" + viewRows + " frankSpeed=" + frankSpeed
+				+ " enemySpeed=" + enemySpeed);
 
-		FruityFrankMap map = new FruityFrankMap();
+		// La map lit ses propres paramètres (cols, rows, ratios...) depuis la config
+		FruityFrankMap map = new FruityFrankMap(cfg);
 		FruityFrank game = new FruityFrank(map.cols(), map.rows());
 		FruityFrankModel model = new FruityFrankModel(game, map);
 
+		// Gazon
 		for (FruityFrankMap.Cell c : map.grassCells()) {
 			model.add(new GrassLow(game, c.col(), c.row()));
 			model.add(new GrassHigh(game, c.col(), c.row()));
 		}
 
+		// Fruits
 		Fruit.FruitType[] ft = Fruit.FruitType.values();
 		int ti = 0;
 		for (FruityFrankMap.Cell c : map.fruitCells())
 			model.add(new Fruit(game, c.col(), c.row(), ft[ti++ % ft.length]));
 
+		// Cerises
 		for (FruityFrankMap.Cell c : map.cherryCells())
 			model.add(new Cherry(game, c.col(), c.row()));
 
+		// Pommes
 		for (FruityFrankMap.Cell c : map.appleCells()) {
 			Apple apple = new Apple(game, c.col(), c.row());
-			apple.setStunt(new BasicStunt(apple)); // pour le push glissant ; toujours pas de bot
+			apple.setStunt(new BasicStunt(apple));
 			model.add(apple);
 		}
 
+		// Frank
 		FrankBot frankBot = spawnFrank(model, game, map);
 		Controller controller = new Controller(frankBot);
 
-		Enemy.EnemyType[] types = { Enemy.EnemyType.RED, // creuse + poursuit
-				Enemy.EnemyType.GREEN, // poursuit dans tunnels
-				Enemy.EnemyType.PURPLE, // fuit
-				Enemy.EnemyType.ORANGE // creuse + poursuit
-		};
+		// Ennemis : types lus depuis la config
+		// format dans le fichier :
+		// enemy_types = RED,GREEN,PURPLE,ORANGE
+		String typesStr = cfg.getString("enemy_types", "RED,GREEN,PURPLE,ORANGE");
+		String[] typeNames = typesStr.split(",");
+
 		int ei = 0;
 		for (FruityFrankMap.Cell c : map.enemySpawns()) {
-			spawnEnemy(model, game, c.col(), c.row(), types[ei % types.length]);
+			String typeName = typeNames[ei % typeNames.length].trim();
+			Enemy.EnemyType type;
+			try {
+				type = Enemy.EnemyType.valueOf(typeName);
+			} catch (IllegalArgumentException e) {
+				System.err.println("[GameApp] type ennemi inconnu : " + typeName + " → RED par défaut");
+				type = Enemy.EnemyType.RED;
+			}
+			spawnEnemy(model, game, c.col(), c.row(), type);
 			ei++;
 		}
 
+		// Rendu
 		int cellPx = (int) Math.round(game.getCmPerCell() * game.getPixelPerCm());
-		int pxW = VIEW_COLS * cellPx, pxH = VIEW_ROWS * cellPx + 24;
+		int pxW = viewCols * cellPx;
+		int pxH = viewRows * cellPx + 24;
 
 		FrankSprites sprites = new FrankSprites();
 		FrankView view = new FrankView(game, model, sprites);
@@ -88,15 +119,15 @@ public class GameApp {
 
 		FrankPainter painter = new FrankPainter(view, map, model, cellPx, game.getCmPerCell());
 		Brain brain = new Brain(model);
+
 		Debug debug = new Debug();
-		debug.setPixelPerCm(game.getPixelPerCm()); // fallback mapping when no camera
+		debug.setPixelPerCm(game.getPixelPerCm());
 		debug.setShowTickStats(true);
 		debug.setShowPaintStats(true);
 		debug.setShowFps(true);
 		debug.setShowHitboxes(true);
 		debug.setShowStates(true);
-		// debug.setShowEntityNames(true);
-		painter.setDebug(debug); // also forwards to the view
+		painter.setDebug(debug);
 
 		Runtime.boot(new Dimension(pxW, pxH), new Runnable() {
 			@Override
@@ -117,7 +148,7 @@ public class GameApp {
 		FruityFrankMap.Cell sp = map.frankSpawn();
 		Frank frank = new Frank("Frank", game, sp.col(), sp.row());
 		frank.setStunt(new BasicStunt(frank));
-		FrankBot bot = new FrankBot(frank, FRANK_SPEED);
+		FrankBot bot = new FrankBot(frank, frankSpeed); // ← vitesse de la config
 		frank.setBot(bot);
 		model.add(frank);
 		model.setPlayer(frank);
@@ -128,7 +159,7 @@ public class GameApp {
 		Enemy enemy = new Enemy("Enemy_" + type + "@" + x + "," + y, game, x, y, type);
 		enemy.setStunt(new BasicStunt(enemy));
 		var automaton = (type == Enemy.EnemyType.PURPLE) ? FrankAutomata.enemyFlee() : FrankAutomata.enemyChase();
-		enemy.setBot(new GALBot(enemy, automaton, ENEMY_SPEED, new FrankCategories()));
+		enemy.setBot(new GALBot(enemy, automaton, enemySpeed, new FrankCategories())); // ← vitesse de la config
 		model.add(enemy);
 	}
 
