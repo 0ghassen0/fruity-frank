@@ -139,8 +139,8 @@ public class GameApp {
 	    enemy.setStunt(new BasicStunt(enemy));
 
 	    Automaton automaton = (type == Enemy.EnemyType.PURPLE)
-	            ? galAutomata.getOrDefault("Fleeing", FrankAutomata.enemyFlee())
-	            : galAutomata.getOrDefault("Tracker", FrankAutomata.enemyChase());
+	            ? galAutomata.get("Fleeing")
+	            : galAutomata.get("Tracker");
 
 	    enemy.setBot(new GALBot(enemy, automaton, ENEMY_SPEED, new FrankCategories()));
 	    model.add(enemy);
