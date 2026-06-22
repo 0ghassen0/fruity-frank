@@ -7,6 +7,7 @@ import java.util.TreeMap;
 
 import engine.debug.Debug;
 import engine.debug.DebugOverlay;
+import engine.entities.Entity;
 import oop.graphics.Graphics;
 
 /**
@@ -115,7 +116,7 @@ public class View {
 		double ppc = debug.pixelPerCm();
 		for (List<Avatar> layer : layers.values())
 			for (Avatar avatar : layer) {
-				engine.entities.Entity e = avatar.entity();
+				Entity e = avatar.entity();
 				if (e == null)
 					continue;
 				if (debug.showHitboxes())

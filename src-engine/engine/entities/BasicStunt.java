@@ -1,6 +1,7 @@
 package engine.entities;
 
 import engine.core.Model;
+import engine.geometry.Grid;
 import engine.geometry.ISU;
 
 // == BASIC STUNT ==
@@ -26,6 +27,8 @@ public class BasicStunt extends Stunt {
 	// Single-slot buffered turn (only the most recent request is kept).
 	private double reqVx, reqVy;
 	private boolean hasReq;
+	private boolean stopAtNextCell = false;
+	private Grid.Position cellAtStopRequest;
 
 	public BasicStunt(Entity owner) {
 		super(owner);
@@ -72,16 +75,13 @@ public class BasicStunt extends Stunt {
 
 	@Override
 	public void advance(Model model, int i, int n) {
-		if (blocked) // already wedged against a wall this tick
+		if (blocked)
 			return;
 
 		ISU.Vector speed = owner.getLinearSpeed();
 		if (speed == null || (speed.x() == 0 && speed.y() == 0))
 			return;
 
-		// This micro = the i-th of n equal slices of the full step, with the last
-		// slice computed as the remainder so the n slices sum to the step exactly
-		// (n == 1 reproduces a single full translate bit-for-bit).
 		ISU isu = owner.center().getISU();
 		double mx = (i < n - 1) ? speed.x() / n : speed.x() - speed.x() / n * (n - 1);
 		double my = (i < n - 1) ? speed.y() / n : speed.y() - speed.y() / n * (n - 1);
@@ -89,15 +89,6 @@ public class BasicStunt extends Stunt {
 			return;
 		ISU.Vector micro = isu.new Vector(mx, my);
 
-		// Consult the game's rule before committing the micro (walls, blocked cells).
-		// The probe is the body's *leading edge* (half a cell ahead along the travel
-		// axis), not the centre: checking only the centre lets the body slide half-way
-		// into a wall before the centre crosses, leaving it wedged and unable to turn.
-		// Capping each micro at half a cell guarantees this probe never skips a wall.
-		// When the edge would enter a wall, stop and snap flush onto the current lane
-		// cell's centre so the entity rests against the wall and can turn aside; the
-		// command is kept (not zeroed) so the entity keeps pushing / can turn next
-		// tick.
 		if (stepHitsWall(model, micro)) {
 			snapToLaneCellAlong(micro);
 			blocked = true;
@@ -105,6 +96,18 @@ public class BasicStunt extends Stunt {
 		}
 
 		owner.translate(micro);
+
+		// ---- NEW: check if we entered a new cell and need to stop ----
+		if (stopAtNextCell) {
+			Grid.Position currentCell = owner.position();
+			if (!currentCell.equals(cellAtStopRequest)) {
+				// We've entered the next cell – snap to its centre and stop
+				snapToLaneCellAlong(micro);
+				drive(0, 0); // stop moving
+				stopAtNextCell = false; // clear the flag
+				blocked = true; // skip any further micro‑steps this tick
+			}
+		}
 	}
 
 	// WALL CLEARANCE
@@ -206,5 +209,21 @@ public class BasicStunt extends Stunt {
 		double vx = reqVx;
 		double vy = reqVy;
 		drive(vx, vy); // clears the buffer and sets the new active command
+	}
+
+	/**
+	 * Request that the entity stops as soon as it enters the next cell. If already
+	 * stopped, does nothing.
+	 */
+	public void requestStopAtNextCell() {
+		if (owner == null)
+			return;
+		ISU.Vector speed = owner.getLinearSpeed();
+		if (speed == null || (speed.x() == 0 && speed.y() == 0)) {
+			// Not moving – nothing to do
+			return;
+		}
+		stopAtNextCell = true;
+		cellAtStopRequest = owner.position(); // current cell before moving on
 	}
 }

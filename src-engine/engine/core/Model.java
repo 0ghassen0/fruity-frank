@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import engine.entities.Entity;
 import engine.entities.Stunt;
@@ -61,7 +60,7 @@ public abstract class Model implements Ticker.TickListener {
 	protected Model(Game game) {
 		this.grid = game.getGrid();
 		this.isu = game.getIsu();
-		this.entities = ConcurrentHashMap.newKeySet();
+		this.entities = new HashSet<>();
 	}
 
 	// ENTITIES

@@ -36,11 +36,9 @@ public abstract class Entity {
 	private Model model; // the world this entity lives in; set on Model.add
 
 	// Command fields written by the AI/bot task (via the stunt's drive) and read by
-	// the motion task; volatile so the write publishes safely across threads. Each
-	// drive swaps in a fresh, fully-built Vector, so the reference write is the
-	// publication point.
-	private volatile ISU.Vector linearSpeed;
-	private volatile double angularSpeed_degree;
+	// the motion task.
+	private ISU.Vector linearSpeed;
+	private double angularSpeed_degree;
 
 	private Avatar avatar;
 
