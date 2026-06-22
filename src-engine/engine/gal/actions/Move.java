@@ -6,16 +6,18 @@ import engine.gal.aut.DirArg;
 import engine.gal.aut.Direction;
 import engine.gal.aut.GALBot;
 import engine.gal.aut.iGALAction;
+import engine.geometry.ISU;
 
 // == MOVE ==
 
 /**
- * The GAL {@code Move(direction)} action: resolves its {@link DirArg} to a unit
- * step, reorients the entity to face that direction (so subsequent relative
- * directions and the avatar track its heading), then pushes a velocity command
- * at the bot's speed onto the entity's stunt. Motion itself is actuated later
- * by the stunt on the motion tick (push model). Returns {@code false} (action
- * not performed) if there is no stunt to drive.
+ * The GAL {@code Move(direction)} action.
+ *
+ * If the entity is already moving and the requested direction is perpendicular
+ * to the current motion, the turn is buffered through {@link Stunt#request}.
+ * The stunt will apply it only when the entity reaches the center of a cell.
+ *
+ * This avoids enemies changing lane between two cells.
  */
 public final class Move implements iGALAction {
 
@@ -29,14 +31,48 @@ public final class Move implements iGALAction {
 	public boolean exec(Entity self) {
 		if (!(self.bot() instanceof GALBot bot))
 			return false;
+
 		Stunt stunt = bot.stunt();
 		if (stunt == null || stunt.busy())
-			return false; // no actuator, or a timed action is in progress (can't redirect)
+			return false;
+
 		int[] d = dir.resolve(self);
-		if (d[0] != 0 || d[1] != 0)
-			self.face(Direction.cardinal(d[0], d[1]).toAngle()); // heading tracks motion
+		if (d[0] == 0 && d[1] == 0)
+			return false;
+
 		double speed = bot.speed();
-		stunt.drive(d[0] * speed, d[1] * speed);
+		double vx = d[0] * speed;
+		double vy = d[1] * speed;
+
+		ISU.Vector current = self.getLinearSpeed();
+
+		if (isPerpendicularTurn(current, vx, vy)) {
+			stunt.request(vx, vy);
+			return true;
+		}
+
+		self.face(Direction.cardinal(d[0], d[1]).toAngle());
+		stunt.drive(vx, vy);
 		return true;
+	}
+
+	private boolean isPerpendicularTurn(ISU.Vector current, double vx, double vy) {
+		if (current == null)
+			return false;
+
+		double cx = current.x();
+		double cy = current.y();
+
+		if ((cx == 0 && cy == 0) || (vx == 0 && vy == 0))
+			return false;
+
+		boolean currentlyHorizontal = cx != 0 && cy == 0;
+		boolean currentlyVertical = cy != 0 && cx == 0;
+
+		boolean requestedHorizontal = vx != 0 && vy == 0;
+		boolean requestedVertical = vy != 0 && vx == 0;
+
+		return (currentlyHorizontal && requestedVertical)
+				|| (currentlyVertical && requestedHorizontal);
 	}
 }
