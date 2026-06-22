@@ -65,14 +65,18 @@ public final class Closest implements iGALCondition {
 		if (matcher == null || model == null)
 			return false;
 
-		double maxDist = rangeSteps > 0 ? rangeSteps * self.center().getISU().getCmPerCell() : Double.MAX_VALUE;
+		// One read of our centre (snapshot): this runs on the AI thread while the
+		// motion thread may swap the entity's centre reference, so every distance in
+		// the scan is measured from the same origin.
+		ISU.Coord selfCenter = self.center();
+		double maxDist = rangeSteps > 0 ? rangeSteps * selfCenter.getISU().getCmPerCell() : Double.MAX_VALUE;
 		Entity nearest = null;
 		ISU.Vector nearestDelta = null;
 		double best = Double.MAX_VALUE;
 		for (Entity other : model.entities()) {
 			if (other == self || !matcher.matches(cat, self, other))
 				continue;
-			ISU.Vector delta = self.center().nearestDeltaTo(other.center());
+			ISU.Vector delta = selfCenter.nearestDeltaTo(other.center());
 			double d = delta.norm();
 			if (d <= maxDist && d < best) {
 				best = d;

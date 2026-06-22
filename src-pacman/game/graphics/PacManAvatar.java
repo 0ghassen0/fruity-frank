@@ -4,7 +4,9 @@ import engine.entities.Entity;
 import engine.geometry.ISU;
 import engine.graphics.Avatar;
 import engine.graphics.View;
+
 import game.Category;
+
 import game.entities.Gum;
 
 import oop.graphics.BufferedImage;

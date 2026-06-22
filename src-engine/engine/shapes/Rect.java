@@ -132,10 +132,43 @@ public class Rect extends Shape {
 		}
 	}
 
-	// === Rect/Rect Intersection (Separating Axis Theorem) ===
+	// === Rect/Rect Intersection ===
+
+	/**
+	 * @implNote When both boxes are axis-aligned (orientation a multiple of 90°,
+	 *           the only case the non-rotating games produce) a plain AABB overlap
+	 *           test settles it — the four SAT axes collapse to the two cardinals
+	 *           and the projections to min/max of x and y, so the general
+	 *           {@link RectRectIntersection} (corner build, edge-normal
+	 *           normalisation, 4×8 projections) is skipped. Any oblique box falls
+	 *           back to the Separating Axis Theorem.
+	 */
 	@Override
 	public boolean intersects(Rect rect) {
+		if (isAxisAligned() && rect.isAxisAligned()) {
+			ISU.Vector delta = center.nearestDeltaTo(rect.getCenter()); // torus-aware
+			return Math.abs(delta.x()) <= extentX() + rect.extentX()
+					&& Math.abs(delta.y()) <= extentY() + rect.extentY();
+		}
 		return new RectRectIntersection(this, rect).intersects();
+	}
+
+	/** @return whether this box is axis-aligned (orientation a multiple of 90°). */
+	private boolean isAxisAligned() {
+		return angle_degree % 90 == 0;
+	}
+
+	/**
+	 * Half-extent along world x for an axis-aligned box: the half-width at 0°/180°,
+	 * the half-height at 90°/270° (where the box is turned on its side).
+	 */
+	private double extentX() {
+		return angle_degree % 180 == 0 ? halfWidth : halfHeight;
+	}
+
+	/** Half-extent along world y for an axis-aligned box (the dual of {@link #extentX()}). */
+	private double extentY() {
+		return angle_degree % 180 == 0 ? halfHeight : halfWidth;
 	}
 
 	class RectRectIntersection {
@@ -147,9 +180,10 @@ public class Rect extends Shape {
 		}
 
 		boolean intersects() {
-			double[][] cornersA = a.cornersAt(a.getCenter().x(), a.getCenter().y());
-			ISU.Vector delta = a.getCenter().nearestDeltaTo(b.getCenter());
-			double[][] cornersB = b.cornersAt(a.getCenter().x() + delta.x(), a.getCenter().y() + delta.y());
+			ISU.Coord ca = a.getCenter();
+			double[][] cornersA = a.cornersAt(ca.x(), ca.y());
+			ISU.Vector delta = ca.nearestDeltaTo(b.getCenter());
+			double[][] cornersB = b.cornersAt(ca.x() + delta.x(), ca.y() + delta.y());
 
 			double[][] axes = { getEdgeNormal(cornersA[0], cornersA[1]), getEdgeNormal(cornersA[1], cornersA[2]),
 					getEdgeNormal(cornersB[0], cornersB[1]), getEdgeNormal(cornersB[1], cornersB[2]) };

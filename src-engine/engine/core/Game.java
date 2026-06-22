@@ -146,18 +146,21 @@ public abstract class Game {
 	}
 
 	public void show(PrintStream ps) {
+		double w_cm = getWidth_cm();
+		double h_cm = getHeight_cm();
+		int ppc = getPixelPerCm();
+		Grid g = getGrid();
+		ISU i = getIsu();
 		ps.println("=== Game State Debug ===");
 		ps.println("Class: " + this.getClass().getSimpleName());
 		ps.println("Grid dimensions: " + getWidth_ncell() + " x " + getHeight_ncell() + " cells");
-		ps.println("Real dimensions: " + String.format("%.2f", getWidth_cm()) + " x "
-				+ String.format("%.2f", getHeight_cm()) + " cm");
-		ps.println("Scale: " + getCmPerCell() + " cm/cell, " + getPixelPerCm() + " pixels/cm");
+		ps.println("Real dimensions: " + String.format("%.2f", w_cm) + " x " + String.format("%.2f", h_cm) + " cm");
+		ps.println("Scale: " + getCmPerCell() + " cm/cell, " + ppc + " pixels/cm");
 		ps.println("Torus: X=" + torusOnXaxis + ", Y=" + torusOnYaxis);
-		ps.println("Pixel dimensions: " + (getWidth_cm() * getPixelPerCm()) + " x " + (getHeight_cm() * getPixelPerCm())
-				+ " pixels");
+		ps.println("Pixel dimensions: " + (w_cm * ppc) + " x " + (h_cm * ppc) + " pixels");
 		ps.println("Coordinate Systems:");
-		ps.println("  Grid: " + (getGrid() != null ? getGrid().getClass().getSimpleName() : "null"));
-		ps.println("  ISU: " + (getIsu() != null ? getIsu().getClass().getSimpleName() : "null"));
+		ps.println("  Grid: " + (g != null ? g.getClass().getSimpleName() : "null"));
+		ps.println("  ISU: " + (i != null ? i.getClass().getSimpleName() : "null"));
 		ps.println("=======================");
 	}
 

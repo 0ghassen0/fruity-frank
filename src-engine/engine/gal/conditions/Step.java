@@ -50,8 +50,11 @@ public final class Step implements iGALCondition {
 
 		Direction abs = dir.resolve(Direction.ofAngle(self.orientation()));
 		Grid grid = model.grid();
-		Grid.Position target = grid.new Position(self.position().x() + abs.dx() * n,
-				self.position().y() + abs.dy() * n);
+		// One read of the position (snapshot): this runs on the AI thread while the
+		// motion thread may swap the entity's position reference, so reading once
+		// keeps the x/y pair consistent.
+		Grid.Position pos = self.position();
+		Grid.Position target = grid.new Position(pos.x() + abs.dx() * n, pos.y() + abs.dy() * n);
 		Grid.Cell cell = grid.cellAt(target);
 
 		if (cat == Category.Void) {

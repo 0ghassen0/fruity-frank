@@ -88,6 +88,11 @@ public class Camera {
 		return camY;
 	}
 
+	/** @return pixels per cm — the scale this camera maps world distances with. */
+	public double pixelPerCm() {
+		return ppc;
+	}
+
 	public double viewWidthCm() {
 		return viewW / ppc;
 	}

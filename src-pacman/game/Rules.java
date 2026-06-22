@@ -1,10 +1,10 @@
 package game;
 
 import java.util.EnumMap;
-
 import engine.entities.Entity;
 import game.entities.Gum;
 import game.entities.Pac;
+
 
 // == RULES ==
 
@@ -49,8 +49,8 @@ public class Rules {
 				m.remove(ghost);
 				s.addScore(200);
 			} else {
-				s.killPac();
-				m.remove(pac);
+				//s.killPac();
+				//m.remove(pac);
 			}
 		});
 		// ghost-ghost, ghost-gum, boss-* … : no rule registered -> no effect.

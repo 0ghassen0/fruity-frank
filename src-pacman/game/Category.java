@@ -1,6 +1,8 @@
 package game;
 
 import engine.entities.Entity;
+import game.Categorized;
+import game.Category;
 
 // == CATEGORY ==
 
