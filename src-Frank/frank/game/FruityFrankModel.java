@@ -63,6 +63,10 @@ public class FruityFrankModel extends Model {
 
 	@Override
 	public void update() {
+		
+		if (state.isStartMenu())
+		    return;
+		
 	    if (state.isEnded()) {
 	        state.tickEndScreenDelay();
 	        return;

@@ -5,6 +5,7 @@ public class GameState {
     private int highScore;
     private int lives = 3;
     
+    private boolean startMenu = true;
     
     private boolean gameOver;
     private boolean frankDied;
@@ -42,6 +43,14 @@ public class GameState {
         return victory;
     }
 
+    public boolean isStartMenu() {
+        return startMenu;
+    }
+
+    public void startGame() {
+        startMenu = false;
+    }
+    
     public int fruitsRemaining() {
         return fruitsRemaining;
     }
@@ -139,6 +148,7 @@ public class GameState {
         score = 0;
         lives = 3;
 
+        startMenu = false;
         gameOver = false;
         frankDied = false;
 

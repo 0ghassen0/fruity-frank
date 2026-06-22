@@ -67,9 +67,13 @@ public class FrankPainter extends Painter {
 			    g.fillOval(canvas.getWidth() - 24 - i * 16, 6, 12, 12);
 		}
 		
-		paintEndMenu(canvas, g);
+		
+		paintStartMenu(canvas, g);
 
-		paintCountdown(canvas, g);
+		if (!model.state().isStartMenu()) {
+		    paintEndMenu(canvas, g);
+		    paintCountdown(canvas, g);
+		}
 		
 		if (model.debugMode())
 			debugOverlay(g);
@@ -89,6 +93,28 @@ public class FrankPainter extends Painter {
 				g.drawString(e.name(), s[0] - 20, s[1] - cellPx / 2 - 4);
 			}
 		}
+	}
+	
+	
+	private void paintStartMenu(Canvas canvas, Graphics g) {
+	    if (!model.state().isStartMenu())
+	        return;
+
+	    BufferedImage img = view.sprites().startMenu();
+
+	    if (img == null)
+	        return;
+
+	    int originalW = img.getWidth();
+	    int originalH = img.getHeight();
+
+	    int w = Math.min(canvas.getWidth() - 20, originalW);
+	    int h = originalH * w / originalW;
+
+	    int x = (canvas.getWidth() - w) / 2;
+	    int y = (canvas.getHeight() - h) / 2;
+
+	    g.drawImage(img, x, y, w, h);
 	}
 	
 	private void paintCountdown(Canvas canvas, Graphics g) {

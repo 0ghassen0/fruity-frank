@@ -20,6 +20,20 @@ public class FrankController extends Controller {
 
     @Override
     public void pressed(Canvas canvas, int bno, int x, int y) {
+        if (model.state().isStartMenu()) {
+            if (insideStartButton(canvas, x, y)) {
+                model.state().startGame();
+                return;
+            }
+
+            if (insideStartExitButton(canvas, x, y)) {
+                System.exit(0);
+                return;
+            }
+
+            return;
+        }
+
         if (model.state().isEnded() && model.state().canShowEndMenu()) {
             if (insideRestartButton(canvas, x, y)) {
                 if (restartAction != null)
@@ -37,7 +51,6 @@ public class FrankController extends Controller {
 
         super.pressed(canvas, bno, x, y);
     }
-
     @Override
     public void pressed(Canvas canvas, int keyCode, char keyChar) {
         if (model.state().isEnded())
@@ -86,4 +99,42 @@ public class FrankController extends Controller {
         return mx >= x && mx <= x + w
             && my >= y && my <= y + h;
     }
+    
+    
+    private boolean insideStartButton(Canvas canvas, int mx, int my) {
+        int originalW = 819;
+        int originalH = 330;
+
+        int menuW = Math.min(canvas.getWidth() - 20, originalW);
+        int menuH = originalH * menuW / originalW;
+
+        int menuX = (canvas.getWidth() - menuW) / 2;
+        int menuY = (canvas.getHeight() - menuH) / 2;
+
+        int x = menuX + (int) (0.18 * menuW);
+        int y = menuY + (int) (0.43 * menuH);
+        int w = (int) (0.65 * menuW);
+        int h = (int) (0.24 * menuH);
+
+        return inside(mx, my, x, y, w, h);
+    }
+
+    private boolean insideStartExitButton(Canvas canvas, int mx, int my) {
+        int originalW = 819;
+        int originalH = 330;
+
+        int menuW = Math.min(canvas.getWidth() - 20, originalW);
+        int menuH = originalH * menuW / originalW;
+
+        int menuX = (canvas.getWidth() - menuW) / 2;
+        int menuY = (canvas.getHeight() - menuH) / 2;
+
+        int x = menuX + (int) (0.27 * menuW);
+        int y = menuY + (int) (0.68 * menuH);
+        int w = (int) (0.55 * menuW);
+        int h = (int) (0.23 * menuH);
+
+        return inside(mx, my, x, y, w, h);
+    }
+
 }
