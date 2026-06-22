@@ -47,15 +47,13 @@ public final class Egg implements iGALAction {
 
 		int[] d = dir.resolve(self);
 		Grid grid = model.grid();
-		// Single read of the position (snapshot): the motion thread may swap the
-		// position reference, so read once to keep the x/y pair consistent.
 		Grid.Position pos = self.position();
 		Grid.Position at = grid.new Position(pos.x() + d[0], pos.y() + d[1]);
 
 		Entity child = factory.create(category, at, self);
 		if (child == null)
 			return false;
-		model.add(child); // the factory only constructs + positions; the action adds
+		model.add(child); 
 		return true;
 	}
 }

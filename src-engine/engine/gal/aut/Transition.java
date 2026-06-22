@@ -7,8 +7,9 @@ import engine.entities.Entity;
 
 /**
  * One GAL transition {@code (src): condition ? action :(tgt)}. It fires only
- * when the bot is in {@code src} and {@code condition} holds; firing runs
- * {@code action} (if any) and switches the bot to {@code tgt}.
+ * when the bot is in {@code src}, {@code condition} holds, and {@code action}
+ * can occur; firing runs {@code action} and switches the bot to {@code tgt}. If
+ * the action cannot occur the transition is treated as not having fired.
  */
 public class Transition {
 
@@ -31,21 +32,25 @@ public class Transition {
 	/**
 	 * Try to fire this transition for {@code e}.
 	 *
-	 * @return {@code true} if it fired (regardless of whether the action
-	 *         succeeded); {@code false} if the bot is not in {@code src} or the
-	 *         condition is unsatisfied.
+	 * <p>
+	 * A transition fires only when the bot is in {@code src}, its {@code condition}
+	 * holds, and its {@code action} can occur; if the action cannot occur
+	 * the transition is considered not to have fired
+	 *
+	 * @return {@code true} if it fired (bot was in {@code src}, the condition held,
+	 *         and the action occurred); {@code false} otherwise.
 	 */
 	public boolean exec(Entity e) {
 		Bot bot = e.bot();
 		if (bot != null && src.equals(bot.state()) && condition.eval(e) && action.exec(e)) {
-			bot.state(tgt); // raw target; Automaton.step resolves the () / (_) sentinels
+			bot.state(tgt);
 			return true;
 		}
 		return false;
 	}
 
 	/**
-	 * @return the (possibly sentinel) target state, for the automaton to resolve.
+	 * @return the target state, for the automaton to resolve.
 	 */
 	public State tgt() {
 		return tgt;
