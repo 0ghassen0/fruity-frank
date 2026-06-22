@@ -22,9 +22,6 @@ public class FruityFrankModel extends Model {
 	private int tick = 0;
 
 	private static final double CHERRY_SPEED = 4.0;
-	private static final int FALL_DELAY_TICKS = 30; // ~1 s à 30 TPS avant qu'une pomme tombe
-	private static final int LOW_DELAY_TICKS = 15; // pause sur une ligne fine avant écrasement
-	private static final int FALL_STEP_DEFAULT = 3; // cadence de secours si la gravité n'est pas définie
 
 	public FruityFrankModel(Game game, FruityFrankMap map) {
 		super(game);
@@ -83,7 +80,6 @@ public class FruityFrankModel extends Model {
 	    updateGrassFade();
 	    pushApples();
 	    collectUnderFrank();
-	    updateAppleFall();
 	    removeBadCherryProjectiles();
 	}
 
@@ -259,126 +255,17 @@ public class FruityFrankModel extends Model {
 	}
 
 	// ============================================================
-	// CHUTE DES POMMES (délai ~1 s puis chute progressive)
-	// La cadence de descente est dérivée de la gravité du monde
-	// (engine.core.Game.gravity), interprétée comme une vitesse en cm/tick.
+	// CHUTE DES POMMES
+	// ------------------------------------------------------------
+	// La chute n'est plus un passage impératif ici : chaque pomme porte un
+	// GALBot exécutant gal_fsm/AppleFall.gal ( Struck ? Move(S) ). La garde
+	// « Struck » est la condition Java frank.gal.aut.conditions.CanFall, qui
+	// décide QUAND la pomme peut tomber (support en dessous + petit délai).
+	// L'écrasement du gazon fin et les morts par chute sont résolus comme des
+	// collisions (voir Rules : APPLE×GRASS_LOW / APPLE×FRANK / APPLE×ENEMY) et
+	// l'arrêt sur un support solide est garanti par canOccupy ci-dessous.
 	// ============================================================
 
-	/**
-	 * @return le nombre de ticks moteur entre deux descentes d'une case. Une case
-	 *         fait {@code cmPerCell} cm et la gravité ({@link engine.core.Game#gravity()})
-	 *         donne la vitesse de chute en cm/tick, d'où {@code cmPerCell / gravité}
-	 *         ticks par case. Gravité ≤ 0 -> cadence de secours.
-	 */
-	private int fallStepTicks() {
-		double g = game.gravity();
-		if (g <= 0)
-			return FALL_STEP_DEFAULT;
-		return Math.max(1, (int) Math.round(game.getCmPerCell() / g));
-	}
-
-	private void updateAppleFall() {
-	    for (Entity e : new ArrayList<>(entities())) {
-	        if (!(e instanceof Apple apple))
-	            continue;
-
-	        Grid.Position pos = apple.position();
-	        Grid.Position south = grid().new Position(pos.x(), pos.y() + 1);
-
-	        /*
-	         * Support solide : mur/bord, GrassHigh (ligne épaisse), autre pomme,
-	         * fruit ou cerise. La pomme s'arrête dessus.
-	         */
-	        boolean supported =
-	                map.isWall(south.x(), south.y())
-	                || cellHas(south, GrassHigh.class)
-	                || cellHas(south, Apple.class)
-	                || cellHas(south, Fruit.class)
-	                || cellHas(south, Cherry.class);
-
-	        if (supported) {
-	            apple.disarm();
-	            apple.disarmLow();
-	            apple.setFalling(false);
-	            continue;
-	        }
-
-	        /*
-	         * Ligne fine : GrassLow n'est pas un vrai support. La pomme s'arrête un
-	         * court instant dessus, puis l'écrase et continue à tomber.
-	         */
-	        if (cellHas(south, GrassLow.class)) {
-	            apple.setFalling(true);
-
-	            if (!apple.isLowArmed()) {
-	                apple.armLow(LOW_DELAY_TICKS);
-	                continue;
-	            }
-
-	            apple.tickLowDelay();
-
-	            if (!apple.lowDelayDone())
-	                continue;
-
-	            for (Entity occ : new ArrayList<>(grid().cellAt(south).entities())) {
-	                if (occ instanceof GrassLow)
-	                    remove(occ);
-	            }
-
-	            apple.disarmLow();
-	            // Pas de continue : la pomme descend dans cette case.
-	        }
-
-	        /*
-	         * Aucun support : si la pomme vient de le perdre (Frank a creusé dessous),
-	         * elle attend un délai avant de tomber.
-	         */
-	        if (!apple.isFalling()) {
-	            if (!apple.isArmed()) {
-	                apple.arm(FALL_DELAY_TICKS);
-	                continue;
-	            }
-
-	            apple.tickDelay();
-
-	            if (!apple.delayDone())
-	                continue;
-
-	            apple.setFalling(true);
-	        }
-
-	        /*
-	         * Ralentissement de la chute : la pomme descend d'une case seulement tous
-	         * les fallStepTicks() ticks, cadence donnée par la gravité du monde.
-	         */
-	        if (tick % fallStepTicks() != 0)
-	            continue;
-
-	        Grid.Cell below = grid().cellAt(south);
-
-	        /*
-	         * Collision avec les entités du dessous. La pomme ne disparaît PAS après
-	         * avoir écrasé.
-	         */
-	        for (Entity occ : new ArrayList<>(below.entities())) {
-	        	if (occ instanceof Frank f) {
-	        	    state.killedByEnemy();
-	        	    remove(f);
-	        	}
-
-	            if (occ instanceof Enemy en) {
-	                remove(en);
-	                state.addScore(500);
-	            }
-
-	            if (occ instanceof GrassLow) {
-	                remove(occ);
-	            }
-	        }
-
-	        apple.setPosition(south);
-	    }
-	}
 	// ============================================================
 	// PROJECTILES CERISE
 	// ============================================================
@@ -434,6 +321,19 @@ public class FruityFrankModel extends Model {
 
 		if (map.isWall(target.x(), target.y()))
 			return false;
+
+		if (e instanceof Apple falling) {
+			// Une pomme qui tombe est arrêtée par un support solide (gros gazon,
+			// autre pomme, fruit, cerise). Sinon elle traverse la case : le gazon
+			// fin, Frank et les ennemis y sont écrasés/tués via les règles de
+			// collision (voir Rules), pas ici.
+			if (cellHas(target, GrassHigh.class) || cellHas(target, Fruit.class) || cellHas(target, Cherry.class))
+				return false;
+			for (Entity o : grid().cellAt(target).entities())
+				if (o instanceof Apple a && a != falling)
+					return false;
+			return true;
+		}
 
 		if (e instanceof Frank frank) {
 			boolean hasApple = false;

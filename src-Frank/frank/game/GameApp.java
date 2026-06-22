@@ -89,10 +89,14 @@ public class GameApp {
 			    map.fruitCells().size() + map.cherryCells().size()
 			);
 		
-		// Pommes
+		// Automates GAL chargés depuis les fichiers .gal (pommes + ennemis)
+		Map<String, Automaton> galAutomata = loadGalAutomata();
+
+		// Pommes : chaque pomme tombe via son automate AppleFall (gravité pilotée par GAL)
 		for (FruityFrankMap.Cell c : map.appleCells()) {
 			Apple apple = new Apple(game, c.col(), c.row());
 			apple.setStunt(new BasicStunt(apple));
+			apple.setBot(new GALBot(apple, galAutomata.get("AppleFall"), game.gravity(), new FrankCategories()));
 			model.add(apple);
 		}
 
@@ -106,9 +110,6 @@ public class GameApp {
 		// enemy_types = RED,GREEN,PURPLE,ORANGE
 		String typesStr = cfg.getString("enemy_types", "RED,GREEN,PURPLE,ORANGE");
 		String[] typeNames = typesStr.split(",");
-
-		// Automates GAL chargés depuis les fichiers .gal
-		Map<String, Automaton> galAutomata = loadGalAutomata();
 
 		int ei = 0;
 		for (FruityFrankMap.Cell c : map.enemySpawns()) {
@@ -137,6 +138,9 @@ public class GameApp {
 
 		painter = new FrankPainter(view, map, model, cellPx, game.getCmPerCell());
 		Brain brain = new Brain(model);
+		// Réveille les bots du bas vers le haut : une colonne de pommes se tasse
+		// proprement (la plus basse décide de tomber avant celles au-dessus).
+		brain.setActivationOrder(Brain.BOTTOM_FIRST);
 
 		// debug est le champ statique ; il démarre éteint et s'active avec F3 (voir FrankBot)
 		debug.setPixelPerCm(game.getPixelPerCm());
@@ -187,9 +191,12 @@ public class GameApp {
 	        map.fruitCells().size() + map.cherryCells().size()
 	    );
 
+	    Map<String, Automaton> galAutomata = loadGalAutomata();
+
 	    for (FruityFrankMap.Cell c : map.appleCells()) {
 	        Apple apple = new Apple(game, c.col(), c.row());
 	        apple.setStunt(new BasicStunt(apple));
+	        apple.setBot(new GALBot(apple, galAutomata.get("AppleFall"), game.gravity(), new FrankCategories()));
 	        model.add(apple);
 	    }
 
@@ -202,8 +209,6 @@ public class GameApp {
 	        Enemy.EnemyType.PURPLE,
 	        Enemy.EnemyType.ORANGE
 	    };
-
-	    Map<String, Automaton> galAutomata = loadGalAutomata();
 
 	    int ei = 0;
 	    for (FruityFrankMap.Cell c : map.enemySpawns()) {
@@ -291,7 +296,8 @@ public class GameApp {
 	    String[] files = {
 	            "gal_fsm/Tracking.gal",
 	            "gal_fsm/Flee.gal",
-	            "gal_fsm/EnemyRandom.gal"
+	            "gal_fsm/EnemyRandom.gal",
+	            "gal_fsm/AppleFall.gal"
 	    };
 
 	    for (String file : files) {

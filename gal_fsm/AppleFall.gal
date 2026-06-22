@@ -1,0 +1,5 @@
+AppleFall(Resting){
+  * (Resting):
+  | Struck ? Move(S) :(Resting)
+  | True ?           :(Resting)
+}

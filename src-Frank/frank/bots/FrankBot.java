@@ -6,7 +6,6 @@ import engine.entities.Stunt;
 import engine.geometry.ISU;
 import frank.entities.Frank;
 import frank.game.FruityFrankModel;
-import frank.game.GameApp;
 import oop.graphics.VirtualKeyCodes;
 import engine.entities.BasicStunt;
 
@@ -25,26 +24,6 @@ public class FrankBot extends Bot {
             return;
 
         FruityFrankModel m = (FruityFrankModel) entity.model();
-
-        if (keyCode == VirtualKeyCodes.VK_F3) {
-            if (!m.debugMode()) {
-                GameApp.debug.setShowTickStats(true);
-                GameApp.debug.setShowPaintStats(true);
-                GameApp.debug.setShowFps(true);
-                GameApp.debug.setShowHitboxes(true);
-                GameApp.debug.setShowStates(true);
-                GameApp.painter.setDebug(GameApp.debug);
-            } else {
-                GameApp.debug.setShowTickStats(false);
-                GameApp.debug.setShowPaintStats(false);
-                GameApp.debug.setShowFps(false);
-                GameApp.debug.setShowHitboxes(false);
-                GameApp.debug.setShowStates(false);
-                GameApp.painter.setDebug(null);
-            }
-            m.toggleDebug();
-            return;
-        }
 
         if (keyCode == VirtualKeyCodes.VK_SPACE) {
             if (entity instanceof Frank frank)
@@ -65,10 +44,6 @@ public class FrankBot extends Bot {
             case VirtualKeyCodes.VK_LEFT -> dvx = -speed;
             case VirtualKeyCodes.VK_UP -> dvy = -speed;
             case VirtualKeyCodes.VK_DOWN -> dvy = speed;
-            case VirtualKeyCodes.VK_SPACE -> {
-                stunt.drive(0, 0);
-                return;
-            }
             default -> {
                 return;
             }

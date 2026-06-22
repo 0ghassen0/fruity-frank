@@ -28,6 +28,7 @@ import frank.gal.aut.actions.Egg;
 import frank.gal.aut.actions.Explode;
 import frank.gal.aut.actions.Move;
 import frank.gal.aut.actions.Turn;
+import frank.gal.aut.conditions.CanFall;
 import frank.gal.aut.conditions.Closest;
 import frank.gal.aut.conditions.MyDir;
 import frank.gal.aut.conditions.Step;
@@ -102,6 +103,7 @@ public final class GalCompiler {
             case "Closest" -> closest(p);
             case "Step", "Cell" -> step(p);
             case "MyDir" -> new MyDir(direction(param(p, 0, name)));
+            case "Struck" -> new CanFall(); // reuses the spare "Struck" token: gravity guard for fruits
             default -> throw unsupported("condition", f.toString());
         };
     }

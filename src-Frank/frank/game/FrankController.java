@@ -3,6 +3,7 @@ package frank.game;
 import engine.core.Controller;
 import engine.entities.Bot;
 import oop.graphics.Canvas;
+import oop.graphics.VirtualKeyCodes;
 
 public class FrankController extends Controller {
 
@@ -56,7 +57,25 @@ public class FrankController extends Controller {
         if (model.state().isEnded())
             return;
 
+        // F3 : bascule les overlays de debug. Touche globale (rendu/dev),
+        // pas une commande de Frank → gérée ici plutôt que dans FrankBot.
+        if (keyCode == VirtualKeyCodes.VK_F3) {
+            toggleDebugOverlay();
+            return;
+        }
+
         super.pressed(canvas, keyCode, keyChar);
+    }
+
+    private void toggleDebugOverlay() {
+        boolean show = !model.debugMode();
+        GameApp.debug.setShowTickStats(show);
+        GameApp.debug.setShowPaintStats(show);
+        GameApp.debug.setShowFps(show);
+        GameApp.debug.setShowHitboxes(show);
+        GameApp.debug.setShowStates(show);
+        GameApp.painter.setDebug(show ? GameApp.debug : null);
+        model.toggleDebug();
     }
 
     private boolean insideRestartButton(Canvas canvas, int mx, int my) {
