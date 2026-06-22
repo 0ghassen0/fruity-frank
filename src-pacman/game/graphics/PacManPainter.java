@@ -5,9 +5,8 @@ import engine.entities.Entity;
 import engine.graphics.Camera;
 import engine.graphics.Minimap;
 import engine.graphics.Painter;
-import game.Category;
 import game.Maze;
-
+import game.Category;
 import oop.graphics.Canvas;
 import oop.graphics.Graphics;
 

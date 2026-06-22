@@ -3,6 +3,7 @@ package engine.debug;
 import engine.entities.Bot;
 import engine.entities.Entity;
 import engine.entities.Hitbox;
+import engine.gal.aut.Category;
 import engine.gal.aut.State;
 import engine.graphics.Camera;
 
@@ -86,6 +87,23 @@ public final class DebugOverlay {
 			return;
 		g.setColor(g.getColor(255, 255, 255, 255)); // white
 		g.drawString(s.toString(), c[0] + 6, c[1] - 6);
+	}
+
+	/**
+	 * Draw the entity's name
+	 */
+	public static void drawName(Graphics g, Entity e, Camera cam, double ppc) {
+		String name = e.name();
+
+		if (name == null)
+			return;
+
+		int[] c = toScreen(e.center().x(), e.center().y(), cam, ppc);
+		if (c == null)
+			return;
+
+		g.setColor(g.getColor(220, 255, 255, 0));
+		g.drawString(name, c[0] + 6, c[1] - 16);
 	}
 
 	// HELPERS

@@ -10,7 +10,6 @@ import engine.graphics.Avatar;
 import engine.graphics.Camera;
 import engine.graphics.View;
 import game.Category;
-
 import oop.graphics.Graphics;
 
 // == PACMAN VIEW ==

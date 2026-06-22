@@ -9,8 +9,7 @@ package engine.debug;
  * One instance is created by the game (e.g. in its {@code main}) and injected
  * into the pieces that own the relevant loops: the motion {@code Ticker}, the
  * {@code Painter}, and the {@code View}. Every flag defaults to {@code false},
- * so with nothing enabled — or with no {@code Debug} injected at all — the added
- * code paths are skipped and engine behaviour is unchanged.
+ * so with nothing enabled — or with no {@code Debug} injected at all.
  *
  * <p>
  * Enable features through the setters, e.g.:
@@ -20,9 +19,6 @@ package engine.debug;
  * debug.setShowFps(true);
  * debug.setShowHitboxes(true);
  * </pre>
- *
- * The rolling-window {@link Stats} are owned here and written/read across
- * threads; {@code Stats} is itself synchronized.
  */
 public final class Debug {
 
@@ -36,6 +32,7 @@ public final class Debug {
 
 	private volatile boolean showHitboxes = false;
 	private volatile boolean showStates = false;
+	private volatile boolean showEntityNames = false;
 
 	// METRICS (rolling window)
 
@@ -97,6 +94,14 @@ public final class Debug {
 
 	public void setShowStates(boolean on) {
 		this.showStates = on;
+	}
+
+	public boolean showEntityNames() {
+		return showEntityNames;
+	}
+
+	public void setShowEntityNames(boolean on) {
+		this.showEntityNames = on;
 	}
 
 	public double pixelPerCm() {
