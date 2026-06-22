@@ -9,7 +9,7 @@ import frank.game.Category;
 
 public class Frank extends Entity implements Categorized {
 
-    private int lives = 3;
+    private static int lives = 3;
     private boolean hasCherry = false;
     private int facingDx = 1, facingDy = 0;
 
