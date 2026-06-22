@@ -1,4 +1,4 @@
-package engine.gal.conditions;
+package frank.gal.aut.conditions;
 
 import engine.core.Model;
 import engine.entities.Entity;

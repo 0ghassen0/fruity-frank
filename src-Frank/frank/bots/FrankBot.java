@@ -1,6 +1,5 @@
 package frank.bots;
 
-import engine.core.Model;
 import engine.entities.Bot;
 import engine.entities.Entity;
 import engine.entities.Stunt;

@@ -1,4 +1,4 @@
-package engine.gal.actions;
+package frank.gal.aut.actions;
 
 import engine.entities.Entity;
 import engine.entities.Stunt;
