@@ -219,11 +219,12 @@ public class GameApp {
 	private static Map<String, Automaton> loadGalAutomata() {
 	    Map<String, Automaton> automata = new LinkedHashMap<>();
 
+	    // FruitFall.gal retiré : la chute des pommes est désormais gérée par la
+	    // gravité du monde (Game.gravity), plus par un automate.
 	    String[] files = {
 	            "gal_fsm/Tracking.gal",
 	            "gal_fsm/Flee.gal",
-	            "gal_fsm/EnemyRandom.gal",
-	            "gal_fsm/FruitFall.gal"
+	            "gal_fsm/EnemyRandom.gal"
 	    };
 
 	    for (String file : files) {

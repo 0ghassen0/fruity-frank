@@ -110,6 +110,8 @@ public abstract class Model implements Ticker.TickListener {
 			}
 			resolveCollisions();
 		}
+
+		tickBuffer.clear();
 	}
 
 	/**
@@ -178,6 +180,11 @@ public abstract class Model implements Ticker.TickListener {
 				notifyCollision(b, a);
 			}
 		}
+
+		collisionSnapshot.clear();
+		collisionIndex.clear();
+		candidatePairs.clear();
+		seenPairs.clear();
 	}
 
 	/**

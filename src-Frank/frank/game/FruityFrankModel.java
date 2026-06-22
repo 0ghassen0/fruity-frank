@@ -22,9 +22,9 @@ public class FruityFrankModel extends Model {
 	private int tick = 0;
 
 	private static final double CHERRY_SPEED = 4.0;
-	private static final int FALL_DELAY_TICKS = 30; // ~1 s à 30 TPS
-	private static final int FALL_STEP_TICKS = 3; // vitesse de chute : 1 case / 3 ticks
+	private static final int FALL_DELAY_TICKS = 30; // ~1 s à 30 TPS avant qu'une pomme tombe
 	private static final int LOW_DELAY_TICKS = 15; // pause sur une ligne fine avant écrasement
+	private static final int FALL_STEP_DEFAULT = 3; // cadence de secours si la gravité n'est pas définie
 
 	public FruityFrankModel(Game game, FruityFrankMap map) {
 		super(game);
@@ -105,38 +105,42 @@ public class FruityFrankModel extends Model {
 	}
 
 	private void digGrass() {
-		if (player != null && entities().contains(player) && centeredEnough(player)) {
-			ISU.Vector v = player.getLinearSpeed();
-			boolean vertical = v != null && v.y() != 0 && v.x() == 0;
-			digCell(player.position(), true, vertical);
-		}
+		if (player != null && entities().contains(player) && centeredEnough(player))
+			dig(player);
 
 		for (Entity e : new ArrayList<>(entities())) {
-			if (e.name().contains("RED")) {
-				ISU.Coord h = e.center();
-				var p = e.position();
-				ISU.Vector v = e.getLinearSpeed();
-				System.out.printf("RED center=(%.1f,%.1f) pos=(%d,%d) speed=(%.2f,%.2f)%n", h.x(), h.y(), p.x(), p.y(),
-						v == null ? 0 : v.x(), v == null ? 0 : v.y());
-			}
 			if (!(e instanceof Enemy en) || !en.canDig())
 				continue;
 			if (!centeredEnough(en))
 				continue; // <-- même garde
-			ISU.Vector ev = en.getLinearSpeed();
-			boolean enemyVertical = ev != null && ev.y() != 0 && ev.x() == 0;
-			digCell(en.position(), true, enemyVertical);
+			dig(en);
 		}
 	}
 
-	private void digCell(Grid.Position pos, boolean digHigh, boolean digLow) {
-		System.out.println("DIG " + pos.x() + "," + pos.y() + " high=" + digHigh + " low=" + digLow);
-		for (Entity e : new ArrayList<>(grid().cellAt(pos).entities())) {
-			if (digHigh && e instanceof GrassHigh gh)
+	/**
+	 * Creuse le gazon traversé par {@code digger}.
+	 * <ul>
+	 * <li>Le gros bloc (GrassHigh) de la cellule courante passe en fondu.</li>
+	 * <li>Le petit bloc (GrassLow) n'est que le sol au bas de chaque cellule ; on
+	 * ne le détruit que si le CORPS du digger le recouvre réellement. Ainsi un
+	 * déplacement horizontal (corps centré, au-dessus du sol) le laisse intact ;
+	 * une descente casse le sol de la cellule courante ; une montée casse le sol de
+	 * la cellule du dessus dès que Frank l'atteint — sans toucher au sol de la
+	 * cellule du dessous au démarrage.</li>
+	 * </ul>
+	 * Fonder la destruction du sol sur le recouvrement réel (et non sur la cellule
+	 * du centre) évite que Frank perce le « petit rect du dessous » ou traverse le
+	 * petit rect au-dessus sans le casser.
+	 */
+	private void dig(Entity digger) {
+		for (Entity e : new ArrayList<>(grid().cellAt(digger.position()).entities()))
+			if (e instanceof GrassHigh gh)
 				gh.startFade();
-			if (digLow && e instanceof GrassLow)
-				remove(e);
-		}
+
+		for (Grid.Cell cell : new ArrayList<>(digger.getHitbox().occupiedCells()))
+			for (Entity e : new ArrayList<>(cell.entities()))
+				if (e instanceof GrassLow && digger.intersects(e))
+					remove(e);
 	}
 
 	private void updateGrassFade() {
@@ -245,7 +249,22 @@ public class FruityFrankModel extends Model {
 
 	// ============================================================
 	// CHUTE DES POMMES (délai ~1 s puis chute progressive)
+	// La cadence de descente est dérivée de la gravité du monde
+	// (engine.core.Game.gravity), interprétée comme une vitesse en cm/tick.
 	// ============================================================
+
+	/**
+	 * @return le nombre de ticks moteur entre deux descentes d'une case. Une case
+	 *         fait {@code cmPerCell} cm et la gravité ({@link engine.core.Game#gravity()})
+	 *         donne la vitesse de chute en cm/tick, d'où {@code cmPerCell / gravité}
+	 *         ticks par case. Gravité ≤ 0 -> cadence de secours.
+	 */
+	private int fallStepTicks() {
+		double g = game.gravity();
+		if (g <= 0)
+			return FALL_STEP_DEFAULT;
+		return Math.max(1, (int) Math.round(game.getCmPerCell() / g));
+	}
 
 	private void updateAppleFall() {
 	    for (Entity e : new ArrayList<>(entities())) {
@@ -256,13 +275,8 @@ public class FruityFrankModel extends Model {
 	        Grid.Position south = grid().new Position(pos.x(), pos.y() + 1);
 
 	        /*
-	         * Support solide :
-	         * - mur / bord
-	         * - GrassHigh = ligne épaisse
-	         * - autre pomme
-	         * - fruit / cerise
-	         *
-	         * Si la pomme rencontre ça, elle s'arrête.
+	         * Support solide : mur/bord, GrassHigh (ligne épaisse), autre pomme,
+	         * fruit ou cerise. La pomme s'arrête dessus.
 	         */
 	        boolean supported =
 	                map.isWall(south.x(), south.y())
@@ -279,10 +293,8 @@ public class FruityFrankModel extends Model {
 	        }
 
 	        /*
-	         * Ligne fine :
-	         * GrassLow n'est pas un vrai support solide.
-	         * La pomme s'arrête un petit moment dessus,
-	         * puis elle l'écrase et continue à tomber.
+	         * Ligne fine : GrassLow n'est pas un vrai support. La pomme s'arrête un
+	         * court instant dessus, puis l'écrase et continue à tomber.
 	         */
 	        if (cellHas(south, GrassLow.class)) {
 	            apple.setFalling(true);
@@ -297,20 +309,18 @@ public class FruityFrankModel extends Model {
 	            if (!apple.lowDelayDone())
 	                continue;
 
-	            // Le délai est terminé : la pomme écrase la ligne fine.
 	            for (Entity occ : new ArrayList<>(grid().cellAt(south).entities())) {
 	                if (occ instanceof GrassLow)
 	                    remove(occ);
 	            }
 
 	            apple.disarmLow();
-	            // Pas de continue ici : la pomme va descendre dans cette case plus bas.
+	            // Pas de continue : la pomme descend dans cette case.
 	        }
 
 	        /*
-	         * Aucun support :
-	         * Si la pomme vient de perdre son support, elle attend avant de tomber.
-	         * C'est le cas où Frank creuse sous la pomme.
+	         * Aucun support : si la pomme vient de le perdre (Frank a creusé dessous),
+	         * elle attend un délai avant de tomber.
 	         */
 	        if (!apple.isFalling()) {
 	            if (!apple.isArmed()) {
@@ -327,17 +337,17 @@ public class FruityFrankModel extends Model {
 	        }
 
 	        /*
-	         * Ralentissement de la chute :
-	         * la pomme descend d'une case seulement tous les FALL_STEP_TICKS.
+	         * Ralentissement de la chute : la pomme descend d'une case seulement tous
+	         * les fallStepTicks() ticks, cadence donnée par la gravité du monde.
 	         */
-	        if (tick % FALL_STEP_TICKS != 0)
+	        if (tick % fallStepTicks() != 0)
 	            continue;
 
 	        Grid.Cell below = grid().cellAt(south);
 
 	        /*
-	         * Collision avec les entités dans la case du dessous.
-	         * Important : la pomme ne disparaît PAS après avoir tué.
+	         * Collision avec les entités du dessous. La pomme ne disparaît PAS après
+	         * avoir écrasé.
 	         */
 	        for (Entity occ : new ArrayList<>(below.entities())) {
 	            if (occ instanceof Frank f) {
