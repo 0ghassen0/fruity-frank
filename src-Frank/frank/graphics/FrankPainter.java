@@ -57,12 +57,23 @@ public class FrankPainter extends Painter {
 		g.setColor(g.getColor(255, 255, 220, 0));
 		g.drawString("SCORE " + String.format("%05d", model.state().score()), 8, 16);
 		g.drawString("HI " + String.format("%05d", model.state().highScore()), canvas.getWidth() / 2 - 30, 16);
-
+		g.drawString("FRUITS " + model.state().fruitsRemaining(), 90, 16);
+		
 		Frank frank = model.player();
 		if (frank != null) {
 			g.setColor(g.getColor(255, 255, 120, 0));
 			for (int i = 0; i < frank.lives(); i++)
 				g.fillOval(canvas.getWidth() - 24 - i * 16, 6, 12, 12);
+		}
+		
+		if (model.state().isVictory()) {
+		    g.setColor(g.getColor(255, 255, 255, 0));
+		    g.drawString("VICTOIRE !", canvas.getWidth() / 2 - 40, canvas.getHeight() / 2);
+		}
+
+		if (model.state().isGameOver()) {
+		    g.setColor(g.getColor(255, 255, 0, 0));
+		    g.drawString("GAME OVER", canvas.getWidth() / 2 - 40, canvas.getHeight() / 2);
 		}
 
 		if (model.debugMode())
