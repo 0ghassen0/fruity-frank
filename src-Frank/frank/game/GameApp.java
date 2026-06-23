@@ -49,11 +49,11 @@ public class GameApp {
 		FruityFrankMap map = new FruityFrankMap();
 		FruityFrank game = new FruityFrank(map.cols(), map.rows());
 		FruityFrankModel model = new FruityFrankModel(game, map);
-		
+
 		Map<String, Automaton> galAutomata = loadGalAutomata();
-		
+
 		spawnEnemySpawner(model, game, map, galAutomata);
-		
+
 		for (FruityFrankMap.Cell c : map.grassCells()) {
 			model.add(new GrassLow(game, c.col(), c.row()));
 			model.add(new GrassHigh(game, c.col(), c.row()));
@@ -81,8 +81,6 @@ public class GameApp {
 				Enemy.EnemyType.PURPLE, // fuit
 				Enemy.EnemyType.ORANGE // creuse + poursuit
 		};
-
-		
 
 		int ei = 0;
 		for (FruityFrankMap.Cell c : map.enemySpawns()) {
@@ -138,78 +136,71 @@ public class GameApp {
 	}
 
 	private static void spawnEnemy(FruityFrankModel model, FruityFrank game, int x, int y, Enemy.EnemyType type,
-	        Map<String, Automaton> galAutomata) {
-	    Enemy enemy = new Enemy("Enemy_" + type + "@" + x + "," + y, game, x, y, type);
-	    enemy.setStunt(new BasicStunt(enemy));
+			Map<String, Automaton> galAutomata) {
+		Enemy enemy = new Enemy("Enemy_" + type + "@" + x + "," + y, game, x, y, type);
+		enemy.setStunt(new BasicStunt(enemy));
 
-	    Automaton automaton = (type == Enemy.EnemyType.PURPLE)
-	            ? galAutomata.get("Fleeing")
-	            : galAutomata.get("Tracker");
+		Automaton automaton = (type == Enemy.EnemyType.PURPLE) ? galAutomata.get("Fleeing")
+				: galAutomata.get("Tracker");
 
-	    enemy.setBot(new GALBot(enemy, automaton, ENEMY_SPEED, new FrankCategories()));
-	    model.add(enemy);
+		enemy.setBot(new GALBot(enemy, automaton, ENEMY_SPEED, new FrankCategories()));
+		model.add(enemy);
 	}
-	
+
 	private static void spawnEnemySpawner(FruityFrankModel model, FruityFrank game, FruityFrankMap map,
-	        Map<String, Automaton> galAutomata) {
+			Map<String, Automaton> galAutomata) {
 
-	    Automaton automaton = galAutomata.get("EnemySpawner");
+		Automaton automaton = galAutomata.get("EnemySpawner");
 
-	    if (automaton == null) {
-	        System.err.println("Automate EnemySpawner introuvable");
-	        return;
-	    }
+		if (automaton == null) {
+			System.err.println("Automate EnemySpawner introuvable");
+			return;
+		}
 
-	    FruityFrankMap.Cell sp = map.enemySpawns().get(0);
-	    EnemySpawnerEntity spawner = new EnemySpawnerEntity(game, sp.col(), sp.row());
+		FruityFrankMap.Cell sp = map.enemySpawns().get(0);
+		EnemySpawnerEntity spawner = new EnemySpawnerEntity(game, sp.col(), sp.row());
 
-	    spawner.setStunt(new BasicStunt(spawner));
+		spawner.setStunt(new BasicStunt(spawner));
 
-	    GALBot bot = new GALBot(spawner, automaton, 0.0, new FrankCategories());
+		GALBot bot = new GALBot(spawner, automaton, 0.0, new FrankCategories());
 
-	    final int[] spawnIndex = { 0 };
+		final int[] spawnIndex = { 0 };
 
-	    Enemy.EnemyType[] spawnTypes = {
-	            Enemy.EnemyType.RED,
-	            Enemy.EnemyType.GREEN,
-	            Enemy.EnemyType.PURPLE,
-	            Enemy.EnemyType.ORANGE
-	    };
+		Enemy.EnemyType[] spawnTypes = { Enemy.EnemyType.RED, Enemy.EnemyType.GREEN, Enemy.EnemyType.PURPLE,
+				Enemy.EnemyType.ORANGE };
 
-	    bot.setFactory((category, at, creator) -> {
-	        Enemy.EnemyType type = spawnTypes[spawnIndex[0] % spawnTypes.length];
-	        spawnIndex[0]++;
+		bot.setFactory((category, at, creator) -> {
+			Enemy.EnemyType type = spawnTypes[spawnIndex[0] % spawnTypes.length];
+			spawnIndex[0]++;
 
-	        Enemy enemy = new Enemy(
-	                "Enemy_SPAWNED_" + type + "@" + at.x() + "," + at.y(),
-	                game,
-	                at.x(),
-	                at.y(),
-	                type
-	        );
+			Enemy enemy = new Enemy("Enemy_SPAWNED_" + type + "@" + at.x() + "," + at.y(), game, at.x(), at.y(), type);
 
-	        enemy.setStunt(new BasicStunt(enemy));
+			enemy.setStunt(new BasicStunt(enemy));
 
-	        Automaton enemyAutomaton = (type == Enemy.EnemyType.PURPLE)
-	                ? galAutomata.get("Fleeing")
-	                : galAutomata.get("Tracker");
+			Automaton enemyAutomaton = switch (type) {
+			case PURPLE -> galAutomata.get("EnemyRandom");
+			case RED -> galAutomata.get("Tracker");
+			case ORANGE -> galAutomata.get("Tracker");
+			case GREEN -> galAutomata.get("Fleeing");
+			default -> throw new IllegalArgumentException();
+			};
 
-	        if (enemyAutomaton != null) {
-	            GALBot enemyBot = new GALBot(enemy, enemyAutomaton, ENEMY_SPEED, new FrankCategories());
-	            enemy.setBot(enemyBot);
-	        } else {
-	            System.err.println("Automate introuvable pour ennemi spawn : " + type);
-	        }
+			if (enemyAutomaton != null) {
+				GALBot enemyBot = new GALBot(enemy, enemyAutomaton, ENEMY_SPEED, new FrankCategories());
+				enemy.setBot(enemyBot);
+			} else {
+				System.err.println("Automate introuvable pour ennemi spawn : " + type);
+			}
 
-	        return enemy;
-	    });
+			return enemy;
+		});
 
-	    spawner.setBot(bot);
-	    model.add(spawner);
+		spawner.setBot(bot);
+		model.add(spawner);
 
-	    System.out.println("EnemySpawnerEntity créée avec l'automate EnemySpawner");
+		System.out.println("EnemySpawnerEntity créée avec l'automate EnemySpawner");
 	}
-	
+
 	private static class Spawner implements Ticker.TickListener {
 		private final FruityFrankModel model;
 		private final FruityFrank game;
@@ -247,27 +238,22 @@ public class GameApp {
 			Runtime.post(this, RENDER_MS);
 		}
 	}
-	
+
 	private static Map<String, Automaton> loadGalAutomata() {
-	    Map<String, Automaton> automata = new LinkedHashMap<>();
+		Map<String, Automaton> automata = new LinkedHashMap<>();
 
-	    String[] files = {
-	            "gal_fsm/Tracking.gal",
-	            "gal_fsm/Flee.gal",
-	            "gal_fsm/EnemyRandom.gal",
-	            "gal_fsm/FruitFall.gal",
-	            "gal_fsm/EnemySpawner.gal"
-	    };
+		String[] files = { "gal_fsm/Tracking.gal", "gal_fsm/Flee.gal", "gal_fsm/EnemyRandom.gal",
+				"gal_fsm/FruitFall.gal", "gal_fsm/EnemySpawner.gal" };
 
-	    for (String file : files) {
-	        try {
-	            automata.putAll(GalCompiler.fromFile(file));
-	        } catch (Exception e) {
-	            System.err.println("GAL ignoré: " + file + " -> " + e.getMessage());
-	        }
-	    }
+		for (String file : files) {
+			try {
+				automata.putAll(GalCompiler.fromFile(file));
+			} catch (Exception e) {
+				System.err.println("GAL ignoré: " + file + " -> " + e.getMessage());
+			}
+		}
 
-	    System.out.println("Automates GAL chargés: " + automata.keySet());
-	    return automata;
+		System.out.println("Automates GAL chargés: " + automata.keySet());
+		return automata;
 	}
 }
