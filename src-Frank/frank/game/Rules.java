@@ -17,13 +17,8 @@ public class Rules {
 	public Rules() {
 		// Frank touche un ennemi → perd une vie
 		on(Category.FRANK, Category.ENEMY, (m, s, frank, enemy) -> {
-			/*
-			Frank f = (Frank) frank;
-			f.loseLife();
 			s.killedByEnemy();
-			if (f.isDead())
-				s.setGameOver();
-			m.remove(frank);*/
+			m.remove(frank);
 		});
 
 		// Cerise projectile touche un ennemi → ennemi meurt
