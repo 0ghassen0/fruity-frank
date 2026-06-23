@@ -3,7 +3,7 @@ package frank.game;
 public class GameState {
     private int score;
     private int highScore;
-    private int lives = 3;
+    int lives = 3;
     
     private boolean startMenu = true;
     

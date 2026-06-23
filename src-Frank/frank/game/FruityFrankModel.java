@@ -20,13 +20,14 @@ public class FruityFrankModel extends Model {
 	private Frank player;
 	private boolean debugMode = false;
 	private int tick = 0;
-
+	
 	private static final double CHERRY_SPEED = 4.0;
-
+	private boolean gameOverSoundPlayed = false;
 	public FruityFrankModel(Game game, FruityFrankMap map) {
 		super(game);
 		this.game = game;
 		this.map = map;
+		
 	}
 
 	
@@ -66,6 +67,7 @@ public class FruityFrankModel extends Model {
 		
 	    if (state.isEnded()) {
 	        state.tickEndScreenDelay();
+	        
 	        return;
 	    }
 
@@ -73,6 +75,15 @@ public class FruityFrankModel extends Model {
 	        state.tickCountdown();
 	        return;
 	    }
+	    //le jeu se fige
+	    if (player != null && player.isDying()) {
+	        player.tickDying();
+	        if (player.dyingDone()) {
+	        	player.clearDying();
+	            state.killedByEnemy();   
+	            remove(player);
+	        }
+	        return; }
 
 	    super.update();
 	    tick++;
@@ -244,14 +255,34 @@ public class FruityFrankModel extends Model {
 	        if (e instanceof Fruit f) {
 	            state.addScore(pointsForFruit(f));
 	            state.collectFruit();
+	            GameApp.audio.eat(); 
 	        }
 
 	        if (e instanceof Cherry) {
 	            player.pickCherry();
 	            state.addScore(50);
 	            state.collectFruit();
+	            GameApp.audio.eat(); 
 	        }
 	    }
+	    if (state.isVictory()) {                  
+	        GameApp.audio.win();
+	        GameApp.audio.stopMusic();
+	    }
+	}
+	public void killFrank() {
+		if(player==null || !entities.contains(player)|| player.isDying()) {
+			return ;
+		}
+		boolean end=(state.lives<=1);
+		if(end) {
+			state.killedByEnemy();
+			remove(player);
+		}
+		else {
+			player.startDying(false);
+		}
+		
 	}
 
 	// ============================================================
@@ -314,6 +345,7 @@ public class FruityFrankModel extends Model {
 		proj.setStunt(new BasicStunt(proj));
 		proj.stunt().drive(frank.facingDx() * CHERRY_SPEED, frank.facingDy() * CHERRY_SPEED);
 		add(proj);
+		 GameApp.audio.shoot();  
 	}
 	// ============================================================
 	// PHYSIQUE
@@ -403,7 +435,9 @@ public class FruityFrankModel extends Model {
 
 	@Override
 	protected void onCollision(Entity a, Entity b) {
+		
 		rules.resolve(this, state, a, b);
+		
 	}
 
 	private boolean cellHas(Grid.Position pos, Class<?> type) {

@@ -17,8 +17,13 @@ public class Rules {
 	public Rules() {
 		// Frank touche un ennemi → perd une vie
 		on(Category.FRANK, Category.ENEMY, (m, s, frank, enemy) -> {
-//			s.killedByEnemy();
-//			m.remove(frank);
+		m.killFrank();
+		if(s.lives()<=0) {
+			GameApp.audio.gameOver();  
+		}
+		else {
+			  GameApp.audio.death(); 
+		}
 		});
 
 		// Cerise projectile touche un ennemi → ennemi meurt
@@ -26,13 +31,19 @@ public class Rules {
 			m.remove(enemy);
 			m.remove(proj);
 			s.addScore(300);
+			GameApp.audio.explosion();  
 		});
 
 		// Pomme EN CHUTE qui rattrape Frank → Frank perd une vie
 		on(Category.APPLE, Category.FRANK, (m, s, apple, frank) -> {
 			if (((Apple) apple).isFalling()) {
-				s.killedByEnemy();
-				m.remove(frank);
+				m.killFrank();
+				if(s.lives()<=0) {
+					GameApp.audio.gameOver();  
+				}
+				else {
+					  GameApp.audio.death(); 
+				}
 			}
 		});
 
@@ -41,6 +52,7 @@ public class Rules {
 			if (((Apple) apple).isFalling()) {
 				m.remove(enemy);
 				s.addScore(500);
+				 GameApp.audio.explosion();
 			}
 		});
 

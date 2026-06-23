@@ -5,6 +5,7 @@ import engine.geometry.ISU;
 import engine.graphics.Avatar;
 import engine.graphics.View;
 import frank.entities.Enemy;
+import frank.entities.Frank;
 import frank.entities.Fruit;
 import frank.entities.GrassHigh;
 import frank.game.Category;
@@ -76,6 +77,8 @@ public class FrankAvatar extends Avatar {
 	}
 
 	private void drawFrank(Graphics g, int cx, int cy) {
+		 if (entity instanceof Frank f && !f.blinkVisible()) {
+		        return; }
 		BufferedImage img = lazyFrank(g);
 		if (img != null)
 			drawOnGrass(g, img, cx, cy, cellPx, 20, 15);

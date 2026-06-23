@@ -45,7 +45,7 @@ public class GameApp {
 	public static FrankPainter painter;
 
 	private static volatile boolean running = true;
-
+	public static FrankAudio audio = new FrankAudio();
 	public static void main(String[] args) {
 
 		// Charge la config depuis le fichier passé en argument,
@@ -157,6 +157,7 @@ public class GameApp {
 				new Ticker(MOTION_TPS).start(model);
 				new Ticker(AI_TPS).start(brain);
 				new Ticker(SPAWN_TPS).start(new Spawner(model, game, map, controller, cam));
+				audio.startMusic();
 				Runtime.post(new RenderLoop(canvas), RENDER_MS);
 			}
 		}, true);
