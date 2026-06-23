@@ -170,11 +170,6 @@ public class GameState {
 		return paused;
 	}
 
-	public void pauseGame() {
-		if (!startMenu && !isEnded())
-			paused = true;
-	}
-
 	public void resumeGame() {
 		paused = false;
 	}

@@ -264,15 +264,17 @@ public class Grid {
 		 * @implNote return the coordinates in cm of the top left of corner of this cell
 		 */
 		public ISU.Coord toISUCoord() {
-			return isu.new Coord(x_ncell * isu.getCmPerCell(), y_ncell * isu.getCmPerCell());
+			double cm = isu.getCmPerCell();
+			return isu.new Coord(x_ncell * cm, y_ncell * cm);
 		}
 
 		/**
 		 * @implNote return the coordinate in cm of the center of corner of this cell
 		 */
 		public ISU.Coord toISUCoordCentered() {
-			double half = isu.getCmPerCell() / 2.0;
-			return isu.new Coord(x_ncell * isu.getCmPerCell() + half, y_ncell * isu.getCmPerCell() + half);
+			double cm = isu.getCmPerCell();
+			double half = cm / 2.0;
+			return isu.new Coord(x_ncell * cm + half, y_ncell * cm + half);
 		}
 
 //		Picture.Pixel toPicturePixel() {

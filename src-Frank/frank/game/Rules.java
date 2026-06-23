@@ -28,17 +28,21 @@ public class Rules {
 			s.addScore(300);
 		});
 
-		// Pomme EN CHUTE qui rattrape Frank → Frank perd une vie
+		// Pomme EN CHUTE qui rattrape Frank → Frank perd une vie.
+		// Inoffensive pendant sa pause posée sur un gazon fin (isLowArmed).
 		on(Category.APPLE, Category.FRANK, (m, s, apple, frank) -> {
-			if (((Apple) apple).isFalling()) {
+			Apple a = (Apple) apple;
+			if (a.isFalling() && !a.isLowArmed()) {
 				s.killedByEnemy();
 				m.remove(frank);
 			}
 		});
 
-		// Pomme EN CHUTE qui écrase un ennemi → ennemi meurt
+		// Pomme EN CHUTE qui écrase un ennemi → ennemi meurt.
+		// Inoffensive pendant sa pause posée sur un gazon fin (isLowArmed).
 		on(Category.APPLE, Category.ENEMY, (m, s, apple, enemy) -> {
-			if (((Apple) apple).isFalling()) {
+			Apple a = (Apple) apple;
+			if (a.isFalling() && !a.isLowArmed()) {
 				m.remove(enemy);
 				s.addScore(500);
 			}

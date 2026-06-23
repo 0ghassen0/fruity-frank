@@ -93,10 +93,12 @@ public class BasicStunt extends Stunt {
 		ISU.Vector speed = owner.getLinearSpeed();
 		if (speed == null || (speed.x() == 0 && speed.y() == 0))
 			return;
+		double sx = speed.x();
+		double sy = speed.y();
 
 		ISU isu = owner.center().getISU();
-		double mx = (i < n - 1) ? speed.x() / n : speed.x() - speed.x() / n * (n - 1);
-		double my = (i < n - 1) ? speed.y() / n : speed.y() - speed.y() / n * (n - 1);
+		double mx = (i < n - 1) ? sx / n : sx - sx / n * (n - 1);
+		double my = (i < n - 1) ? sy / n : sy - sy / n * (n - 1);
 		if (mx == 0 && my == 0)
 			return;
 		ISU.Vector micro = isu.new Vector(mx, my);
@@ -125,7 +127,8 @@ public class BasicStunt extends Stunt {
 	/** @return the next cell centre at or ahead of the current position along {@code step}. */
 	private ISU.Coord nextCentreAhead(ISU.Vector step) {
 		ISU.Coord c = owner.center();
-		double cm = c.getISU().getCmPerCell();
+		ISU isu = c.getISU();
+		double cm = isu.getCmPerCell();
 		boolean alongX = step.x() != 0;
 		double dir = Math.signum(alongX ? step.x() : step.y());
 		double pos = alongX ? c.x() : c.y();
@@ -134,7 +137,7 @@ public class BasicStunt extends Stunt {
 		double k = pos / cm - 0.5;
 		double targetK = dir > 0 ? Math.ceil(k - 1e-9) : Math.floor(k + 1e-9);
 		double targetVal = (targetK + 0.5) * cm;
-		return alongX ? c.getISU().new Coord(targetVal, c.y()) : c.getISU().new Coord(c.x(), targetVal);
+		return alongX ? isu.new Coord(targetVal, c.y()) : isu.new Coord(c.x(), targetVal);
 	}
 
 	/**

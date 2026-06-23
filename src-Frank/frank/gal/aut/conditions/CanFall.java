@@ -3,6 +3,7 @@ package frank.gal.aut.conditions;
 import java.util.ArrayList;
 
 import engine.entities.Entity;
+import engine.entities.Stunt;
 import engine.gal.aut.iGALCondition;
 import engine.geometry.Grid;
 import frank.entities.Apple;
@@ -43,13 +44,14 @@ public final class CanFall implements iGALCondition {
 		Grid grid = model.grid();
 		Grid.Position pos = apple.position();
 		Grid.Position south = grid.new Position(pos.x(), pos.y() + 1);
+		Stunt stunt = apple.stunt();
 
 		// (1) Paused on a thin floor (armed on contact by the crush rule): hold in
 		// place, count the pause down, then crush the floor under us. Driven by the
 		// lowDelay state alone, so it can never get stuck.
 		if (apple.isLowArmed()) {
-			if (apple.stunt() != null)
-				apple.stunt().drive(0, 0);
+			if (stunt != null)
+				stunt.drive(0, 0);
 			apple.tickLowDelay();
 			if (apple.lowDelayDone()) {
 				removeGrassLow(model, grid.cellAt(pos));
@@ -70,8 +72,8 @@ public final class CanFall implements iGALCondition {
 			apple.disarm();
 			apple.disarmLow();
 			apple.setFalling(false);
-			if (apple.stunt() != null)
-				apple.stunt().drive(0, 0); // come to rest on the support
+			if (stunt != null)
+				stunt.drive(0, 0); // come to rest on the support
 			return false;
 		}
 

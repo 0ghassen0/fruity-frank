@@ -7,6 +7,7 @@ import frank.entities.Frank;
 import frank.game.Category;
 import frank.game.FruityFrankMap;
 import frank.game.FruityFrankModel;
+import frank.game.GameState;
 import oop.graphics.Canvas;
 import oop.graphics.Color;
 import oop.graphics.Font;
@@ -54,35 +55,39 @@ public class FrankPainter extends Painter {
 
 	@Override
 	protected void paintForeground(Canvas canvas, Graphics g) {
+		GameState st = model.state();
+		int cw = canvas.getWidth();
+
 		// HUD
 		g.setColor(g.getColor(255, 0, 0, 0));
-		g.fillRect(0, 0, canvas.getWidth(), 24);
+		g.fillRect(0, 0, cw, 24);
 		g.setColor(g.getColor(255, 255, 220, 0));
-		g.drawString("SCORE " + String.format("%05d", model.state().score()), 8, 16);
-		g.drawString("HI " + String.format("%05d", model.state().highScore()), canvas.getWidth() / 2 - 30, 16);
-		g.drawString("FRUITS " + model.state().fruitsRemaining(), 90, 16);
+		g.drawString("SCORE " + String.format("%05d", st.score()), 8, 16);
+		g.drawString("HI " + String.format("%05d", st.highScore()), cw / 2 - 30, 16);
+		g.drawString("FRUITS " + st.fruitsRemaining(), 90, 16);
 
 		// compteur d'ennemis : entre le HI SCORE et les vies, calé à gauche des vies
 		String enemies = "ENEMIES " + model.enemyCount();
-		g.drawString(enemies, canvas.getWidth() - 64 - g.getFont().getWidth(enemies), 16);
+		g.drawString(enemies, cw - 64 - g.getFont().getWidth(enemies), 16);
 
 		Frank frank = model.player();
 		if (frank != null) {
 			g.setColor(g.getColor(255, 255, 120, 0));
-			for (int i = 0; i < model.state().lives(); i++)
-			    g.fillOval(canvas.getWidth() - 24 - i * 16, 6, 12, 12);
+			int lives = st.lives();
+			for (int i = 0; i < lives; i++)
+			    g.fillOval(cw - 24 - i * 16, 6, 12, 12);
 		}
-		
-		
+
+
 		paintStartMenu(canvas, g);
 
 		paintPauseMenu(canvas, g);
 
-		if (!model.state().isStartMenu()) {
+		if (!st.isStartMenu()) {
 		    paintEndMenu(canvas, g);
 		    paintCountdown(canvas, g);
 		}
-		
+
 		if (model.debugMode())
 			debugOverlay(g);
 	}
@@ -105,42 +110,48 @@ public class FrankPainter extends Painter {
 	    Camera cam = view.camera();
 	    Color frankColor = g.getColor(255, 255, 80, 80);
 	    Color otherColor = g.getColor(220, 255, 255, 0);
+	    int lives = model.state().lives();
 
 	    for (Entity e : model.entities()) {
+	        Category cat = Category.of(e);
 	        int[] s = (cam != null) ? cam.worldToScreen(e.center().x(), e.center().y())
 	                : new int[] { (int) e.center().x(), (int) e.center().y() };
 	        int lx = s[0] - 20;
 	        int ly = s[1] - cellPx / 2 - 4;
 
-	        if (Category.of(e) == Category.FRANK && e instanceof Frank f) {
-	            drawLabel(g, f.name() + " vies:" + model.state().lives(), lx, ly, frankColor);
-	        } else if (Category.of(e) == Category.ENEMY || Category.of(e) == Category.APPLE) {
+	        if (cat == Category.FRANK && e instanceof Frank f) {
+	            drawLabel(g, f.name() + " vies:" + lives, lx, ly, frankColor);
+	        } else if (cat == Category.ENEMY || cat == Category.APPLE) {
 	            drawLabel(g, e.name(), lx, ly, otherColor);
 	        }
 	    }
 	}
 	
 	
+	/** Dessine {@code img} centrée et adaptée à la fenêtre ; renvoie {@code {x, y, w, h}} affichés. */
+	private int[] drawCenteredImage(Canvas canvas, Graphics g, BufferedImage img) {
+	    int cw = canvas.getWidth();
+	    int iw = img.getWidth();
+
+	    int w = Math.min(cw - 20, iw);
+	    int h = img.getHeight() * w / iw;
+	    int x = (cw - w) / 2;
+	    int y = (canvas.getHeight() - h) / 2;
+
+	    g.drawImage(img, x, y, w, h);
+	    return new int[] { x, y, w, h };
+	}
+
 	private void paintPauseMenu(Canvas canvas, Graphics g) {
 	    if (!model.state().isPaused())
 	        return;
 
 	    BufferedImage img = view.sprites().pauseMenu();
-
 	    if (img == null)
 	        return;
 
-	    int originalW = img.getWidth();
-	    int originalH = img.getHeight();
-
-	    int w = Math.min(canvas.getWidth() - 20, originalW);
-	    int h = originalH * w / originalW;
-
-	    int x = (canvas.getWidth() - w) / 2;
-	    int y = (canvas.getHeight() - h) / 2;
-
-	    g.drawImage(img, x, y, w, h);
-	    paintPauseMenuCursor(g, x, y, w, h);
+	    int[] r = drawCenteredImage(canvas, g, img);
+	    paintPauseMenuCursor(g, r[0], r[1], r[2], r[3]);
 	}
 
 	private void paintStartMenu(Canvas canvas, Graphics g) {
@@ -148,29 +159,19 @@ public class FrankPainter extends Painter {
 	        return;
 
 	    BufferedImage img = view.sprites().startMenu();
-
 	    if (img == null)
 	        return;
 
-	    int originalW = img.getWidth();
-	    int originalH = img.getHeight();
-
-	    int w = Math.min(canvas.getWidth() - 20, originalW);
-	    int h = originalH * w / originalW;
-
-	    int x = (canvas.getWidth() - w) / 2;
-	    int y = (canvas.getHeight() - h) / 2;
-
-	    g.drawImage(img, x, y, w, h);
-	    paintMenuCursor(canvas, g, x, y, w, h, true);
+	    int[] r = drawCenteredImage(canvas, g, img);
+	    paintMenuCursor(canvas, g, r[0], r[1], r[2], r[3], true);
 	}
 	
 	private void paintCountdown(Canvas canvas, Graphics g) {
-	    if (!model.state().isCountingDown())
+	    GameState st = model.state();
+	    if (!st.isCountingDown())
 	        return;
 
-	    int n = model.state().countdownNumber();
-	    BufferedImage img = view.sprites().countdownDigit(n);
+	    BufferedImage img = view.sprites().countdownDigit(st.countdownNumber());
 
 	    if (img == null)
 	        return;
@@ -185,31 +186,18 @@ public class FrankPainter extends Painter {
 	}
 	
 	private void paintEndMenu(Canvas canvas, Graphics g) {
-	    if (!model.state().isEnded())
+	    GameState st = model.state();
+	    if (!st.isEnded() || !st.canShowEndMenu())
 	        return;
 
-	    if (!model.state().canShowEndMenu())
-	        return;
-
-	    BufferedImage img = model.state().isVictory()
+	    BufferedImage img = st.isVictory()
 	            ? view.sprites().victoryMenu()
 	            : view.sprites().gameOverMenu();
-	    
-	    
 	    if (img == null)
 	        return;
 
-	    int originalW = img.getWidth();
-	    int originalH = img.getHeight();
-
-	    int w = Math.min(canvas.getWidth() - 20, originalW);
-	    int h = originalH * w / originalW;
-
-	    int x = (canvas.getWidth() - w) / 2;
-	    int y = (canvas.getHeight() - h) / 2;
-
-	    g.drawImage(img, x, y, w, h);
-	    paintMenuCursor(canvas, g, x, y, w, h, true);
+	    int[] r = drawCenteredImage(canvas, g, img);
+	    paintMenuCursor(canvas, g, r[0], r[1], r[2], r[3], true);
 	}
 	private void paintMenuCursor(Canvas canvas, Graphics g, int menuX, int menuY, int menuW, int menuH, boolean startMenu) {
 	    int option = model.state().hoveredMenuOption();

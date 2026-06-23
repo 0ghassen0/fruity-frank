@@ -12,10 +12,10 @@ public class GrassLow extends Entity implements Categorized {
 
     public GrassLow(Game game, int x, int y) {
         super("GL@" + x + "," + y, game);
-        setSize(isu.new Dimension(0.1 * game.getCmPerCell(), 0.1 * game.getCmPerCell()));
+        double cm = game.getCmPerCell();
+        setSize(isu.new Dimension(0.1 * cm, 0.1 * cm));
         setPosition(grid.new Position(x, y));
         // Décale le centre vers le BAS : la couche 1cm occupe le bas de la cellule
-        double cm = game.getCmPerCell();
         ISU.Coord shifted = isu.new Coord(center.x(), center.y() + 0.45 * cm);
         setCoord(shifted);
         setBounding(game);

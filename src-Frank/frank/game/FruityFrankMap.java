@@ -91,9 +91,6 @@ public final class FruityFrankMap {
 		grassCells.removeAll(fruitCells);
 		grassCells.removeAll(cherryCells);
 		grassCells.removeAll(appleCells);
-
-		System.out.println("[Map] grass=" + grassCells.size() + " fruit=" + fruitCells.size() + " apple="
-				+ appleCells.size() + " cherry=" + cherryCells.size());
 	}
 
 	public boolean isWall(int col, int row) {

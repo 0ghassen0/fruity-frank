@@ -21,9 +21,11 @@ public class FrankController extends Controller {
 
     @Override
     public void pressed(Canvas canvas, int bno, int x, int y) {
-        if (model.state().isStartMenu()) {
+        GameState st = model.state();
+
+        if (st.isStartMenu()) {
             if (insideStartButton(canvas, x, y)) {
-                model.state().startGame();
+                st.startGame();
                 return;
             }
 
@@ -35,22 +37,22 @@ public class FrankController extends Controller {
             return;
         }
 
-        if (model.state().isPaused()) {
+        if (st.isPaused()) {
             if (insidePauseResumeButton(canvas, x, y)) {
-            	model.state().setHoveredMenuOption(0);
-            	model.state().resumeGame();
+            	st.setHoveredMenuOption(0);
+            	st.resumeGame();
                 return;
             }
 
             if (insidePauseRestartButton(canvas, x, y)) {
-            	model.state().setHoveredMenuOption(0);
+            	st.setHoveredMenuOption(0);
             	if (restartAction != null)
                     restartAction.run();
                 return;
             }
 
             if (insidePauseExitButton(canvas, x, y)) {
-            	model.state().setHoveredMenuOption(0);
+            	st.setHoveredMenuOption(0);
             	GameApp.exitGame();
                 return;
             }
@@ -58,7 +60,7 @@ public class FrankController extends Controller {
             return;
         }
 
-        if (model.state().isEnded() && model.state().canShowEndMenu()) {
+        if (st.isEnded() && st.canShowEndMenu()) {
             if (insideRestartButton(canvas, x, y)) {
                 if (restartAction != null)
                     restartAction.run();
@@ -77,10 +79,12 @@ public class FrankController extends Controller {
     }
     @Override
     public void pressed(Canvas canvas, int keyCode, char keyChar) {
+        GameState st = model.state();
+
         // ESC : met le jeu en pause / le reprend (togglePause ignore menu et fin).
         if (keyCode == VirtualKeyCodes.VK_ESCAPE) {
-        	model.state().setHoveredMenuOption(0);
-        	model.state().togglePause();
+        	st.setHoveredMenuOption(0);
+        	st.togglePause();
             return;
         }
 
@@ -91,13 +95,7 @@ public class FrankController extends Controller {
             return;
         }
 
-        if (model.state().isPaused())
-            return;
-
-        if (model.state().isEnded())
-            return;
-
-        if (model.state().isStartMenu())
+        if (st.isPaused() || st.isEnded() || st.isStartMenu())
             return;
 
         super.pressed(canvas, keyCode, keyChar);
@@ -114,172 +112,102 @@ public class FrankController extends Controller {
         model.toggleDebug();
     }
 
-    private boolean insideRestartButton(Canvas canvas, int mx, int my) {
-        int originalW = 713;
-        int originalH = 276;
-
-        int menuW = Math.min(canvas.getWidth() - 20, originalW);
-        int menuH = originalH * menuW / originalW;
-
-        int menuX = (canvas.getWidth() - menuW) / 2;
-        int menuY = (canvas.getHeight() - menuH) / 2;
-
-        int x = menuX + (int) (0.12 * menuW);
-        int y = menuY + (int) (0.45 * menuH);
-        int w = (int) (0.72 * menuW);
-        int h = (int) (0.22 * menuH);
-
-        return inside(mx, my, x, y, w, h);
-    }
-
-    private boolean insideExitButton(Canvas canvas, int mx, int my) {
-        int originalW = 713;
-        int originalH = 276;
-
-        int menuW = Math.min(canvas.getWidth() - 20, originalW);
-        int menuH = originalH * menuW / originalW;
-
-        int menuX = (canvas.getWidth() - menuW) / 2;
-        int menuY = (canvas.getHeight() - menuH) / 2;
-
-        int x = menuX + (int) (0.25 * menuW);
-        int y = menuY + (int) (0.68 * menuH);
-        int w = (int) (0.55 * menuW);
-        int h = (int) (0.22 * menuH);
-
-        return inside(mx, my, x, y, w, h);
-    }
-    
     private boolean inside(int mx, int my, int x, int y, int w, int h) {
         return mx >= x && mx <= x + w
             && my >= y && my <= y + h;
     }
-    
-    
-    private boolean insideStartButton(Canvas canvas, int mx, int my) {
-        int originalW = 819;
-        int originalH = 330;
 
-        int menuW = Math.min(canvas.getWidth() - 20, originalW);
-        int menuH = originalH * menuW / originalW;
+    /**
+     * Teste si ({@code mx},{@code my}) tombe dans un bouton d'un menu. Le menu est une
+     * image {@code origW×origH} centrée et adaptée à la fenêtre ; le bouton est défini
+     * en fractions ({@code fx,fy,fw,fh}) de ce menu. Toutes les méthodes de hit-test
+     * délèguent ici (géométrie identique, seules les fractions changent).
+     */
+    private boolean insideMenuButton(Canvas canvas, int mx, int my, int origW, int origH,
+            double fx, double fy, double fw, double fh) {
+        int cw = canvas.getWidth();
+        int ch = canvas.getHeight();
 
-        int menuX = (canvas.getWidth() - menuW) / 2;
-        int menuY = (canvas.getHeight() - menuH) / 2;
+        int menuW = Math.min(cw - 20, origW);
+        int menuH = origH * menuW / origW;
 
-        int x = menuX + (int) (0.18 * menuW);
-        int y = menuY + (int) (0.43 * menuH);
-        int w = (int) (0.65 * menuW);
-        int h = (int) (0.24 * menuH);
+        int menuX = (cw - menuW) / 2;
+        int menuY = (ch - menuH) / 2;
+
+        int x = menuX + (int) (fx * menuW);
+        int y = menuY + (int) (fy * menuH);
+        int w = (int) (fw * menuW);
+        int h = (int) (fh * menuH);
 
         return inside(mx, my, x, y, w, h);
+    }
+
+    // End menu (image 713×276)
+    private boolean insideRestartButton(Canvas canvas, int mx, int my) {
+        return insideMenuButton(canvas, mx, my, 713, 276, 0.12, 0.45, 0.72, 0.22);
+    }
+
+    private boolean insideExitButton(Canvas canvas, int mx, int my) {
+        return insideMenuButton(canvas, mx, my, 713, 276, 0.25, 0.68, 0.55, 0.22);
+    }
+
+    // Start & pause menus (image 819×330)
+    private boolean insideStartButton(Canvas canvas, int mx, int my) {
+        return insideMenuButton(canvas, mx, my, 819, 330, 0.18, 0.43, 0.65, 0.24);
     }
 
     private boolean insideStartExitButton(Canvas canvas, int mx, int my) {
-        int originalW = 819;
-        int originalH = 330;
-
-        int menuW = Math.min(canvas.getWidth() - 20, originalW);
-        int menuH = originalH * menuW / originalW;
-
-        int menuX = (canvas.getWidth() - menuW) / 2;
-        int menuY = (canvas.getHeight() - menuH) / 2;
-
-        int x = menuX + (int) (0.27 * menuW);
-        int y = menuY + (int) (0.68 * menuH);
-        int w = (int) (0.55 * menuW);
-        int h = (int) (0.23 * menuH);
-
-        return inside(mx, my, x, y, w, h);
+        return insideMenuButton(canvas, mx, my, 819, 330, 0.27, 0.68, 0.55, 0.23);
     }
 
     private boolean insidePauseResumeButton(Canvas canvas, int mx, int my) {
-        int originalW = 819;
-        int originalH = 330;
-
-        int menuW = Math.min(canvas.getWidth() - 20, originalW);
-        int menuH = originalH * menuW / originalW;
-
-        int menuX = (canvas.getWidth() - menuW) / 2;
-        int menuY = (canvas.getHeight() - menuH) / 2;
-
-        int x = menuX + (int) (0.30 * menuW);
-        int y = menuY + (int) (0.34 * menuH);
-        int w = (int) (0.42 * menuW);
-        int h = (int) (0.18 * menuH);
-
-        return inside(mx, my, x, y, w, h);
+        return insideMenuButton(canvas, mx, my, 819, 330, 0.30, 0.34, 0.42, 0.18);
     }
 
     private boolean insidePauseRestartButton(Canvas canvas, int mx, int my) {
-        int originalW = 819;
-        int originalH = 330;
-
-        int menuW = Math.min(canvas.getWidth() - 20, originalW);
-        int menuH = originalH * menuW / originalW;
-
-        int menuX = (canvas.getWidth() - menuW) / 2;
-        int menuY = (canvas.getHeight() - menuH) / 2;
-
-        int x = menuX + (int) (0.17 * menuW);
-        int y = menuY + (int) (0.54 * menuH);
-        int w = (int) (0.67 * menuW);
-        int h = (int) (0.18 * menuH);
-
-        return inside(mx, my, x, y, w, h);
+        return insideMenuButton(canvas, mx, my, 819, 330, 0.17, 0.54, 0.67, 0.18);
     }
 
     private boolean insidePauseExitButton(Canvas canvas, int mx, int my) {
-        int originalW = 819;
-        int originalH = 330;
-
-        int menuW = Math.min(canvas.getWidth() - 20, originalW);
-        int menuH = originalH * menuW / originalW;
-
-        int menuX = (canvas.getWidth() - menuW) / 2;
-        int menuY = (canvas.getHeight() - menuH) / 2;
-
-        int x = menuX + (int) (0.28 * menuW);
-        int y = menuY + (int) (0.74 * menuH);
-        int w = (int) (0.53 * menuW);
-        int h = (int) (0.17 * menuH);
-
-        return inside(mx, my, x, y, w, h);
+        return insideMenuButton(canvas, mx, my, 819, 330, 0.28, 0.74, 0.53, 0.17);
     }
     @Override
     public void moved(Canvas canvas, int x, int y) {
-        if (model.state().isStartMenu()) {
+        GameState st = model.state();
+
+        if (st.isStartMenu()) {
             if (insideStartButton(canvas, x, y))
-                model.state().setHoveredMenuOption(1);
+                st.setHoveredMenuOption(1);
             else if (insideStartExitButton(canvas, x, y))
-                model.state().setHoveredMenuOption(2);
+                st.setHoveredMenuOption(2);
             else
-                model.state().setHoveredMenuOption(0);
+                st.setHoveredMenuOption(0);
             return;
         }
 
-        if (model.state().isPaused()) {
+        if (st.isPaused()) {
             if (insidePauseResumeButton(canvas, x, y))
-                model.state().setHoveredMenuOption(1);
+                st.setHoveredMenuOption(1);
             else if (insidePauseRestartButton(canvas, x, y))
-                model.state().setHoveredMenuOption(2);
+                st.setHoveredMenuOption(2);
             else if (insidePauseExitButton(canvas, x, y))
-                model.state().setHoveredMenuOption(3);
+                st.setHoveredMenuOption(3);
             else
-                model.state().setHoveredMenuOption(0);
+                st.setHoveredMenuOption(0);
             return;
         }
 
-        if (model.state().isEnded() && model.state().canShowEndMenu()) {
+        if (st.isEnded() && st.canShowEndMenu()) {
             if (insideRestartButton(canvas, x, y))
-                model.state().setHoveredMenuOption(1);
+                st.setHoveredMenuOption(1);
             else if (insideExitButton(canvas, x, y))
-                model.state().setHoveredMenuOption(2);
+                st.setHoveredMenuOption(2);
             else
-                model.state().setHoveredMenuOption(0);
+                st.setHoveredMenuOption(0);
             return;
         }
 
-        model.state().setHoveredMenuOption(0);
+        st.setHoveredMenuOption(0);
         super.moved(canvas, x, y);
     }
 }
