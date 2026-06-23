@@ -70,20 +70,20 @@ public final class CanFall implements iGALCondition {
 
 		if (solidSupport) {
 			// position() flips to cell Y the instant the apple's CENTRE crosses the top
-			// edge of Y (toGridPosition floors), so the support below (Y+1) is detected
-			// while the apple is still up to half a cell above its resting height. Keep
-			// descending until the centre reaches the cell-centre line, then snap exactly
-			// onto it — otherwise the apple freezes in mid-air, half a block too high.
-			double restY = pos.toISUCoordCentered().y();
-			if (apple.center().y() < restY)
-				return true; // not yet at resting height: take another downward step
+			// edge of Y (toGridPosition floors), so support below (Y+1) is detected while
+			// the apple is still up to a cell above its resting height. Halting here would
+			// freeze it in mid-air, half a block too high. Instead keep falling and let
+			// the stunt's own wall-clearance (canOccupy + snapToLaneCellAlong, at 30Hz)
+			// carry the apple down and rest it flush on the support; only once its centre
+			// has reached the cell-centre line do we finalise the landing.
+			if (apple.center().y() < pos.toISUCoordCentered().y())
+				return true; // not yet at resting height: keep descending
 
 			apple.disarm();
 			apple.disarmLow();
 			apple.setFalling(false);
-			apple.setCoord(pos.toISUCoordCentered()); // snap to cell centre, clearing sub-cell error
 			if (stunt != null)
-				stunt.drive(0, 0); // come to rest on the support
+				stunt.drive(0, 0); // settle: stop re-probing now that it rests on the support
 			return false;
 		}
 

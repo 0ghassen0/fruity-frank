@@ -409,7 +409,7 @@ public class FruityFrankModel extends Model {
 			// une pomme posée (stable) est un obstacle pour TOUS les monstres
 			Grid.Cell cell = grid.cellAt(target);
 			for (Entity o : cell.entities())
-				if ((o instanceof Apple a && !a.isFalling()) || (o instanceof Enemy && o != e))
+				if ((o instanceof Apple a && !a.isFalling()) || (o instanceof Enemy && o != e) || (o instanceof Fruit) || (o instanceof Cherry))
 					return false;
 
 			if (en.canDig())
