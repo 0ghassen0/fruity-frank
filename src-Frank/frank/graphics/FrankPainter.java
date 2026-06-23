@@ -140,6 +140,7 @@ public class FrankPainter extends Painter {
 	    int y = (canvas.getHeight() - h) / 2;
 
 	    g.drawImage(img, x, y, w, h);
+	    paintPauseMenuCursor(g, x, y, w, h);
 	}
 
 	private void paintStartMenu(Canvas canvas, Graphics g) {
@@ -161,6 +162,7 @@ public class FrankPainter extends Painter {
 	    int y = (canvas.getHeight() - h) / 2;
 
 	    g.drawImage(img, x, y, w, h);
+	    paintMenuCursor(canvas, g, x, y, w, h, true);
 	}
 	
 	private void paintCountdown(Canvas canvas, Graphics g) {
@@ -207,5 +209,67 @@ public class FrankPainter extends Painter {
 	    int y = (canvas.getHeight() - h) / 2;
 
 	    g.drawImage(img, x, y, w, h);
+	    paintMenuCursor(canvas, g, x, y, w, h, true);
+	}
+	private void paintMenuCursor(Canvas canvas, Graphics g, int menuX, int menuY, int menuW, int menuH, boolean startMenu) {
+	    int option = model.state().hoveredMenuOption();
+
+	    if (option == 0)
+	        return;
+
+	    BufferedImage cursor = view.sprites().menuCursor();
+
+	    if (cursor == null)
+	        return;
+
+	    int cursorW = Math.max(12, (int) (0.045 * menuW));
+	    int cursorH = cursor.getHeight() * cursorW / cursor.getWidth();
+
+	    double cursorXRatio;
+	    double cursorYRatio;
+
+	    if (startMenu) {
+	        cursorXRatio = 0.12;
+	        cursorYRatio = option == 1 ? 0.64 : 0.86;
+	    } else {
+	        cursorXRatio = 0.09;
+	        cursorYRatio = option == 1 ? 0.68 : 0.90;
+	    }
+
+	    int x = menuX + (int) (cursorXRatio * menuW) - cursorW;
+	    int y = menuY + (int) (cursorYRatio * menuH) - cursorH / 2;
+
+	    g.drawImage(cursor, x, y, cursorW, cursorH);
+	}
+	
+	private void paintPauseMenuCursor(Graphics g, int menuX, int menuY, int menuW, int menuH) {
+	    int option = model.state().hoveredMenuOption();
+
+	    if (option == 0)
+	        return;
+
+	    BufferedImage cursor = view.sprites().menuCursor();
+
+	    if (cursor == null)
+	        return;
+
+	    int cursorW = Math.max(12, (int) (0.045 * menuW));
+	    int cursorH = cursor.getHeight() * cursorW / cursor.getWidth();
+
+	    double cursorXRatio = 0.10;
+	    double cursorYRatio;
+
+	    if (option == 1) {
+	        cursorYRatio = 0.51; // RESUME
+	    } else if (option == 2) {
+	        cursorYRatio = 0.68; // RESTART GAME
+	    } else {
+	        cursorYRatio = 0.89; // EXIT GAME
+	    }
+
+	    int x = menuX + (int) (cursorXRatio * menuW) - cursorW;
+	    int y = menuY + (int) (cursorYRatio * menuH) - cursorH / 2;
+
+	    g.drawImage(cursor, x, y, cursorW, cursorH);
 	}
 }

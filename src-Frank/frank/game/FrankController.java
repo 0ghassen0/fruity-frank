@@ -37,18 +37,21 @@ public class FrankController extends Controller {
 
         if (model.state().isPaused()) {
             if (insidePauseResumeButton(canvas, x, y)) {
-                model.state().resumeGame();
+            	model.state().setHoveredMenuOption(0);
+            	model.state().resumeGame();
                 return;
             }
 
             if (insidePauseRestartButton(canvas, x, y)) {
-                if (restartAction != null)
+            	model.state().setHoveredMenuOption(0);
+            	if (restartAction != null)
                     restartAction.run();
                 return;
             }
 
             if (insidePauseExitButton(canvas, x, y)) {
-                System.exit(0);
+            	model.state().setHoveredMenuOption(0);
+            	System.exit(0);
                 return;
             }
 
@@ -76,7 +79,8 @@ public class FrankController extends Controller {
     public void pressed(Canvas canvas, int keyCode, char keyChar) {
         // ESC : met le jeu en pause / le reprend (togglePause ignore menu et fin).
         if (keyCode == VirtualKeyCodes.VK_ESCAPE) {
-            model.state().togglePause();
+        	model.state().setHoveredMenuOption(0);
+        	model.state().togglePause();
             return;
         }
 
@@ -241,5 +245,41 @@ public class FrankController extends Controller {
 
         return inside(mx, my, x, y, w, h);
     }
+    @Override
+    public void moved(Canvas canvas, int x, int y) {
+        if (model.state().isStartMenu()) {
+            if (insideStartButton(canvas, x, y))
+                model.state().setHoveredMenuOption(1);
+            else if (insideStartExitButton(canvas, x, y))
+                model.state().setHoveredMenuOption(2);
+            else
+                model.state().setHoveredMenuOption(0);
+            return;
+        }
 
+        if (model.state().isPaused()) {
+            if (insidePauseResumeButton(canvas, x, y))
+                model.state().setHoveredMenuOption(1);
+            else if (insidePauseRestartButton(canvas, x, y))
+                model.state().setHoveredMenuOption(2);
+            else if (insidePauseExitButton(canvas, x, y))
+                model.state().setHoveredMenuOption(3);
+            else
+                model.state().setHoveredMenuOption(0);
+            return;
+        }
+
+        if (model.state().isEnded() && model.state().canShowEndMenu()) {
+            if (insideRestartButton(canvas, x, y))
+                model.state().setHoveredMenuOption(1);
+            else if (insideExitButton(canvas, x, y))
+                model.state().setHoveredMenuOption(2);
+            else
+                model.state().setHoveredMenuOption(0);
+            return;
+        }
+
+        model.state().setHoveredMenuOption(0);
+        super.moved(canvas, x, y);
+    }
 }
