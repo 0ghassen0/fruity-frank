@@ -256,23 +256,31 @@ public class FruityFrankModel extends Model {
 
 	    for (Entity e : got) {
 	        remove(e);
-
-	        if (e instanceof Fruit f) {
-	            state.addScore(pointsForFruit(f));
-	            state.collectFruit();
-	            GameApp.audio.eat(); 
-	        }
-
-	        if (e instanceof Cherry) {
-	            player.pickCherry();
-	            state.addScore(50);
-	            state.collectFruit();
-	            GameApp.audio.eat(); 
-	        }
+	        awardPickup(e);
 	    }
-	    if (state.isVictory()) {                  
+	    if (state.isVictory()) {
 	        GameApp.audio.win();
 	        GameApp.audio.stopMusic();
+	    }
+	}
+
+	/**
+	 * Award a fruit/cherry pickup's value: score, fruit count, and the eat sound.
+	 * Does NOT remove the entity — the caller handles removal (the imperative
+	 * {@link #collectUnderFrank} above, or the GAL {@code Pick} action paired with a
+	 * {@code ()} destroy target). Shared so both paths score identically.
+	 */
+	public void awardPickup(Entity e) {
+	    if (e instanceof Fruit f) {
+	        state.addScore(pointsForFruit(f));
+	        state.collectFruit();
+	        GameApp.audio.eat();
+	    } else if (e instanceof Cherry) {
+	        if (player != null)
+	            player.pickCherry();
+	        state.addScore(50);
+	        state.collectFruit();
+	        GameApp.audio.eat();
 	    }
 	}
 	public void killFrank() {

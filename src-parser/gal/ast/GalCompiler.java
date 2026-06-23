@@ -26,10 +26,13 @@ import engine.gal.conditions.Or;
 import engine.gal.conditions.True;
 import frank.gal.aut.actions.Egg;
 import frank.gal.aut.actions.Explode;
+import frank.gal.aut.actions.Hit;
 import frank.gal.aut.actions.Move;
+import frank.gal.aut.actions.Pick;
 import frank.gal.aut.actions.Turn;
 import frank.gal.aut.conditions.CanFall;
 import frank.gal.aut.conditions.Closest;
+import frank.gal.aut.conditions.Got;
 import frank.gal.aut.conditions.MyDir;
 import frank.gal.aut.conditions.Step;
 
@@ -104,6 +107,7 @@ public final class GalCompiler {
             case "Step", "Cell" -> step(p);
             case "MyDir" -> new MyDir(direction(param(p, 0, name)));
             case "Struck" -> new CanFall(); // reuses the spare "Struck" token: gravity guard for fruits
+            case "Got" -> new Got(category(param(p, 0, name))); // spare "Got": bounding-overlap with a category
             default -> throw unsupported("condition", f.toString());
         };
     }
@@ -148,6 +152,8 @@ public final class GalCompiler {
             case "Wait" -> new Wait(intValue(param(p, 0, name)));
             case "Egg" -> egg(p);
             case "Explode" -> Explode.INSTANCE;
+            case "Pick" -> Pick.INSTANCE; // spare "Pick": award a fruit/cherry value
+            case "Hit" -> Hit.INSTANCE;   // spare "Hit": apply the aggressor's effect to $
             default -> throw unsupported("action", f.toString());
         };
     }
