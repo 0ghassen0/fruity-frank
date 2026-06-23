@@ -300,7 +300,10 @@ public class FruityFrankModel extends Model {
 		for (Entity e : entities()) {
 			if (!(e instanceof CherryProjectile cp))
 				continue;
-
+			 if (cp.outOfRange()) {
+			        dead.add(cp);
+			        continue;
+			    }
 			// La case juste devant le projectile, dans sa direction de tir
 			Grid.Position next = grid().new Position(cp.position().x() + cp.facingDx(),
 					cp.position().y() + cp.facingDy());
@@ -313,7 +316,7 @@ public class FruityFrankModel extends Model {
 
 			// Tout obstacle dans la case suivante → la cerise disparaît
 			for (Entity o : grid().cellAt(next).entities()) {
-				if (o instanceof GrassHigh || o instanceof GrassLow || o instanceof Fruit || o instanceof Apple
+				if (o instanceof GrassHigh || o instanceof Fruit || o instanceof Apple
 						|| o instanceof Cherry) {
 					dead.add(cp);
 					break;
