@@ -129,16 +129,26 @@ public final class FrankSprites {
 		}
 	}
 
-	// FRANK : dir 0=droite 1=gauche 2=haut 3=bas, animation 4 frames
-	public BufferedImage frank(int dir, int frame) {
-		int row = switch (dir) {
-		case 0 -> 1; // droite
-		case 1 -> 0; // gauche
-		case 2 -> 2; // haut (pas de sprite dos → on prend le face)
-		case 3 -> 2; // bas (face)
-		default -> 2;
-		};
-		return frank[row * 4 + (frame % 4)];
+	// FRANK : dir 0=droite 1=gauche 2=haut 3=bas
+	public BufferedImage frank(int dir, int frame, boolean hasCherry) {
+	    int row = switch (dir) {
+	        case 0 -> 1; // droite
+	        case 1 -> 0; // gauche
+	        case 2 -> 2; // haut
+	        case 3 -> 2; // bas
+	        default -> 2;
+	    };
+
+	    /*
+	     * Spritesheet Frank :
+	     * colonnes 0-1 = avec projectile en main
+	     * colonnes 2-3 = sans projectile
+	     */
+	    int baseCol = hasCherry ? 0 : 2;
+
+	    int col = baseCol + (frame % 2);
+
+	    return frank[row * 4 + col];
 	}
 
 	// ENEMY : ligne = type, colonnes par direction (0-1 droite, 2-3 gauche, 4-5 vertical)

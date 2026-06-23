@@ -306,17 +306,23 @@ public class FruityFrankModel extends Model {
 	}
 
 	public void throwCherryInternal(Frank frank) {
-		frank.useCherry();
-		int sx = frank.position().x() + frank.facingDx();
-		int sy = frank.position().y() + frank.facingDy();
-		Grid.Position p = grid().new Position(sx, sy);
-		if (map.isWall(p.x(), p.y()))
-			return; // ← seule condition : pas tirer dans un mur
+	    int sx = frank.position().x() + frank.facingDx();
+	    int sy = frank.position().y() + frank.facingDy();
 
-		CherryProjectile proj = new CherryProjectile(game, sx, sy, frank.facingDx(), frank.facingDy());
-		proj.setStunt(new BasicStunt(proj));
-		proj.stunt().drive(frank.facingDx() * CHERRY_SPEED, frank.facingDy() * CHERRY_SPEED);
-		add(proj);
+	    Grid.Position p = grid().new Position(sx, sy);
+
+	    // Si Frank tire dans un mur, il garde sa cerise.
+	    if (map.isWall(p.x(), p.y()))
+	        return;
+
+	    CherryProjectile proj = new CherryProjectile(game, sx, sy, frank.facingDx(), frank.facingDy());
+	    proj.setStunt(new BasicStunt(proj));
+	    proj.stunt().drive(frank.facingDx() * CHERRY_SPEED, frank.facingDy() * CHERRY_SPEED);
+
+	    add(proj);
+
+	    // Là seulement, le projectile a vraiment été lancé.
+	    frank.useCherry();
 	}
 	// ============================================================
 	// PHYSIQUE
