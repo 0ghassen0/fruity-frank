@@ -35,6 +35,26 @@ public class FrankController extends Controller {
             return;
         }
 
+        if (model.state().isPaused()) {
+            if (insidePauseResumeButton(canvas, x, y)) {
+                model.state().resumeGame();
+                return;
+            }
+
+            if (insidePauseRestartButton(canvas, x, y)) {
+                if (restartAction != null)
+                    restartAction.run();
+                return;
+            }
+
+            if (insidePauseExitButton(canvas, x, y)) {
+                System.exit(0);
+                return;
+            }
+
+            return;
+        }
+
         if (model.state().isEnded() && model.state().canShowEndMenu()) {
             if (insideRestartButton(canvas, x, y)) {
                 if (restartAction != null)
@@ -54,8 +74,11 @@ public class FrankController extends Controller {
     }
     @Override
     public void pressed(Canvas canvas, int keyCode, char keyChar) {
-        if (model.state().isEnded())
+        // ESC : met le jeu en pause / le reprend (togglePause ignore menu et fin).
+        if (keyCode == VirtualKeyCodes.VK_ESCAPE) {
+            model.state().togglePause();
             return;
+        }
 
         // F3 : bascule les overlays de debug. Touche globale (rendu/dev),
         // pas une commande de Frank → gérée ici plutôt que dans FrankBot.
@@ -63,6 +86,15 @@ public class FrankController extends Controller {
             toggleDebugOverlay();
             return;
         }
+
+        if (model.state().isPaused())
+            return;
+
+        if (model.state().isEnded())
+            return;
+
+        if (model.state().isStartMenu())
+            return;
 
         super.pressed(canvas, keyCode, keyChar);
     }
@@ -152,6 +184,60 @@ public class FrankController extends Controller {
         int y = menuY + (int) (0.68 * menuH);
         int w = (int) (0.55 * menuW);
         int h = (int) (0.23 * menuH);
+
+        return inside(mx, my, x, y, w, h);
+    }
+
+    private boolean insidePauseResumeButton(Canvas canvas, int mx, int my) {
+        int originalW = 819;
+        int originalH = 330;
+
+        int menuW = Math.min(canvas.getWidth() - 20, originalW);
+        int menuH = originalH * menuW / originalW;
+
+        int menuX = (canvas.getWidth() - menuW) / 2;
+        int menuY = (canvas.getHeight() - menuH) / 2;
+
+        int x = menuX + (int) (0.30 * menuW);
+        int y = menuY + (int) (0.34 * menuH);
+        int w = (int) (0.42 * menuW);
+        int h = (int) (0.18 * menuH);
+
+        return inside(mx, my, x, y, w, h);
+    }
+
+    private boolean insidePauseRestartButton(Canvas canvas, int mx, int my) {
+        int originalW = 819;
+        int originalH = 330;
+
+        int menuW = Math.min(canvas.getWidth() - 20, originalW);
+        int menuH = originalH * menuW / originalW;
+
+        int menuX = (canvas.getWidth() - menuW) / 2;
+        int menuY = (canvas.getHeight() - menuH) / 2;
+
+        int x = menuX + (int) (0.17 * menuW);
+        int y = menuY + (int) (0.54 * menuH);
+        int w = (int) (0.67 * menuW);
+        int h = (int) (0.18 * menuH);
+
+        return inside(mx, my, x, y, w, h);
+    }
+
+    private boolean insidePauseExitButton(Canvas canvas, int mx, int my) {
+        int originalW = 819;
+        int originalH = 330;
+
+        int menuW = Math.min(canvas.getWidth() - 20, originalW);
+        int menuH = originalH * menuW / originalW;
+
+        int menuX = (canvas.getWidth() - menuW) / 2;
+        int menuY = (canvas.getHeight() - menuH) / 2;
+
+        int x = menuX + (int) (0.28 * menuW);
+        int y = menuY + (int) (0.74 * menuH);
+        int w = (int) (0.53 * menuW);
+        int h = (int) (0.17 * menuH);
 
         return inside(mx, my, x, y, w, h);
     }

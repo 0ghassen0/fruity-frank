@@ -69,6 +69,9 @@ public class FruityFrankModel extends Model {
 	        return;
 	    }
 
+	    if (state.isPaused())
+	        return;
+
 	    if (state.isCountingDown()) {
 	        state.tickCountdown();
 	        return;
@@ -421,5 +424,16 @@ public class FruityFrankModel extends Model {
 		case PLUM -> 200;
 		case GRAPES -> 120;
 		};
+	}
+
+	public int enemyCount() {
+	    int count = 0;
+
+	    for (Entity e : entities()) {
+	        if (e instanceof Enemy)
+	            count++;
+	    }
+
+	    return count;
 	}
 }

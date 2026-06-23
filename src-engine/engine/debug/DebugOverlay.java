@@ -1,12 +1,15 @@
 package engine.debug;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import engine.entities.Bot;
 import engine.entities.Entity;
 import engine.entities.Hitbox;
 import engine.gal.aut.Category;
 import engine.gal.aut.State;
 import engine.graphics.Camera;
-
+import oop.graphics.Font;
 import oop.graphics.Graphics;
 
 // == DEBUG OVERLAY ==
@@ -26,22 +29,39 @@ public final class DebugOverlay {
 	 * the top-left corner. Values are millisecond intervals; fps is frames/second.
 	 */
 	public static void drawHud(Graphics g, Debug d) {
-		int x = 8;
-		int y = 16;
-		int dy = 14;
-		g.setColor(g.getColor(255, 255, 255, 0)); // opaque yellow
-		if (d.showTickStats()) {
-			g.drawString(line("tick ms", d.tickStats()), x, y);
-			y += dy;
-		}
-		if (d.showPaintStats()) {
-			g.drawString(line("paint ms", d.paintStats()), x, y);
-			y += dy;
-		}
-		if (d.showFps()) {
-			g.drawString(line("fps", d.fpsStats()), x, y);
-			y += dy;
-		}
+	    int x = 8;
+	    int y = 16;
+	    int dy = 14;
+
+	    
+	    List<String> lines = new ArrayList<>();
+	    if (d.showTickStats())  lines.add(line("tick ms",  d.tickStats()));
+	    if (d.showPaintStats()) lines.add(line("paint ms", d.paintStats()));
+	    if (d.showFps())        lines.add(line("fps",      d.fpsStats()));
+	    if (lines.isEmpty())
+	        return;
+
+	    Font f  = g.getFont();
+	    int asc = f.getAscent();
+	    int dsc = f.getDescent();
+	    int pad = 3;
+
+	    // largeur de la plus longue ligne 
+	    int w = 0;
+	    for (String s : lines)
+	        w = Math.max(w, f.getWidth(s));
+	    int h = (lines.size() - 1) * dy + asc + dsc;
+
+	    // fond noir derrière tout le bloc
+	    g.setColor(g.getColor(255, 0, 0, 0));
+	    g.fillRect(x - pad, y - asc - pad, w + 2 * pad, h + 2 * pad);
+
+	    //le text de debug
+	    g.setColor(g.getColor(255, 255, 255, 0)); // opaque yellow
+	    for (String s : lines) {
+	        g.drawString(s, x, y);
+	        y += dy;
+	    }
 	}
 
 	private static String line(String label, Stats s) {
