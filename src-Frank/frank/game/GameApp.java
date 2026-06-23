@@ -46,6 +46,12 @@ public class GameApp {
 
 	private static volatile boolean running = true;
 
+	// Boucles de jeu, gardées en référence pour pouvoir les arrêter à la fermeture
+	// (sinon elles continuent de tourner sur un canvas détruit → NPE / process zombie).
+	private static Ticker motionTicker;
+	private static Ticker aiTicker;
+	private static Ticker spawnTicker;
+
 	public static void main(String[] args) {
 
 		// Charge la config depuis le fichier passé en argument,
@@ -154,12 +160,57 @@ public class GameApp {
 				canvas.set(painter);
 				canvas.set((Canvas.KeyListener) controller);
 				canvas.set((Canvas.MouseListener) controller);
-				new Ticker(MOTION_TPS).start(model);
-				new Ticker(AI_TPS).start(brain);
-				new Ticker(SPAWN_TPS).start(new Spawner(model, game, map, controller, cam));
+				motionTicker = new Ticker(MOTION_TPS);
+				motionTicker.start(model);
+				aiTicker = new Ticker(AI_TPS);
+				aiTicker.start(brain);
+				spawnTicker = new Ticker(SPAWN_TPS);
+				spawnTicker.start(new Spawner(model, game, map, controller, cam));
 				Runtime.post(new RenderLoop(canvas), RENDER_MS);
+				installCloseHandler();
 			}
 		}, true);
+	}
+
+	/**
+	 * Arrête proprement toutes les boucles (rendu + tickers) puis termine le
+	 * processus. Appelé par le bouton « quitter » des menus du jeu.
+	 */
+	public static void exitGame() {
+		stopLoops();
+		System.exit(0);
+	}
+
+	/** Stoppe le rendu et les tickers pour qu'aucune tâche ne tourne sur un canvas détruit. */
+	private static void stopLoops() {
+		running = false;
+		if (motionTicker != null)
+			motionTicker.stop();
+		if (aiTicker != null)
+			aiTicker.stop();
+		if (spawnTicker != null)
+			spawnTicker.stop();
+	}
+
+	/**
+	 * Le {@link Canvas} de la lib n'expose pas d'événement de fermeture. On récupère
+	 * donc la fenêtre AWT créée par {@code Runtime.boot} pour : (1) arrêter nos
+	 * boucles dès le clic sur la croix (sinon une tâche de rendu s'exécute après que
+	 * le canvas a été détruit → {@code grabGraphics()} sur {@code null}) ; (2) faire
+	 * terminer la JVM à la fermeture manuelle.
+	 */
+	private static void installCloseHandler() {
+		for (java.awt.Frame f : java.awt.Frame.getFrames()) {
+			if (!(f instanceof javax.swing.JFrame jf))
+				continue;
+			jf.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+			jf.addWindowListener(new java.awt.event.WindowAdapter() {
+				@Override
+				public void windowClosing(java.awt.event.WindowEvent e) {
+					stopLoops();
+				}
+			});
+		}
 	}
 
 	private static void resetLevel(FruityFrankModel model, FruityFrank game, FruityFrankMap map,
@@ -188,6 +239,10 @@ public class GameApp {
 		model.state().setFruitsRemaining(map.fruitCells().size() + map.cherryCells().size());
 
 		Map<String, Automaton> galAutomata = loadGalAutomata();
+
+		// Le spawner d'ennemis a été retiré avec tous les autres entités ci-dessus :
+		// il faut le recréer, sinon il n'apparaît que pour la première partie.
+		spawnEnemySpawner(model, game, map, galAutomata);
 
 		for (FruityFrankMap.Cell c : map.appleCells()) {
 			Apple apple = new Apple(game, c.col(), c.row());

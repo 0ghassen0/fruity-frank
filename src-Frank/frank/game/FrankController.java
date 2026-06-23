@@ -28,7 +28,7 @@ public class FrankController extends Controller {
             }
 
             if (insideStartExitButton(canvas, x, y)) {
-                System.exit(0);
+                GameApp.exitGame();
                 return;
             }
 
@@ -51,7 +51,7 @@ public class FrankController extends Controller {
 
             if (insidePauseExitButton(canvas, x, y)) {
             	model.state().setHoveredMenuOption(0);
-            	System.exit(0);
+            	GameApp.exitGame();
                 return;
             }
 
@@ -66,7 +66,7 @@ public class FrankController extends Controller {
             }
 
             if (insideExitButton(canvas, x, y)) {
-                System.exit(0);
+                GameApp.exitGame();
                 return;
             }
 
