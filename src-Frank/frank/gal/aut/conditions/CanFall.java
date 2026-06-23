@@ -69,9 +69,19 @@ public final class CanFall implements iGALCondition {
 				|| cellHas(grid, south, Cherry.class);
 
 		if (solidSupport) {
+			// position() flips to cell Y the instant the apple's CENTRE crosses the top
+			// edge of Y (toGridPosition floors), so the support below (Y+1) is detected
+			// while the apple is still up to half a cell above its resting height. Keep
+			// descending until the centre reaches the cell-centre line, then snap exactly
+			// onto it — otherwise the apple freezes in mid-air, half a block too high.
+			double restY = pos.toISUCoordCentered().y();
+			if (apple.center().y() < restY)
+				return true; // not yet at resting height: take another downward step
+
 			apple.disarm();
 			apple.disarmLow();
 			apple.setFalling(false);
+			apple.setCoord(pos.toISUCoordCentered()); // snap to cell centre, clearing sub-cell error
 			if (stunt != null)
 				stunt.drive(0, 0); // come to rest on the support
 			return false;
