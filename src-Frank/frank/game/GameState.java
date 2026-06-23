@@ -6,7 +6,7 @@ public class GameState {
     private int lives = 3;
     
     private boolean startMenu = true;
-    private boolean paused = false;
+    
     private boolean gameOver;
     private boolean frankDied;
 
@@ -148,7 +148,6 @@ public class GameState {
         score = 0;
         lives = 3;
 
-        paused = false;
         startMenu = false;
         gameOver = false;
         frankDied = false;
@@ -159,24 +158,5 @@ public class GameState {
         countdownTicks = 90;
 
         endScreenTicks = -1;
-    }
-    
-    public boolean isPaused() {
-        return paused;
-    }
-
-    public void pauseGame() {
-        if (!startMenu && !isEnded())
-            paused = true;
-    }
-
-    public void resumeGame() {
-        paused = false;
-    }
-
-    public void togglePause() {
-        if (startMenu || isEnded())
-            return;
-        paused = !paused;
     }
 }
