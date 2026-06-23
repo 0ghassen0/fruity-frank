@@ -422,4 +422,15 @@ public class FruityFrankModel extends Model {
 		case GRAPES -> 120;
 		};
 	}
+	
+	public int enemyCount() {
+	    int count = 0;
+
+	    for (Entity e : entities()) {
+	        if (e instanceof Enemy)
+	            count++;
+	    }
+
+	    return count;
+	}
 }

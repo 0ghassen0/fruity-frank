@@ -59,6 +59,7 @@ public class FrankPainter extends Painter {
 		g.drawString("SCORE " + String.format("%05d", model.state().score()), 8, 16);
 		g.drawString("HI " + String.format("%05d", model.state().highScore()), canvas.getWidth() / 2 - 30, 16);
 		g.drawString("FRUITS " + model.state().fruitsRemaining(), 90, 16);
+		g.drawString("ENEMIES " + model.enemyCount(), 8, 36);
 		
 		Frank frank = model.player();
 		if (frank != null) {
