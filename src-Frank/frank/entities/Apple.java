@@ -9,6 +9,9 @@ import frank.game.Category;
 
 public class Apple extends Entity implements Categorized {
 
+    /** AI ticks the apple pauses on a thin floor (GrassLow) before crushing it (~0.5 s). */
+    public static final int LOW_PAUSE_TICKS = 4;
+
     private boolean falling = false;
     private int fallDelay = -1; // -1 = pas armé
     private int lowDelay = -1;  // -1 = pas en train d'écraser une ligne fine
