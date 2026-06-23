@@ -71,6 +71,7 @@ public class FrankPainter extends Painter {
 		
 		paintStartMenu(canvas, g);
 
+		paintPauseMenu(canvas, g);
 		if (!model.state().isStartMenu()) {
 		    paintEndMenu(canvas, g);
 		    paintCountdown(canvas, g);
@@ -96,6 +97,26 @@ public class FrankPainter extends Painter {
 		}
 	}
 	
+	private void paintPauseMenu(Canvas canvas, Graphics g) {
+	    if (!model.state().isPaused())
+	        return;
+
+	    BufferedImage img = view.sprites().pauseMenu();
+
+	    if (img == null)
+	        return;
+
+	    int originalW = img.getWidth();
+	    int originalH = img.getHeight();
+
+	    int w = Math.min(canvas.getWidth() - 20, originalW);
+	    int h = originalH * w / originalW;
+
+	    int x = (canvas.getWidth() - w) / 2;
+	    int y = (canvas.getHeight() - h) / 2;
+
+	    g.drawImage(img, x, y, w, h);
+	}
 	
 	private void paintStartMenu(Canvas canvas, Graphics g) {
 	    if (!model.state().isStartMenu())

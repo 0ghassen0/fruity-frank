@@ -68,6 +68,9 @@ public class FruityFrankModel extends Model {
 	        state.tickEndScreenDelay();
 	        return;
 	    }
+	    
+	    if (state.isPaused())
+	        return;
 
 	    if (state.isCountingDown()) {
 	        state.tickCountdown();
