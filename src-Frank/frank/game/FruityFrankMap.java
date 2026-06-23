@@ -33,15 +33,24 @@ public final class FruityFrankMap {
 		}
 
 		frankSpawn = new Cell(cols / 2, rows / 2);
-		enemySpawns.add(new Cell(cfg.getInt("spawnerx", 2), cfg.getInt("spawnerx", 2)));
-	
+		int spawnerX = cfg.getInt("spawnerx", 2);
+		int spawnerY = cfg.getInt("spawnery", 2);
+		enemySpawns.add(new Cell(spawnerX, spawnerY));
 
 		Set<Cell> reserved = new HashSet<>(enemySpawns);
 		reserved.add(frankSpawn);
 
+		for (int i = 0; i < rows - 1; i++) {
+			reserved.add(new Cell(spawnerX, i));
+		}
+		for (int i = 0; i < cols; i++) {
+			reserved.add(new Cell(i, spawnerY));
+		}
+
 		for (int c = 0; c < cols; c++)
 			for (int r = 1; r < rows - 1; r++)
-				if (!wall[c][r] && !reserved.contains(new Cell(c, r)))
+				if (!wall[c][r] && !reserved.contains(new Cell(c, r)) && !appleCells.contains(new Cell(c, r))
+						&& !cherryCells.contains(new Cell(c, r)) && !fruitCells.contains(new Cell(c, r)))
 					grassCells.add(new Cell(c, r));
 
 		Set<Cell> grassSet = new HashSet<>(grassCells);
@@ -79,6 +88,9 @@ public final class FruityFrankMap {
 			if (used.add(c))
 				cherryCells.add(c);
 		}
+		grassCells.removeAll(fruitCells);
+		grassCells.removeAll(cherryCells);
+		grassCells.removeAll(appleCells);
 
 		System.out.println("[Map] grass=" + grassCells.size() + " fruit=" + fruitCells.size() + " apple="
 				+ appleCells.size() + " cherry=" + cherryCells.size());
