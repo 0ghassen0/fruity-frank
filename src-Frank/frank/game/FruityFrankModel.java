@@ -71,6 +71,9 @@ public class FruityFrankModel extends Model {
 	        return;
 	    }
 
+	    if (state.isPaused())
+	        return;
+
 	    if (state.isCountingDown()) {
 	        state.tickCountdown();
 	        return;
@@ -187,19 +190,21 @@ public class FruityFrankModel extends Model {
 		boolean horizontal = v != null && v.x() != 0 && v.y() == 0;
 		int dir = horizontal ? (int) Math.signum(v.x()) : 0;
 		boolean wantsH = horizontal;
+		Grid grid = grid();
+		Grid.Position fp = player.position(); // invariant pendant la passe
 
 		for (Entity e : new ArrayList<>(entities())) {
 			if (!(e instanceof Apple apple))
 				continue;
 			if (apple.isFalling())
 				continue;
-			if (apple.stunt() != null)
-				apple.stunt().drive(0, 0);
+			var aStunt = apple.stunt();
+			if (aStunt != null)
+				aStunt.drive(0, 0);
 
 			if (!wantsH)
 				continue;
 
-			Grid.Position fp = player.position();
 			Grid.Position ap = apple.position();
 
 			// même ligne obligatoire
@@ -217,12 +222,12 @@ public class FruityFrankModel extends Model {
 				continue;
 
 			// La case devant la pomme doit être libre
-			Grid.Position beyond = grid().new Position(ap.x() + dir, ap.y());
+			Grid.Position beyond = grid.new Position(ap.x() + dir, ap.y());
 			if (!canReceiveApple(beyond))
 				continue;
 
 			// La pomme écrase le gazon de la case où elle ARRIVE, puis s'y installe
-			for (Entity o : new ArrayList<>(grid().cellAt(beyond).entities())) {
+			for (Entity o : new ArrayList<>(grid.cellAt(beyond).entities())) {
 				if (o instanceof GrassHigh gh)
 					gh.startFade();
 				if (o instanceof GrassLow gl)
@@ -302,6 +307,7 @@ public class FruityFrankModel extends Model {
 	// ============================================================
 
 	private void removeBadCherryProjectiles() {
+		Grid grid = grid();
 		List<Entity> dead = new ArrayList<>();
 		for (Entity e : entities()) {
 			if (!(e instanceof CherryProjectile cp))
@@ -311,8 +317,8 @@ public class FruityFrankModel extends Model {
 			        continue;
 			    }
 			// La case juste devant le projectile, dans sa direction de tir
-			Grid.Position next = grid().new Position(cp.position().x() + cp.facingDx(),
-					cp.position().y() + cp.facingDy());
+			Grid.Position cpos = cp.position();
+			Grid.Position next = grid.new Position(cpos.x() + cp.facingDx(), cpos.y() + cp.facingDy());
 
 			// Mur → la cerise disparaît
 			if (map.isWall(next.x(), next.y())) {
@@ -321,7 +327,7 @@ public class FruityFrankModel extends Model {
 			}
 
 			// Tout obstacle dans la case suivante → la cerise disparaît
-			for (Entity o : grid().cellAt(next).entities()) {
+			for (Entity o : grid.cellAt(next).entities()) {
 				if (o instanceof GrassHigh || o instanceof Fruit || o instanceof Apple
 						|| o instanceof Cherry) {
 					dead.add(cp);
@@ -334,18 +340,26 @@ public class FruityFrankModel extends Model {
 	}
 
 	public void throwCherryInternal(Frank frank) {
-		frank.useCherry();
-		int sx = frank.position().x() + frank.facingDx();
-		int sy = frank.position().y() + frank.facingDy();
-		Grid.Position p = grid().new Position(sx, sy);
-		if (map.isWall(p.x(), p.y()))
-			return; // ← seule condition : pas tirer dans un mur
+	    int fdx = frank.facingDx();
+	    int fdy = frank.facingDy();
+	    int sx = frank.position().x() + fdx;
+	    int sy = frank.position().y() + fdy;
 
-		CherryProjectile proj = new CherryProjectile(game, sx, sy, frank.facingDx(), frank.facingDy());
-		proj.setStunt(new BasicStunt(proj));
-		proj.stunt().drive(frank.facingDx() * CHERRY_SPEED, frank.facingDy() * CHERRY_SPEED);
-		add(proj);
-		 GameApp.audio.shoot();  
+	    Grid.Position p = grid().new Position(sx, sy);
+
+	    // Si Frank tire dans un mur, il garde sa cerise.
+	    if (map.isWall(p.x(), p.y()))
+	        return;
+
+	    CherryProjectile proj = new CherryProjectile(game, sx, sy, fdx, fdy);
+	    proj.setStunt(new BasicStunt(proj));
+	    proj.stunt().drive(fdx * CHERRY_SPEED, fdy * CHERRY_SPEED);
+
+	    add(proj);
+	    GameApp.audio.shoot();
+
+	    // Là seulement, le projectile a vraiment été lancé.
+	    frank.useCherry();
 	}
 	// ============================================================
 	// PHYSIQUE
@@ -357,6 +371,8 @@ public class FruityFrankModel extends Model {
 		if (map.isWall(target.x(), target.y()))
 			return false;
 
+		Grid grid = grid();
+
 		if (e instanceof Apple falling) {
 			// Une pomme qui tombe est arrêtée par un support solide (gros gazon,
 			// autre pomme, fruit, cerise). Sinon elle traverse la case : le gazon
@@ -364,7 +380,7 @@ public class FruityFrankModel extends Model {
 			// collision (voir Rules), pas ici.
 			if (cellHas(target, GrassHigh.class) || cellHas(target, Fruit.class) || cellHas(target, Cherry.class))
 				return false;
-			for (Entity o : grid().cellAt(target).entities())
+			for (Entity o : grid.cellAt(target).entities())
 				if (o instanceof Apple a && a != falling)
 					return false;
 			return true;
@@ -372,7 +388,7 @@ public class FruityFrankModel extends Model {
 
 		if (e instanceof Frank frank) {
 			boolean hasApple = false;
-			for (Entity o : grid().cellAt(target).entities())
+			for (Entity o : grid.cellAt(target).entities())
 				if (o instanceof Apple) {
 					hasApple = true;
 					break;
@@ -384,27 +400,28 @@ public class FruityFrankModel extends Model {
 				int dy = (int) Math.signum(toTarget.y());
 				if (dy != 0 || dx == 0)
 					return false; // pas de poussée verticale
-				Grid.Position beyond = grid().new Position(target.x() + dx, target.y());
+				Grid.Position beyond = grid.new Position(target.x() + dx, target.y());
 				return canReceiveApple(beyond);
 			}
 		}
 
 		if (e instanceof Enemy en) {
 			// une pomme posée (stable) est un obstacle pour TOUS les monstres
-			for (Entity o : grid().cellAt(target).entities())
+			Grid.Cell cell = grid.cellAt(target);
+			for (Entity o : cell.entities())
 				if ((o instanceof Apple a && !a.isFalling()) || (o instanceof Enemy && o != e))
 					return false;
 
 			if (en.canDig())
 				return true;
-			for (Entity o : grid().cellAt(target).entities())
+			for (Entity o : cell.entities())
 				if (o instanceof GrassHigh)
 					return false;
 			return true;
 		}
 
 		if (e instanceof CherryProjectile) {
-			for (Entity o : grid().cellAt(target).entities())
+			for (Entity o : grid.cellAt(target).entities())
 				if (o instanceof GrassHigh)
 					return false;
 			return true;
@@ -455,5 +472,16 @@ public class FruityFrankModel extends Model {
 		case PLUM -> 200;
 		case GRAPES -> 120;
 		};
+	}
+
+	public int enemyCount() {
+	    int count = 0;
+
+	    for (Entity e : entities()) {
+	        if (e instanceof Enemy)
+	            count++;
+	    }
+
+	    return count;
 	}
 }

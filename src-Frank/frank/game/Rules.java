@@ -17,13 +17,12 @@ public class Rules {
 	public Rules() {
 		// Frank touche un ennemi → perd une vie
 		on(Category.FRANK, Category.ENEMY, (m, s, frank, enemy) -> {
-		m.killFrank();
-		if(s.lives()<=0) {
-			GameApp.audio.gameOver();  
-		}
-		else {
-			  GameApp.audio.death(); 
-		}
+			m.killFrank();
+			if (s.lives() <= 0) {
+				GameApp.audio.gameOver();
+			} else {
+				GameApp.audio.death();
+			}
 		});
 
 		// Cerise projectile touche un ennemi → ennemi meurt
@@ -34,32 +33,41 @@ public class Rules {
 			GameApp.audio.explosion();  
 		});
 
-		// Pomme EN CHUTE qui rattrape Frank → Frank perd une vie
+		// Pomme EN CHUTE qui rattrape Frank → Frank perd une vie.
+		// Inoffensive pendant sa pause posée sur un gazon fin (isLowArmed).
 		on(Category.APPLE, Category.FRANK, (m, s, apple, frank) -> {
-			if (((Apple) apple).isFalling()) {
+			Apple a = (Apple) apple;
+			if (a.isFalling() && !a.isLowArmed()) {
 				m.killFrank();
-				if(s.lives()<=0) {
-					GameApp.audio.gameOver();  
-				}
-				else {
-					  GameApp.audio.death(); 
+				if (s.lives() <= 0) {
+					GameApp.audio.gameOver();
+				} else {
+					GameApp.audio.death();
 				}
 			}
 		});
 
-		// Pomme EN CHUTE qui écrase un ennemi → ennemi meurt
+		// Pomme EN CHUTE qui écrase un ennemi → ennemi meurt.
+		// Inoffensive pendant sa pause posée sur un gazon fin (isLowArmed).
 		on(Category.APPLE, Category.ENEMY, (m, s, apple, enemy) -> {
-			if (((Apple) apple).isFalling()) {
+			Apple a = (Apple) apple;
+			if (a.isFalling() && !a.isLowArmed()) {
 				m.remove(enemy);
 				s.addScore(500);
 				 GameApp.audio.explosion();
 			}
 		});
 
-		// Pomme EN CHUTE qui traverse le gazon fin → l'écrase
+		// Pomme EN CHUTE qui touche le gazon fin → marque une courte pause posée dessus
+		// (contact = la pomme est pile à la bonne hauteur). Le décompte et l'écrasement
+		// sont gérés par la garde CanFall ; la règle ne fait qu'armer et stopper.
 		on(Category.APPLE, Category.GRASS_LOW, (m, s, apple, grass) -> {
-			if (((Apple) apple).isFalling())
-				m.remove(grass);
+			Apple a = (Apple) apple;
+			if (a.isFalling() && !a.isLowArmed()) {
+				a.armLow(Apple.LOW_PAUSE_TICKS);
+				if (a.stunt() != null)
+					a.stunt().drive(0, 0); // s'arrête posée sur le gazon fin
+			}
 		});
 	}
 

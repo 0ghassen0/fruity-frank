@@ -11,7 +11,7 @@ import frank.entities.GrassHigh;
 import frank.game.Category;
 import oop.graphics.BufferedImage;
 import oop.graphics.Graphics;
-
+import frank.entities.Frank;
 
 public class FrankAvatar extends Avatar {
 
@@ -209,9 +209,13 @@ public class FrankAvatar extends Avatar {
 	    ISU.Vector v = entity.getLinearSpeed();
 	    boolean moving = v != null && (v.x() != 0 || v.y() != 0);
 
-	    int animFrame = moving ? frame(4) : 0;
+	    // Important : seulement 2 frames, pas 4.
+	    // Sinon  mélanges les frames avec et sans projectile.
+	    int animFrame = moving ? frame(2) : 0;
 
-	    return sprites.frank(facing, animFrame);
+	    boolean hasCherry = entity instanceof Frank f && f.hasCherry();
+
+	    return sprites.frank(facing, animFrame, hasCherry);
 	}
 
 	private BufferedImage lazyEnemy(Graphics g) {

@@ -46,23 +46,25 @@ public class GameApp {
 
 	private static volatile boolean running = true;
 	public static FrankAudio audio = new FrankAudio();
+
+	// Boucles de jeu, gardées en référence pour pouvoir les arrêter à la fermeture
+	// (sinon elles continuent de tourner sur un canvas détruit → NPE / process zombie).
+	private static Ticker motionTicker;
+	private static Ticker aiTicker;
+	private static Ticker spawnTicker;
+
 	public static void main(String[] args) {
 
 		// Charge la config depuis le fichier passé en argument,
 		// ou "config/game.cfg" par défaut
 		String configPath = (args.length > 0) ? args[0] : "game.cfg";
 		GameConfig cfg = new GameConfig(configPath);
-		System.out.println("[DEBUG] dossier de travail = " + new java.io.File(".").getAbsolutePath());
-		System.out.println("[DEBUG] game.cfg existe ? " + new java.io.File("game.cfg").exists());
 
 		// Lit les paramètres depuis la config (avec valeurs par défaut)
 		viewCols = cfg.getInt("view_cols", 15);
 		viewRows = cfg.getInt("view_rows", 11);
 		frankSpeed = cfg.getDouble("frank_speed", 1.0);
 		enemySpeed = cfg.getDouble("enemy_speed", 0.6);
-
-		System.out.println("[GameApp] viewCols=" + viewCols + " viewRows=" + viewRows + " frankSpeed=" + frankSpeed
-				+ " enemySpeed=" + enemySpeed);
 
 		// La map lit ses propres paramètres (cols, rows, ratios...) depuis la config
 		FruityFrankMap map = new FruityFrankMap(cfg);
@@ -154,13 +156,70 @@ public class GameApp {
 				canvas.set(painter);
 				canvas.set((Canvas.KeyListener) controller);
 				canvas.set((Canvas.MouseListener) controller);
-				new Ticker(MOTION_TPS).start(model);
-				new Ticker(AI_TPS).start(brain);
-				new Ticker(SPAWN_TPS).start(new Spawner(model, game, map, controller, cam));
+				// Le ticker de mouvement se gère seul (Model.update sort tôt si en pause).
+				// L'IA et le spawner ne le savent pas → on les enveloppe pour qu'ils ne
+				// tournent pas pendant la pause (sinon les automates continuent de penser
+				// et le spawner peut faire réapparaître Frank pendant la pause).
+				motionTicker = new Ticker(MOTION_TPS);
+				motionTicker.start(model);
+				aiTicker = new Ticker(AI_TPS);
+				aiTicker.start(pauseGated(model, brain));
+				spawnTicker = new Ticker(SPAWN_TPS);
+				spawnTicker.start(pauseGated(model, new Spawner(model, game, map, controller, cam)));
 				audio.startMusic();
 				Runtime.post(new RenderLoop(canvas), RENDER_MS);
+				installCloseHandler();
 			}
 		}, true);
+	}
+
+	/**
+	 * Arrête proprement toutes les boucles (rendu + tickers) puis termine le
+	 * processus. Appelé par le bouton « quitter » des menus du jeu.
+	 */
+	public static void exitGame() {
+		stopLoops();
+		System.exit(0);
+	}
+
+	/** Enveloppe un {@link Ticker.TickListener} pour qu'il soit ignoré tant que le jeu est en pause. */
+	private static Ticker.TickListener pauseGated(FruityFrankModel model, Ticker.TickListener inner) {
+		return dt -> {
+			if (!model.state().isPaused())
+				inner.onTick(dt);
+		};
+	}
+
+	/** Stoppe le rendu et les tickers pour qu'aucune tâche ne tourne sur un canvas détruit. */
+	private static void stopLoops() {
+		running = false;
+		if (motionTicker != null)
+			motionTicker.stop();
+		if (aiTicker != null)
+			aiTicker.stop();
+		if (spawnTicker != null)
+			spawnTicker.stop();
+	}
+
+	/**
+	 * Le {@link Canvas} de la lib n'expose pas d'événement de fermeture. On récupère
+	 * donc la fenêtre AWT créée par {@code Runtime.boot} pour : (1) arrêter nos
+	 * boucles dès le clic sur la croix (sinon une tâche de rendu s'exécute après que
+	 * le canvas a été détruit → {@code grabGraphics()} sur {@code null}) ; (2) faire
+	 * terminer la JVM à la fermeture manuelle.
+	 */
+	private static void installCloseHandler() {
+		for (java.awt.Frame f : java.awt.Frame.getFrames()) {
+			if (!(f instanceof javax.swing.JFrame jf))
+				continue;
+			jf.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+			jf.addWindowListener(new java.awt.event.WindowAdapter() {
+				@Override
+				public void windowClosing(java.awt.event.WindowEvent e) {
+					stopLoops();
+				}
+			});
+		}
 	}
 
 	private static void resetLevel(FruityFrankModel model, FruityFrank game, FruityFrankMap map,
@@ -189,6 +248,10 @@ public class GameApp {
 		model.state().setFruitsRemaining(map.fruitCells().size() + map.cherryCells().size());
 
 		Map<String, Automaton> galAutomata = loadGalAutomata();
+
+		// Le spawner d'ennemis a été retiré avec tous les autres entités ci-dessus :
+		// il faut le recréer, sinon il n'apparaît que pour la première partie.
+		spawnEnemySpawner(model, game, map, galAutomata);
 
 		for (FruityFrankMap.Cell c : map.appleCells()) {
 			Apple apple = new Apple(game, c.col(), c.row());
@@ -283,8 +346,6 @@ public class GameApp {
 
 		spawner.setBot(bot);
 		model.add(spawner);
-
-		System.out.println("EnemySpawnerEntity créée avec l'automate EnemySpawner");
 	}
 
 	private static class Spawner implements Ticker.TickListener {
@@ -304,8 +365,9 @@ public class GameApp {
 
 		@Override
 		public void onTick(double dt) {
-			if (!model.state().isGameOver() && model.state().frankDied()) {
-				model.state().clearDeath();
+			GameState st = model.state();
+			if (!st.isGameOver() && st.frankDied()) {
+				st.clearDeath();
 
 				FrankBot bot = spawnFrank(model, game, map);
 				controller.setPlayerBot(bot);
@@ -350,7 +412,6 @@ public class GameApp {
 			}
 		}
 
-		System.out.println("Automates GAL chargés: " + automata.keySet());
 		return automata;
 	}
 }
