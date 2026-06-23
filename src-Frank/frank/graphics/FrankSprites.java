@@ -15,7 +15,8 @@ public final class FrankSprites {
 	private static final String VICTORY_MENU = "sprites/victory_restart_exit.png";
 	private static final String START_MENU = "sprites/fruity-frank_start.png";
 	private static final String PAUSE_MENU = "sprites/echap_menu.png";
-
+	private static final String MENU_CURSOR = "sprites/menu_cursor.png";
+	
 	// Géométrie EXACTE mesurée sur les images :
 	// premier sprite à (4,5), taille 20x15, pas horizontal 24, pas vertical 20
 	private static final int OX = 4, OY = 5; // origine
@@ -32,7 +33,8 @@ public final class FrankSprites {
 	private BufferedImage victoryMenu;
 	private BufferedImage startMenu;
 	private BufferedImage pauseMenu;
-
+	private BufferedImage menuCursor;
+	
 	private boolean loaded = false;
 
 	public void ensureLoaded(Graphics g) {
@@ -47,7 +49,8 @@ public final class FrankSprites {
 		victoryMenu = g.load(VICTORY_MENU);
 		startMenu = g.load(START_MENU);
 		pauseMenu = g.load(PAUSE_MENU);
-
+		menuCursor = g.load(MENU_CURSOR);
+		
 		// FRANK : 4 colonnes × 3 lignes
 		for (int r = 0; r < 3; r++)
 			for (int c = 0; c < 4; c++)
@@ -91,6 +94,10 @@ public final class FrankSprites {
 
 	public BufferedImage startMenu() {
 	    return startMenu;
+	}
+	
+	public BufferedImage menuCursor() {
+	    return menuCursor;
 	}
 
 	public BufferedImage victoryMenu() {
