@@ -44,10 +44,16 @@ public class Rules {
 			}
 		});
 
-		// Pomme EN CHUTE qui traverse le gazon fin → l'écrase
+		// Pomme EN CHUTE qui touche le gazon fin → marque une courte pause posée dessus
+		// (contact = la pomme est pile à la bonne hauteur). Le décompte et l'écrasement
+		// sont gérés par la garde CanFall ; la règle ne fait qu'armer et stopper.
 		on(Category.APPLE, Category.GRASS_LOW, (m, s, apple, grass) -> {
-			if (((Apple) apple).isFalling())
-				m.remove(grass);
+			Apple a = (Apple) apple;
+			if (a.isFalling() && !a.isLowArmed()) {
+				a.armLow(Apple.LOW_PAUSE_TICKS);
+				if (a.stunt() != null)
+					a.stunt().drive(0, 0); // s'arrête posée sur le gazon fin
+			}
 		});
 	}
 
