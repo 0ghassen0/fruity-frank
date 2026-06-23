@@ -327,10 +327,10 @@ public class GameApp {
 			enemy.setStunt(new BasicStunt(enemy));
 
 			Automaton enemyAutomaton = switch (type) {
-			case PURPLE -> galAutomata.get("EnemyRandom");
-			case RED -> galAutomata.get("Tracker");
-			case ORANGE -> galAutomata.get("Tracker");
-			case GREEN -> galAutomata.get("Fleeing");
+			case PURPLE -> galAutomata.get("Tracker");
+			case RED -> galAutomata.get("Square");
+			case ORANGE -> galAutomata.get("WallFollower");
+			case GREEN -> galAutomata.get("EnemyRandom");
 			default -> throw new IllegalArgumentException();
 			};
 
@@ -402,7 +402,7 @@ public class GameApp {
 		// FruitFall.gal retiré : la chute des pommes est désormais gérée par la
 		// gravité du monde (Game.gravity), plus par un automate.
 		String[] files = { "gal_fsm/Tracking.gal", "gal_fsm/Flee.gal", "gal_fsm/EnemyRandom.gal",
-				"gal_fsm/AppleFall.gal", "gal_fsm/EnemySpawner.gal" };
+				"gal_fsm/AppleFall.gal", "gal_fsm/EnemySpawner.gal",  "gal_fsm/Digger.gal" , "gal_fsm/Square.gal"  };
 
 		for (String file : files) {
 			try {
