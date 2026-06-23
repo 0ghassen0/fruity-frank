@@ -1,4 +1,4 @@
-JAVAPROJECT = ../../../../JavaProject
+JAVAPROJECT = ../../../../ple2026
 CLASS_PATH = $(JAVAPROJECT)/bin
 SRC = $(JAVAPROJECT)/src-parser
 

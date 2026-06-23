@@ -57,13 +57,16 @@ public class FrankView extends View {
     }
 
     public Model model() { return model; }
+    public FrankSprites sprites() {
+    	return this.sprites;
+    }
 
     private int zOrderFor(Category cat) {
         return switch (cat) {
             case GRASS_LOW  -> 0;
             case GRASS_HIGH -> 1;
             case FRUIT, APPLE, CHERRY, CHERRY_PROJECTILE -> 2;
-            case ENEMY      -> 3;
+            case ENEMY, ENEMY_SPAWNER  -> 3;
             case FRANK      -> 4;
             default         -> 2;
         };

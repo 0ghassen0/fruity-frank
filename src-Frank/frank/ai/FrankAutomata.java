@@ -44,9 +44,10 @@ public final class FrankAutomata {
         return self -> {
             if (!(self.bot() instanceof GALBot b) || b.selected() == null)
                 return new int[] { 0, 0 };
-
-            ISU.Vector d = self.center().nearestDeltaTo(b.selected().center());
-            double cm = self.center().getISU().getCmPerCell();
+            
+            ISU.Coord selfcenter = self.center();
+            ISU.Vector d = selfcenter.nearestDeltaTo(b.selected().center());
+            double cm = selfcenter.getISU().getCmPerCell();
             int sign = flee ? -1 : 1;
             int towardX = (d.x() < 0 ? -1 : (d.x() > 0 ? 1 : 0)) * sign;
             int towardY = (d.y() < 0 ? -1 : (d.y() > 0 ? 1 : 0)) * sign;
