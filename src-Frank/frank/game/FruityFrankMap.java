@@ -33,7 +33,7 @@ public final class FruityFrankMap {
 		}
 
 		frankSpawn = new Cell(cols / 2, rows / 2);
-		enemySpawns.add(new Cell(2, 2));
+		enemySpawns.add(new Cell(cfg.getInt("spawnerx", 2), cfg.getInt("spawnerx", 2)));
 		enemySpawns.add(new Cell(cols - 3, 2));
 		enemySpawns.add(new Cell(2, rows - 3));
 		enemySpawns.add(new Cell(cols - 3, rows - 3));
