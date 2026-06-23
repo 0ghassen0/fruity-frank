@@ -9,6 +9,7 @@ import frank.game.FruityFrankMap;
 import frank.game.FruityFrankModel;
 import oop.graphics.Canvas;
 import oop.graphics.Graphics;
+import oop.graphics.BufferedImage;
 
 public class FrankPainter extends Painter {
 
@@ -57,14 +58,23 @@ public class FrankPainter extends Painter {
 		g.setColor(g.getColor(255, 255, 220, 0));
 		g.drawString("SCORE " + String.format("%05d", model.state().score()), 8, 16);
 		g.drawString("HI " + String.format("%05d", model.state().highScore()), canvas.getWidth() / 2 - 30, 16);
-
+		g.drawString("FRUITS " + model.state().fruitsRemaining(), 90, 16);
+		
 		Frank frank = model.player();
 		if (frank != null) {
 			g.setColor(g.getColor(255, 255, 120, 0));
-			for (int i = 0; i < frank.lives(); i++)
-				g.fillOval(canvas.getWidth() - 24 - i * 16, 6, 12, 12);
+			for (int i = 0; i < model.state().lives(); i++)
+			    g.fillOval(canvas.getWidth() - 24 - i * 16, 6, 12, 12);
 		}
+		
+		
+		paintStartMenu(canvas, g);
 
+		if (!model.state().isStartMenu()) {
+		    paintEndMenu(canvas, g);
+		    paintCountdown(canvas, g);
+		}
+		
 		if (model.debugMode())
 			debugOverlay(g);
 	}
@@ -77,11 +87,79 @@ public class FrankPainter extends Painter {
 					: new int[] { (int) e.center().x(), (int) e.center().y() };
 			if (Category.of(e) == Category.FRANK && e instanceof Frank f) {
 				g.setColor(g.getColor(255, 255, 80, 80));
-				g.drawString(f.name() + " vies:" + f.lives(), s[0] - 20, s[1] - cellPx / 2 - 4);
+				g.drawString(f.name() + " vies:" + model.state().lives(), s[0] - 20, s[1] - cellPx / 2 - 4);
 				g.setColor(g.getColor(220, 255, 255, 0));
 			} else if (Category.of(e) == Category.ENEMY || Category.of(e) == Category.APPLE) {
 				g.drawString(e.name(), s[0] - 20, s[1] - cellPx / 2 - 4);
 			}
 		}
+	}
+	
+	
+	private void paintStartMenu(Canvas canvas, Graphics g) {
+	    if (!model.state().isStartMenu())
+	        return;
+
+	    BufferedImage img = view.sprites().startMenu();
+
+	    if (img == null)
+	        return;
+
+	    int originalW = img.getWidth();
+	    int originalH = img.getHeight();
+
+	    int w = Math.min(canvas.getWidth() - 20, originalW);
+	    int h = originalH * w / originalW;
+
+	    int x = (canvas.getWidth() - w) / 2;
+	    int y = (canvas.getHeight() - h) / 2;
+
+	    g.drawImage(img, x, y, w, h);
+	}
+	
+	private void paintCountdown(Canvas canvas, Graphics g) {
+	    if (!model.state().isCountingDown())
+	        return;
+
+	    int n = model.state().countdownNumber();
+	    BufferedImage img = view.sprites().countdownDigit(n);
+
+	    if (img == null)
+	        return;
+
+	    int w = 90;
+	    int h = 110;
+
+	    int x = (canvas.getWidth() - w) / 2;
+	    int y = (canvas.getHeight() - h) / 2;
+
+	    g.drawImage(img, x, y, w, h);
+	}
+	
+	private void paintEndMenu(Canvas canvas, Graphics g) {
+	    if (!model.state().isEnded())
+	        return;
+
+	    if (!model.state().canShowEndMenu())
+	        return;
+
+	    BufferedImage img = model.state().isVictory()
+	            ? view.sprites().victoryMenu()
+	            : view.sprites().gameOverMenu();
+	    
+	    
+	    if (img == null)
+	        return;
+
+	    int originalW = img.getWidth();
+	    int originalH = img.getHeight();
+
+	    int w = Math.min(canvas.getWidth() - 20, originalW);
+	    int h = originalH * w / originalW;
+
+	    int x = (canvas.getWidth() - w) / 2;
+	    int y = (canvas.getHeight() - h) / 2;
+
+	    g.drawImage(img, x, y, w, h);
 	}
 }

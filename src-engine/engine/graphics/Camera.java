@@ -26,6 +26,8 @@ public class Camera {
 
 	private final double deadZoneHalfX, deadZoneHalfY; // cm
 	private double lerp = 0.15;
+	
+	private boolean forceCentering = false;
 
 	public Camera(double worldWcm, double worldHcm, boolean torusX, boolean torusY, int viewWpx, int viewHpx,
 			double pixelPerCm) {
@@ -52,16 +54,37 @@ public class Camera {
 		this.tgtX = cmX;
 		this.tgtY = cmY;
 	}
+	
+	public void smoothCenterOn(double cmX, double cmY) {
+	    this.tgtX = cmX;
+	    this.tgtY = cmY;
+	    this.forceCentering = true;
+	}
 
 	/**
 	 * Ease the centre toward the target by the part of the offset beyond the
 	 * dead-zone.
 	 */
 	public void update() {
-		double dx = signed(camX, tgtX, worldW, torusX);
-		double dy = signed(camY, tgtY, worldH, torusY);
-		camX = settle(camX + excess(dx, deadZoneHalfX) * lerp, worldW, torusX, viewW);
-		camY = settle(camY + excess(dy, deadZoneHalfY) * lerp, worldH, torusY, viewH);
+	    double dx = signed(camX, tgtX, worldW, torusX);
+	    double dy = signed(camY, tgtY, worldH, torusY);
+
+	    if (forceCentering) {
+	        camX = settle(camX + dx * lerp, worldW, torusX, viewW);
+	        camY = settle(camY + dy * lerp, worldH, torusY, viewH);
+
+	        double eps = 0.05; // cm, seuil très petit
+	        if (Math.abs(dx) < eps && Math.abs(dy) < eps) {
+	            camX = settle(tgtX, worldW, torusX, viewW);
+	            camY = settle(tgtY, worldH, torusY, viewH);
+	            forceCentering = false;
+	        }
+
+	        return;
+	    }
+
+	    camX = settle(camX + excess(dx, deadZoneHalfX) * lerp, worldW, torusX, viewW);
+	    camY = settle(camY + excess(dy, deadZoneHalfY) * lerp, worldH, torusY, viewH);
 	}
 
 	/** @return the screen pixel {@code {sx, sy}} for a world point (cm). */

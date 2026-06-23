@@ -3,9 +3,11 @@ package frank.bots;
 import engine.entities.Bot;
 import engine.entities.Entity;
 import engine.entities.Stunt;
+import engine.geometry.ISU;
 import frank.entities.Frank;
 import frank.game.FruityFrankModel;
 import oop.graphics.VirtualKeyCodes;
+import engine.entities.BasicStunt;
 
 public class FrankBot extends Bot {
 
@@ -18,50 +20,64 @@ public class FrankBot extends Bot {
 
     @Override
     public void pressed(int keyCode, char keyChar) {
-        if (entity == null) return;
-
-        if (keyChar == 'd' || keyChar == 'D') {
-            if (entity.model() instanceof FruityFrankModel m) m.toggleDebug();
+        if (entity == null)
             return;
-        }
+
+        FruityFrankModel m = (FruityFrankModel) entity.model();
 
         if (keyCode == VirtualKeyCodes.VK_SPACE) {
             if (entity instanceof Frank frank)
                 if (frank.hasCherry())
-                    if (entity.model() instanceof FruityFrankModel m)
-                        m.throwCherryInternal(frank);
+                    m.throwCherryInternal(frank);
             return;
         }
 
         Stunt stunt = stunt();
-        if (stunt == null) return;
+        if (stunt == null)
+            return;
 
-        double dvx = 0, dvy = 0;
+        double dvx = 0;
+        double dvy = 0;
+
         switch (keyCode) {
-            case VirtualKeyCodes.VK_RIGHT -> dvx =  speed;
-            case VirtualKeyCodes.VK_LEFT  -> dvx = -speed;
-            case VirtualKeyCodes.VK_UP    -> dvy = -speed;
-            case VirtualKeyCodes.VK_DOWN  -> dvy =  speed;
-            default -> { return; }
+            case VirtualKeyCodes.VK_RIGHT -> dvx = speed;
+            case VirtualKeyCodes.VK_LEFT -> dvx = -speed;
+            case VirtualKeyCodes.VK_UP -> dvy = -speed;
+            case VirtualKeyCodes.VK_DOWN -> dvy = speed;
+            default -> {
+                return;
+            }
         }
 
-        if (entity instanceof Frank frank)
-            frank.setFacing(dvx > 0 ? 1 : dvx < 0 ? -1 : 0,
-                            dvy > 0 ? 1 : dvy < 0 ? -1 : 0);
+        // Mémorise la direction pressée (sert au tir de cerise et à l'orientation).
+        if (entity instanceof Frank f)
+            f.setFacing((int) Math.signum(dvx), (int) Math.signum(dvy));
 
-        stunt.drive(dvx, dvy);
+        ISU.Vector current = stunt.velocity();
+        boolean moving = current != null && (current.x() != 0 || current.y() != 0);
+        boolean perpendicular = moving && (current.x() != 0) != (dvx != 0);
+
+        if (perpendicular)
+            stunt.request(dvx, dvy);
+        else
+            stunt.drive(dvx, dvy);
     }
 
     @Override
     public void released(int keyCode, char keyChar) {
         Stunt stunt = stunt();
         if (stunt == null) return;
+
         switch (keyCode) {
-            case VirtualKeyCodes.VK_RIGHT, VirtualKeyCodes.VK_LEFT,
-                 VirtualKeyCodes.VK_UP,    VirtualKeyCodes.VK_DOWN -> {
-                	 entity.setCoord(entity.position().toISUCoordCentered());
-                	 stunt.drive(0, 0);
-                 }
+            case VirtualKeyCodes.VK_RIGHT,
+                 VirtualKeyCodes.VK_LEFT,
+                 VirtualKeyCodes.VK_UP,
+                 VirtualKeyCodes.VK_DOWN -> {
+                // Request to stop at the next cell centre
+                if (stunt instanceof BasicStunt basicStunt) {
+                    basicStunt.requestStopAtNextCell();
+                }
+            }
         }
     }
 }

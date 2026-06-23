@@ -22,8 +22,6 @@ public class FruityFrankModel extends Model {
 	private int tick = 0;
 
 	private static final double CHERRY_SPEED = 4.0;
-	private static final int FALL_DELAY_TICKS = 30; // ~1 s à 30 TPS
-	private static final int FALL_STEP_TICKS = 3; // vitesse de chute : 1 case / 3 ticks
 
 	public FruityFrankModel(Game game, FruityFrankMap map) {
 		super(game);
@@ -31,6 +29,7 @@ public class FruityFrankModel extends Model {
 		this.map = map;
 	}
 
+	
 	public void setPlayer(Frank p) {
 		this.player = p;
 	}
@@ -61,14 +60,27 @@ public class FruityFrankModel extends Model {
 
 	@Override
 	public void update() {
-		super.update();
-		tick++;
-		digGrass();
-		updateGrassFade();
-		pushApples();
-		collectUnderFrank();
-		updateAppleFall();
-		removeBadCherryProjectiles();
+		
+		if (state.isStartMenu())
+		    return;
+		
+	    if (state.isEnded()) {
+	        state.tickEndScreenDelay();
+	        return;
+	    }
+
+	    if (state.isCountingDown()) {
+	        state.tickCountdown();
+	        return;
+	    }
+
+	    super.update();
+	    tick++;
+	    digGrass();
+	    updateGrassFade();
+	    pushApples();
+	    collectUnderFrank();
+	    removeBadCherryProjectiles();
 	}
 
 	// ============================================================
@@ -82,53 +94,60 @@ public class FruityFrankModel extends Model {
 	 * restent dans les tunnels).
 	 */
 	private boolean centeredEnough(Entity e) {
-	    ISU.Coord here = e.center();
-	    ISU.Coord cc   = e.position().toISUCoordCentered();
-	    ISU.Vector delta = here.nearestDeltaTo(cc);
+		ISU.Coord here = e.center();
+		ISU.Coord cc = e.position().toISUCoordCentered();
+		ISU.Vector delta = here.nearestDeltaTo(cc);
 
-	    ISU.Vector v = e.getLinearSpeed();
-	    double vx = v == null ? 0 : Math.abs(v.x());
-	    double vy = v == null ? 0 : Math.abs(v.y());
-	    double cm = here.getISU().getCmPerCell();
+		ISU.Vector v = e.getLinearSpeed();
+		double vx = v == null ? 0 : Math.abs(v.x());
+		double vy = v == null ? 0 : Math.abs(v.y());
+		double cm = here.getISU().getCmPerCell();
 
-	    // sur l'axe de déplacement : demi-pas ; sur l'axe perpendiculaire : tolérance fixe large
-	    double tolX = Math.max(vx / 2.0, 0.45 * cm) + 1e-6;
-	    double tolY = Math.max(vy / 2.0, 0.45 * cm) + 1e-6;
+		// sur l'axe de déplacement : demi-pas ; sur l'axe perpendiculaire : tolérance
+		// fixe large
+		double tolX = Math.max(vx / 2.0, 0.45 * cm) + 1e-6;
+		double tolY = Math.max(vy / 2.0, 0.45 * cm) + 1e-6;
 
-	    return Math.abs(delta.x()) <= tolX && Math.abs(delta.y()) <= tolY;
+		return Math.abs(delta.x()) <= tolX && Math.abs(delta.y()) <= tolY;
 	}
+
 	private void digGrass() {
-	    if (player != null && entities().contains(player) && centeredEnough(player)) {
-	        ISU.Vector v = player.getLinearSpeed();
-	        boolean vertical = v != null && v.y() != 0 && v.x() == 0;
-	        digCell(player.position(), true, vertical);
-	    }
+		if (player != null && entities().contains(player) && centeredEnough(player))
+			dig(player);
 
-	    for (Entity e : new ArrayList<>(entities())) {
-	    	if (e.name().contains("RED")) {
-	    	    ISU.Coord h = e.center();
-	    	    var p = e.position();
-	    	    ISU.Vector v = e.getLinearSpeed();
-	    	    System.out.printf("RED center=(%.1f,%.1f) pos=(%d,%d) speed=(%.2f,%.2f)%n",
-	    	        h.x(), h.y(), p.x(), p.y(),
-	    	        v==null?0:v.x(), v==null?0:v.y());
-	    	}
-	        if (!(e instanceof Enemy en) || !en.canDig()) continue;
-	        if (!centeredEnough(en)) continue;                  // <-- même garde
-	        ISU.Vector ev = en.getLinearSpeed();
-	        boolean enemyVertical = ev != null && ev.y() != 0 && ev.x() == 0;
-	        digCell(en.position(), true, enemyVertical);
-	    }
-	}
-	private void digCell(Grid.Position pos, boolean digHigh, boolean digLow) {
-		 System.out.println("DIG " + pos.x() + "," + pos.y()
-         + " high=" + digHigh + " low=" + digLow);
-		for (Entity e : new ArrayList<>(grid().cellAt(pos).entities())) {
-			if (digHigh && e instanceof GrassHigh gh)
-				gh.startFade();
-			if (digLow && e instanceof GrassLow)
-				remove(e);
+		for (Entity e : new ArrayList<>(entities())) {
+			if (!(e instanceof Enemy en) || !en.canDig())
+				continue;
+			if (!centeredEnough(en))
+				continue; // <-- même garde
+			dig(en);
 		}
+	}
+
+	/**
+	 * Creuse le gazon traversé par {@code digger}.
+	 * <ul>
+	 * <li>Le gros bloc (GrassHigh) de la cellule courante passe en fondu.</li>
+	 * <li>Le petit bloc (GrassLow) n'est que le sol au bas de chaque cellule ; on
+	 * ne le détruit que si le CORPS du digger le recouvre réellement. Ainsi un
+	 * déplacement horizontal (corps centré, au-dessus du sol) le laisse intact ;
+	 * une descente casse le sol de la cellule courante ; une montée casse le sol de
+	 * la cellule du dessus dès que Frank l'atteint — sans toucher au sol de la
+	 * cellule du dessous au démarrage.</li>
+	 * </ul>
+	 * Fonder la destruction du sol sur le recouvrement réel (et non sur la cellule
+	 * du centre) évite que Frank perce le « petit rect du dessous » ou traverse le
+	 * petit rect au-dessus sans le casser.
+	 */
+	private void dig(Entity digger) {
+		for (Entity e : new ArrayList<>(grid().cellAt(digger.position()).entities()))
+			if (e instanceof GrassHigh gh)
+				gh.startFade();
+
+		for (Grid.Cell cell : new ArrayList<>(digger.getHitbox().occupiedCells()))
+			for (Entity e : new ArrayList<>(cell.entities()))
+				if (e instanceof GrassLow && digger.intersects(e))
+					remove(e);
 	}
 
 	private void updateGrassFade() {
@@ -149,148 +168,104 @@ public class FruityFrankModel extends Model {
 	// ============================================================
 
 	private void pushApples() {
-	    if (player == null || !entities().contains(player))
-	        return;
+		if (player == null || !entities().contains(player))
+			return;
 
-	    double cell = game.getCmPerCell();
-	    int dir = player.facingDx();
-	    boolean wantsH = (dir != 0) && (player.facingDy() == 0);
+		double cell = game.getCmPerCell();
+		ISU.Vector v = player.getLinearSpeed();
+		boolean horizontal = v != null && v.x() != 0 && v.y() == 0;
+		int dir = horizontal ? (int) Math.signum(v.x()) : 0;
+		boolean wantsH = horizontal;
 
-	    for (Entity e : new ArrayList<>(entities())) {
-	        if (!(e instanceof Apple apple))
-	            continue;
-	        if (apple.isFalling())
-	            continue;
-	        if (apple.stunt() != null)
-	            apple.stunt().drive(0, 0);
+		for (Entity e : new ArrayList<>(entities())) {
+			if (!(e instanceof Apple apple))
+				continue;
+			if (apple.isFalling())
+				continue;
+			if (apple.stunt() != null)
+				apple.stunt().drive(0, 0);
 
-	        if (!wantsH)
-	            continue;
+			if (!wantsH)
+				continue;
 
-	        Grid.Position fp = player.position();
-	        Grid.Position ap = apple.position();
+			Grid.Position fp = player.position();
+			Grid.Position ap = apple.position();
 
-	        // même ligne obligatoire
-	        if (fp.y() != ap.y())
-	            continue;
+			// même ligne obligatoire
+			if (fp.y() != ap.y())
+				continue;
 
-	        // distance réelle (cm) entre Frank et la pomme sur X (torique)
-	        double deltaX = player.center().nearestDeltaTo(apple.center()).x();
+			// distance réelle (cm) entre Frank et la pomme sur X (torique)
+			double deltaX = player.center().nearestDeltaTo(apple.center()).x();
 
-	        // la pomme doit être DEVANT Frank, et au CONTACT (somme des rayons)
-	        double contact = 0.35 * cell + 0.40 * cell;   // rayon Frank + rayon pomme
-	        boolean appleAhead = Math.signum(deltaX) == dir;
-	        boolean touching   = Math.abs(deltaX) <= contact + 0.05 * cell;
-	        if (!appleAhead || !touching)
-	            continue;
+			// la pomme doit être DEVANT Frank, et au CONTACT (somme des rayons)
+			double contact = 0.35 * cell + 0.40 * cell; // rayon Frank + rayon pomme
+			boolean appleAhead = Math.signum(deltaX) == dir;
+			boolean touching = Math.abs(deltaX) <= contact + 0.05 * cell;
+			if (!appleAhead || !touching)
+				continue;
 
-	        // La case devant la pomme doit être libre
-	        Grid.Position beyond = grid().new Position(ap.x() + dir, ap.y());
-	        if (!canReceiveApple(beyond))
-	            continue;
+			// La case devant la pomme doit être libre
+			Grid.Position beyond = grid().new Position(ap.x() + dir, ap.y());
+			if (!canReceiveApple(beyond))
+				continue;
 
-	        // La pomme écrase le gazon de la case où elle ARRIVE, puis s'y installe
-	        for (Entity o : new ArrayList<>(grid().cellAt(beyond).entities())) {
-	            if (o instanceof GrassHigh gh) gh.startFade();
-	            if (o instanceof GrassLow gl)  remove(gl);
-	        }
+			// La pomme écrase le gazon de la case où elle ARRIVE, puis s'y installe
+			for (Entity o : new ArrayList<>(grid().cellAt(beyond).entities())) {
+				if (o instanceof GrassHigh gh)
+					gh.startFade();
+				if (o instanceof GrassLow gl)
+					remove(gl);
+			}
 
-	        // Déplace la pomme proprement d'une case (alignée sur la grille)
-	        apple.setPosition(beyond);
-	    }
+			// Déplace la pomme proprement d'une case (alignée sur la grille)
+			apple.setPosition(beyond);
+		}
 	}
 	// ============================================================
 	// RAMASSAGE
 	// ============================================================
 
 	private void collectUnderFrank() {
-		if (player == null || !entities().contains(player))
-			return;
-		Grid.Cell cell = grid().cellAt(player.position());
-		List<Entity> got = new ArrayList<>();
-		for (Entity e : cell.entities())
-			if (e instanceof Fruit || e instanceof Cherry)
-				got.add(e);
-		for (Entity e : got) {
-			remove(e);
-			if (e instanceof Fruit f)
-				state.addScore(pointsForFruit(f));
-			if (e instanceof Cherry) {
-				player.pickCherry();
-				state.addScore(50);
-			}
-		}
+	    if (player == null || !entities().contains(player))
+	        return;
+
+	    Grid.Cell cell = grid().cellAt(player.position());
+	    List<Entity> got = new ArrayList<>();
+
+	    for (Entity e : cell.entities()) {
+	        if (e instanceof Fruit || e instanceof Cherry)
+	            got.add(e);
+	    }
+
+	    for (Entity e : got) {
+	        remove(e);
+
+	        if (e instanceof Fruit f) {
+	            state.addScore(pointsForFruit(f));
+	            state.collectFruit();
+	        }
+
+	        if (e instanceof Cherry) {
+	            player.pickCherry();
+	            state.addScore(50);
+	            state.collectFruit();
+	        }
+	    }
 	}
 
 	// ============================================================
-	// CHUTE DES POMMES (délai ~1 s puis chute progressive)
+	// CHUTE DES POMMES
+	// ------------------------------------------------------------
+	// La chute n'est plus un passage impératif ici : chaque pomme porte un
+	// GALBot exécutant gal_fsm/AppleFall.gal ( Struck ? Move(S) ). La garde
+	// « Struck » est la condition Java frank.gal.aut.conditions.CanFall, qui
+	// décide QUAND la pomme peut tomber (support en dessous + petit délai).
+	// L'écrasement du gazon fin et les morts par chute sont résolus comme des
+	// collisions (voir Rules : APPLE×GRASS_LOW / APPLE×FRANK / APPLE×ENEMY) et
+	// l'arrêt sur un support solide est garanti par canOccupy ci-dessous.
 	// ============================================================
 
-	private void updateAppleFall() {
-		for (Entity e : new ArrayList<>(entities())) {
-			if (!(e instanceof Apple apple))
-				continue;
-
-			Grid.Position pos = apple.position();
-			Grid.Position south = grid().new Position(pos.x(), pos.y() + 1);
-
-			// SUPPORT = ce qui RETIENT la pomme.
-			// Le GrassLow (1cm) ne retient PAS : la pomme l'écrase en tombant.
-			boolean supported = map.isWall(south.x(), south.y()) || cellHas(south, GrassHigh.class) // gros gazon =
-																									// support
-					|| cellHas(south, Apple.class) // autre pomme = support
-					|| cellHas(south, Fruit.class); // fruit = support
-			// NOTE : GrassLow n'est PAS dans la liste → la pomme tombe à travers/dessus
-
-			if (supported) {
-				apple.disarm();
-				apple.setFalling(false);
-				continue;
-			}
-
-			// Pas de support : armer le délai d'~1s
-			if (!apple.isArmed()) {
-				apple.arm(FALL_DELAY_TICKS);
-				continue;
-			}
-
-			apple.tickDelay();
-			if (!apple.delayDone())
-				continue;
-
-			apple.setFalling(true);
-			if (tick % FALL_STEP_TICKS != 0)
-				continue; // ralentit la chute
-
-			// La pomme tombe dans la case du dessous
-			Grid.Cell below = grid().cellAt(south);
-			boolean killed = false;
-			for (Entity occ : new ArrayList<>(below.entities())) {
-				if (occ instanceof Frank f) {
-					f.loseLife();
-					state.killedByEnemy();
-					if (f.isDead())
-						state.setGameOver();
-					remove(f);
-					killed = true;
-				}
-				if (occ instanceof Enemy en) {
-					remove(en);
-					state.addScore(500);
-					killed = true;
-				}
-				// Le petit gazon est ÉCRASÉ par la pomme qui tombe dessus
-				if (occ instanceof GrassLow gl)
-					remove(gl);
-			}
-			if (killed) {
-				remove(apple);
-				continue;
-			}
-
-			apple.setPosition(south);
-		}
-	}
 	// ============================================================
 	// PROJECTILES CERISE
 	// ============================================================
@@ -347,39 +322,50 @@ public class FruityFrankModel extends Model {
 		if (map.isWall(target.x(), target.y()))
 			return false;
 
-		if (e instanceof Frank frank) {
-			Apple apple = null;
+		if (e instanceof Apple falling) {
+			// Une pomme qui tombe est arrêtée par un support solide (gros gazon,
+			// autre pomme, fruit, cerise). Sinon elle traverse la case : le gazon
+			// fin, Frank et les ennemis y sont écrasés/tués via les règles de
+			// collision (voir Rules), pas ici.
+			if (cellHas(target, GrassHigh.class) || cellHas(target, Fruit.class) || cellHas(target, Cherry.class))
+				return false;
 			for (Entity o : grid().cellAt(target).entities())
-				if (o instanceof Apple a) {
-					apple = a;
+				if (o instanceof Apple a && a != falling)
+					return false;
+			return true;
+		}
+
+		if (e instanceof Frank frank) {
+			boolean hasApple = false;
+			for (Entity o : grid().cellAt(target).entities())
+				if (o instanceof Apple) {
+					hasApple = true;
 					break;
 				}
 
-			if (apple != null) {
-				int dx = target.x() - frank.position().x();
-				int dy = target.y() - frank.position().y();
-				if (dy != 0)
-					return false;
+			if (hasApple) {
+				ISU.Vector toTarget = frank.center().nearestDeltaTo(target.toISUCoordCentered());
+				int dx = (int) Math.signum(toTarget.x());
+				int dy = (int) Math.signum(toTarget.y());
+				if (dy != 0 || dx == 0)
+					return false; // pas de poussée verticale
 				Grid.Position beyond = grid().new Position(target.x() + dx, target.y());
-				boolean ok = canReceiveApple(beyond);
-				System.out.println("[PUSH] Frank veut pousser pomme, case derrière libre ? " + ok + " (beyond="
-						+ beyond.x() + "," + beyond.y() + ")");
-				return ok;
+				return canReceiveApple(beyond);
 			}
 		}
 
 		if (e instanceof Enemy en) {
-		    // une pomme posée (stable) est un obstacle pour TOUS les monstres
-		    for (Entity o : grid().cellAt(target).entities())
-		        if (o instanceof Apple a && !a.isFalling())
-		            return false;
+			// une pomme posée (stable) est un obstacle pour TOUS les monstres
+			for (Entity o : grid().cellAt(target).entities())
+				if (o instanceof Apple a && !a.isFalling())
+					return false;
 
-		    if (en.canDig())
-		        return true;
-		    for (Entity o : grid().cellAt(target).entities())
-		        if (o instanceof GrassHigh)
-		            return false;
-		    return true;
+			if (en.canDig())
+				return true;
+			for (Entity o : grid().cellAt(target).entities())
+				if (o instanceof GrassHigh)
+					return false;
+			return true;
 		}
 
 		if (e instanceof CherryProjectile) {

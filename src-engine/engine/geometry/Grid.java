@@ -2,8 +2,8 @@ package engine.geometry;
 
 import java.io.PrintStream;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import engine.core.Game;
 import engine.entities.Entity;
@@ -307,9 +307,7 @@ public class Grid {
 
 		Cell(Position p) {
 			position = p;
-			// Concurrent: the motion task rewrites occupancy (Hitbox deploy/retract)
-			// while the Brain/render tasks read it (Step, Closest, drawing).
-			entities = ConcurrentHashMap.newKeySet();
+			entities = new HashSet<>();
 			size = new Dimension(1, 1);
 		}
 

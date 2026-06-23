@@ -2,6 +2,7 @@ package frank.game;
 
 import java.util.EnumMap;
 import engine.entities.Entity;
+import frank.entities.Apple;
 import frank.entities.Frank;
 
 public class Rules {
@@ -16,12 +17,13 @@ public class Rules {
 	public Rules() {
 		// Frank touche un ennemi → perd une vie
 		on(Category.FRANK, Category.ENEMY, (m, s, frank, enemy) -> {
-//			Frank f = (Frank) frank;
-//			f.loseLife();
-//			s.killedByEnemy();
-//			if (f.isDead())
-//				s.setGameOver();
-//			m.remove(frank);
+			/*
+			Frank f = (Frank) frank;
+			f.loseLife();
+			s.killedByEnemy();
+			if (f.isDead())
+				s.setGameOver();
+			m.remove(frank);*/
 		});
 
 		// Cerise projectile touche un ennemi → ennemi meurt
@@ -29,6 +31,28 @@ public class Rules {
 			m.remove(enemy);
 			m.remove(proj);
 			s.addScore(300);
+		});
+
+		// Pomme EN CHUTE qui rattrape Frank → Frank perd une vie
+		on(Category.APPLE, Category.FRANK, (m, s, apple, frank) -> {
+			if (((Apple) apple).isFalling()) {
+				s.killedByEnemy();
+				m.remove(frank);
+			}
+		});
+
+		// Pomme EN CHUTE qui écrase un ennemi → ennemi meurt
+		on(Category.APPLE, Category.ENEMY, (m, s, apple, enemy) -> {
+			if (((Apple) apple).isFalling()) {
+				m.remove(enemy);
+				s.addScore(500);
+			}
+		});
+
+		// Pomme EN CHUTE qui traverse le gazon fin → l'écrase
+		on(Category.APPLE, Category.GRASS_LOW, (m, s, apple, grass) -> {
+			if (((Apple) apple).isFalling())
+				m.remove(grass);
 		});
 	}
 

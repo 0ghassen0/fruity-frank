@@ -18,19 +18,20 @@ import engine.gal.aut.State;
 import engine.gal.aut.Transition;
 import engine.gal.aut.iGALAction;
 import engine.gal.aut.iGALCondition;
-import engine.gal.actions.Egg;
-import engine.gal.actions.Explode;
-import engine.gal.actions.Move;
 import engine.gal.actions.Nothing;
-import engine.gal.actions.Turn;
 import engine.gal.actions.Wait;
 import engine.gal.conditions.And;
-import engine.gal.conditions.Closest;
-import engine.gal.conditions.MyDir;
 import engine.gal.conditions.Not;
 import engine.gal.conditions.Or;
-import engine.gal.conditions.Step;
 import engine.gal.conditions.True;
+import frank.gal.aut.actions.Egg;
+import frank.gal.aut.actions.Explode;
+import frank.gal.aut.actions.Move;
+import frank.gal.aut.actions.Turn;
+import frank.gal.aut.conditions.CanFall;
+import frank.gal.aut.conditions.Closest;
+import frank.gal.aut.conditions.MyDir;
+import frank.gal.aut.conditions.Step;
 
 /**
  * Converts the teachers' GAL parser AST (package gal.ast) to the engine GAL FSM
@@ -102,6 +103,7 @@ public final class GalCompiler {
             case "Closest" -> closest(p);
             case "Step", "Cell" -> step(p);
             case "MyDir" -> new MyDir(direction(param(p, 0, name)));
+            case "Struck" -> new CanFall(); // reuses the spare "Struck" token: gravity guard for fruits
             default -> throw unsupported("condition", f.toString());
         };
     }

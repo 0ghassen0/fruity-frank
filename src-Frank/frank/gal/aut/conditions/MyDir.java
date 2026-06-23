@@ -1,4 +1,4 @@
-package engine.gal.conditions;
+package frank.gal.aut.conditions;
 
 import engine.entities.Entity;
 import engine.gal.aut.Direction;

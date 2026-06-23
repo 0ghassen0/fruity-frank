@@ -201,8 +201,14 @@ public class FrankAvatar extends Avatar {
 	// ── Helpers ──
 
 	private BufferedImage lazyFrank(Graphics g) {
-		sprites.ensureLoaded(g);
-		return sprites.frank(facing, frame(4));
+	    sprites.ensureLoaded(g);
+
+	    ISU.Vector v = entity.getLinearSpeed();
+	    boolean moving = v != null && (v.x() != 0 || v.y() != 0);
+
+	    int animFrame = moving ? frame(4) : 0;
+
+	    return sprites.frank(facing, animFrame);
 	}
 
 	private BufferedImage lazyEnemy(Graphics g) {
