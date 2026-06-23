@@ -61,7 +61,11 @@ public class FrankPainter extends Painter {
 		g.drawString("SCORE " + String.format("%05d", model.state().score()), 8, 16);
 		g.drawString("HI " + String.format("%05d", model.state().highScore()), canvas.getWidth() / 2 - 30, 16);
 		g.drawString("FRUITS " + model.state().fruitsRemaining(), 90, 16);
-		
+
+		// compteur d'ennemis : entre le HI SCORE et les vies, calé à gauche des vies
+		String enemies = "ENEMIES " + model.enemyCount();
+		g.drawString(enemies, canvas.getWidth() - 64 - g.getFont().getWidth(enemies), 16);
+
 		Frank frank = model.player();
 		if (frank != null) {
 			g.setColor(g.getColor(255, 255, 120, 0));
@@ -71,6 +75,8 @@ public class FrankPainter extends Painter {
 		
 		
 		paintStartMenu(canvas, g);
+
+		paintPauseMenu(canvas, g);
 
 		if (!model.state().isStartMenu()) {
 		    paintEndMenu(canvas, g);
@@ -115,6 +121,27 @@ public class FrankPainter extends Painter {
 	}
 	
 	
+	private void paintPauseMenu(Canvas canvas, Graphics g) {
+	    if (!model.state().isPaused())
+	        return;
+
+	    BufferedImage img = view.sprites().pauseMenu();
+
+	    if (img == null)
+	        return;
+
+	    int originalW = img.getWidth();
+	    int originalH = img.getHeight();
+
+	    int w = Math.min(canvas.getWidth() - 20, originalW);
+	    int h = originalH * w / originalW;
+
+	    int x = (canvas.getWidth() - w) / 2;
+	    int y = (canvas.getHeight() - h) / 2;
+
+	    g.drawImage(img, x, y, w, h);
+	}
+
 	private void paintStartMenu(Canvas canvas, Graphics g) {
 	    if (!model.state().isStartMenu())
 	        return;
