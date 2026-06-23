@@ -9,4 +9,5 @@ Fleeing(Flee) {
     | Cell(L, V) ? Move(L) :(Flee)
     | Cell(R, V) ? Move(R) :(Flee)
     | Cell(B, V) ? Move(B) :(Flee)
+    
 }

@@ -49,7 +49,11 @@ public class GameApp {
 		FruityFrankMap map = new FruityFrankMap();
 		FruityFrank game = new FruityFrank(map.cols(), map.rows());
 		FruityFrankModel model = new FruityFrankModel(game, map);
-
+		
+		Map<String, Automaton> galAutomata = loadGalAutomata();
+		
+		spawnEnemySpawner(model, game, map, galAutomata);
+		
 		for (FruityFrankMap.Cell c : map.grassCells()) {
 			model.add(new GrassLow(game, c.col(), c.row()));
 			model.add(new GrassHigh(game, c.col(), c.row()));
@@ -78,7 +82,7 @@ public class GameApp {
 				Enemy.EnemyType.ORANGE // creuse + poursuit
 		};
 
-		Map<String, Automaton> galAutomata = loadGalAutomata();
+		
 
 		int ei = 0;
 		for (FruityFrankMap.Cell c : map.enemySpawns()) {
@@ -145,7 +149,67 @@ public class GameApp {
 	    enemy.setBot(new GALBot(enemy, automaton, ENEMY_SPEED, new FrankCategories()));
 	    model.add(enemy);
 	}
+	
+	private static void spawnEnemySpawner(FruityFrankModel model, FruityFrank game, FruityFrankMap map,
+	        Map<String, Automaton> galAutomata) {
 
+	    Automaton automaton = galAutomata.get("EnemySpawner");
+
+	    if (automaton == null) {
+	        System.err.println("Automate EnemySpawner introuvable");
+	        return;
+	    }
+
+	    FruityFrankMap.Cell sp = map.enemySpawns().get(0);
+	    EnemySpawnerEntity spawner = new EnemySpawnerEntity(game, sp.col(), sp.row());
+
+	    spawner.setStunt(new BasicStunt(spawner));
+
+	    GALBot bot = new GALBot(spawner, automaton, 0.0, new FrankCategories());
+
+	    final int[] spawnIndex = { 0 };
+
+	    Enemy.EnemyType[] spawnTypes = {
+	            Enemy.EnemyType.RED,
+	            Enemy.EnemyType.GREEN,
+	            Enemy.EnemyType.PURPLE,
+	            Enemy.EnemyType.ORANGE
+	    };
+
+	    bot.setFactory((category, at, creator) -> {
+	        Enemy.EnemyType type = spawnTypes[spawnIndex[0] % spawnTypes.length];
+	        spawnIndex[0]++;
+
+	        Enemy enemy = new Enemy(
+	                "Enemy_SPAWNED_" + type + "@" + at.x() + "," + at.y(),
+	                game,
+	                at.x(),
+	                at.y(),
+	                type
+	        );
+
+	        enemy.setStunt(new BasicStunt(enemy));
+
+	        Automaton enemyAutomaton = (type == Enemy.EnemyType.PURPLE)
+	                ? galAutomata.get("Fleeing")
+	                : galAutomata.get("Tracker");
+
+	        if (enemyAutomaton != null) {
+	            GALBot enemyBot = new GALBot(enemy, enemyAutomaton, ENEMY_SPEED, new FrankCategories());
+	            enemy.setBot(enemyBot);
+	        } else {
+	            System.err.println("Automate introuvable pour ennemi spawn : " + type);
+	        }
+
+	        return enemy;
+	    });
+
+	    spawner.setBot(bot);
+	    model.add(spawner);
+
+	    System.out.println("EnemySpawnerEntity créée avec l'automate EnemySpawner");
+	}
+	
 	private static class Spawner implements Ticker.TickListener {
 		private final FruityFrankModel model;
 		private final FruityFrank game;
@@ -191,7 +255,8 @@ public class GameApp {
 	            "gal_fsm/Tracking.gal",
 	            "gal_fsm/Flee.gal",
 	            "gal_fsm/EnemyRandom.gal",
-	            "gal_fsm/FruitFall.gal"
+	            "gal_fsm/FruitFall.gal",
+	            "gal_fsm/EnemySpawner.gal"
 	    };
 
 	    for (String file : files) {

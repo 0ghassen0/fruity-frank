@@ -20,7 +20,8 @@ public final class FrankSprites {
 	private final BufferedImage[] frank = new BufferedImage[12]; // 4 col x 3 lignes
 	private final BufferedImage[] enemy = new BufferedImage[24]; // 6 col x 4 lignes
 	private final BufferedImage[] item = new BufferedImage[15]; // 5 col x 3 lignes
-
+	private BufferedImage enemySpawner;
+	
 	private boolean loaded = false;
 
 	public void ensureLoaded(Graphics g) {
@@ -41,6 +42,9 @@ public final class FrankSprites {
 			for (int c = 0; c < 6; c++)
 				enemy[r * 6 + c] = cell(es, c, r);
 
+		// SPAWNER : ligne spéciale en bas de la spritesheet ennemis
+		enemySpawner = cell(es, 0, 4);
+		
 		// ITEMS : 5 colonnes × 3 lignes
 		for (int r = 0; r < 3; r++)
 			for (int c = 0; c < 5; c++)
@@ -95,7 +99,7 @@ public final class FrankSprites {
 	    int col = baseCol + (frame % 2); // anime entre les 2 frames de la direction
 	    return enemy[row * 6 + col];
 	}
-
+	
 	// FRUITS — index identifiés par analyse des couleurs
 	public BufferedImage fruit(Fruit.FruitType type) {
 		return switch (type) {
@@ -114,7 +118,11 @@ public final class FrankSprites {
 	public BufferedImage cherry() {
 		return item[4];
 	} // cerises rouge foncé
-
+	
+	public BufferedImage enemySpawner() {
+	    return enemySpawner;
+	}
+	
 	public boolean isLoaded() {
 		return loaded;
 	}

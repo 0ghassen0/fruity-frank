@@ -3,9 +3,9 @@ EnemySpawner(Wait){
   | True ? Wait(180) :(TrySpawn)
 
   * (TrySpawn):
-  | Step(F,V) ? Egg(F, Enemy) :(Wait)
-  | Step(L,V) ? Egg(L, Enemy) :(Wait)
-  | Step(R,V) ? Egg(R, Enemy) :(Wait)
+  | Step(F,V) ? Egg(F, A) :(Wait)
+  | Step(L,V) ? Egg(L, A) :(Wait)
+  | Step(R,V) ? Egg(R, A) :(Wait)
   | True ?                     :(Wait)
 
   * ()

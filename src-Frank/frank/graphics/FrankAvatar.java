@@ -11,6 +11,7 @@ import frank.game.Category;
 import oop.graphics.BufferedImage;
 import oop.graphics.Graphics;
 
+
 public class FrankAvatar extends Avatar {
 
 	private static final long ANIM_NS = 150_000_000L;
@@ -40,6 +41,7 @@ public class FrankAvatar extends Avatar {
 		case GRASS_HIGH -> grassHigh(g, cx, cy);
 		case FRANK -> drawFrank(g, cx, cy);
 		case ENEMY -> drawEnemy(g, cx, cy);
+		case ENEMY_SPAWNER -> drawEnemySpawner(g, cx, cy);
 		case FRUIT -> drawFruit(g, cx, cy);
 		case APPLE -> drawApple(g, cx, cy);
 		case CHERRY -> drawCherry(g, cx, cy);
@@ -88,7 +90,14 @@ public class FrankAvatar extends Avatar {
 		else
 			drawEnemyShape(g, cx, cy);
 	}
-
+	
+	private void drawEnemySpawner(Graphics g, int cx, int cy) {
+	    BufferedImage img = lazyEnemySpawner(g);
+	    if (img != null)
+	        drawOnGrass(g, img, cx, cy, cellPx, 20, 15);
+	    else
+	        drawEnemyShape(g, cx, cy);
+	}
 	/**
 	 * Pose le sprite de sorte que ses PIEDS touchent le petit gazon (1cm) qui se
 	 * trouve tout en bas de la cellule. Le petit gazon occupe les ~10% du bas, donc
@@ -201,6 +210,11 @@ public class FrankAvatar extends Avatar {
 		return entity instanceof Enemy e ? sprites.enemy(e.type(), facing, frameSlow(2)) : null;
 	}
 
+	private BufferedImage lazyEnemySpawner(Graphics g) {
+	    sprites.ensureLoaded(g);
+	    return sprites.enemySpawner();
+	}
+	
 	private int frameSlow(int n) {
 		return (int) ((System.nanoTime() / 300_000_000L) % n);
 	}
