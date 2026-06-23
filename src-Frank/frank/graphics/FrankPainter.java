@@ -8,6 +8,8 @@ import frank.game.Category;
 import frank.game.FruityFrankMap;
 import frank.game.FruityFrankModel;
 import oop.graphics.Canvas;
+import oop.graphics.Color;
+import oop.graphics.Font;
 import oop.graphics.Graphics;
 import oop.graphics.BufferedImage;
 
@@ -78,21 +80,38 @@ public class FrankPainter extends Painter {
 		if (model.debugMode())
 			debugOverlay(g);
 	}
+	private void drawLabel(Graphics g, String text, int x, int y, Color textColor) {
+	    Font f = g.getFont();
+	    int w   = f.getWidth(text);   // largeur réelle du texte
+	    int asc = f.getAscent();      // au-dessus de la ligne de base
+	    int dsc = f.getDescent();     // en dessous
+	    int pad = 2;
 
+	    // fond noir opaque 
+	    g.setColor(g.getColor(255, 0, 0, 0));
+	    g.fillRect(x - pad, y - asc - pad, w + 2 * pad, asc + dsc + 2 * pad);
+
+	    // texte
+	    g.setColor(textColor);
+	    g.drawString(text, x, y);
+	}
 	private void debugOverlay(Graphics g) {
-		Camera cam = view.camera();
-		g.setColor(g.getColor(220, 255, 255, 0));
-		for (Entity e : model.entities()) {
-			int[] s = (cam != null) ? cam.worldToScreen(e.center().x(), e.center().y())
-					: new int[] { (int) e.center().x(), (int) e.center().y() };
-			if (Category.of(e) == Category.FRANK && e instanceof Frank f) {
-				g.setColor(g.getColor(255, 255, 80, 80));
-				g.drawString(f.name() + " vies:" + model.state().lives(), s[0] - 20, s[1] - cellPx / 2 - 4);
-				g.setColor(g.getColor(220, 255, 255, 0));
-			} else if (Category.of(e) == Category.ENEMY || Category.of(e) == Category.APPLE) {
-				g.drawString(e.name(), s[0] - 20, s[1] - cellPx / 2 - 4);
-			}
-		}
+	    Camera cam = view.camera();
+	    Color frankColor = g.getColor(255, 255, 80, 80);
+	    Color otherColor = g.getColor(220, 255, 255, 0);
+
+	    for (Entity e : model.entities()) {
+	        int[] s = (cam != null) ? cam.worldToScreen(e.center().x(), e.center().y())
+	                : new int[] { (int) e.center().x(), (int) e.center().y() };
+	        int lx = s[0] - 20;
+	        int ly = s[1] - cellPx / 2 - 4;
+
+	        if (Category.of(e) == Category.FRANK && e instanceof Frank f) {
+	            drawLabel(g, f.name() + " vies:" + model.state().lives(), lx, ly, frankColor);
+	        } else if (Category.of(e) == Category.ENEMY || Category.of(e) == Category.APPLE) {
+	            drawLabel(g, e.name(), lx, ly, otherColor);
+	        }
+	    }
 	}
 	
 	
