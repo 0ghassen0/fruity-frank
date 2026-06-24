@@ -20,11 +20,6 @@ public class Rules {
 		// Frank touche un ennemi → perd une vie
 		on(Category.FRANK, Category.ENEMY, (m, s, frank, enemy) -> {
 			m.killFrank();
-			if (s.lives() <= 0) {
-				GameApp.audio.gameOver();
-			} else {
-				GameApp.audio.death();
-			}
 		});
 
 		// Cerise projectile touche un ennemi → ennemi meurt
@@ -41,11 +36,6 @@ public class Rules {
 			Apple a = (Apple) apple;
 			if (canCrush(a)) {
 				m.killFrank();
-				if (s.lives() <= 0) {
-					GameApp.audio.gameOver();
-				} else {
-					GameApp.audio.death();
-				}
 			}
 		});
 

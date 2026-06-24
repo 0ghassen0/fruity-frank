@@ -11,9 +11,15 @@ public class Frank extends Entity implements Categorized {
 
 	private boolean hasCherry = false;
 	private int facingDx = 1, facingDy = 0;
-	public static final int DEATH_TICKS = 30; 
-	private int dyingTicks = -1;              // -1 implique vivant et >=0 implique en train de mourir
-	private boolean lastDeath = false; 
+
+	public static final int DEATH_TICKS = 30;
+	public static final int INVINCIBLE_TICKS = 90; // 3 secondes si MOTION_TPS = 30
+
+	private int dyingTicks = -1;
+	private boolean lastDeath = false;
+
+	private int invincibleTicks = 0;
+
 	public Frank(String name, Game game, int x, int y) {
 		super(name, game);
 		setStep(isu.new Vector(1.0, 1.0));
@@ -29,25 +35,12 @@ public class Frank extends Entity implements Categorized {
 		setBounding(b);
 	}
 
-	public boolean hasCherry() {
-		return hasCherry;
-	}
+	public boolean hasCherry() { return hasCherry; }
+	public void pickCherry() { hasCherry = true; }
+	public void useCherry() { hasCherry = false; }
 
-	public void pickCherry() {
-		hasCherry = true;
-	}
-
-	public void useCherry() {
-		hasCherry = false;
-	}
-
-	public int facingDx() {
-		return facingDx;
-	}
-
-	public int facingDy() {
-		return facingDy;
-	}
+	public int facingDx() { return facingDx; }
+	public int facingDy() { return facingDy; }
 
 	public void setFacing(int dx, int dy) {
 		if (dx != 0 || dy != 0) {
@@ -55,25 +48,57 @@ public class Frank extends Entity implements Categorized {
 			facingDy = dy;
 		}
 	}
-	public boolean isDying()    { return dyingTicks >= 0; }
-	public boolean isLastDeath(){ return lastDeath; }
+
+	public boolean isDying() { return dyingTicks >= 0; }
+	public boolean isLastDeath() { return lastDeath; }
+
 	public void startDying(boolean last) {
-	    if (dyingTicks >= 0) return;          // déjà en train de mourir
-	    dyingTicks = DEATH_TICKS;
-	    lastDeath  = last;
+		if (dyingTicks >= 0) return;
+		dyingTicks = DEATH_TICKS;
+		lastDeath = last;
 	}
 
-	public void tickDying()     { if (dyingTicks > 0) dyingTicks--; }
-	public boolean dyingDone()  { return dyingTicks == 0; }
-	
-	public boolean blinkVisible() {
-	    if (dyingTicks < 0) return true;      // vivant
-	    if (lastDeath)      return false;     // dernière vie il disparait
-	    int elapsed = DEATH_TICKS - dyingTicks;
-	    int half = Math.max(1, DEATH_TICKS / 6); // 6 demi-périodes donc 3 clignotements
-	    return (elapsed / half) % 2 == 0;     // alterne entre visible invisible
+	public void tickDying() {
+		if (dyingTicks > 0) dyingTicks--;
 	}
-	public void clearDying() { dyingTicks = -1; lastDeath = false; }
+
+	public boolean dyingDone() {
+		return dyingTicks == 0;
+	}
+
+	public void clearDying() {
+		dyingTicks = -1;
+		lastDeath = false;
+	}
+
+	public void makeInvincible() {
+		invincibleTicks = INVINCIBLE_TICKS;
+	}
+
+	public boolean isInvincible() {
+		return invincibleTicks > 0;
+	}
+
+	public void tickInvincible() {
+		if (invincibleTicks > 0)
+			invincibleTicks--;
+	}
+
+	public boolean blinkVisible() {
+		if (dyingTicks >= 0) {
+			if (lastDeath) return false;
+			int elapsed = DEATH_TICKS - dyingTicks;
+			int half = Math.max(1, DEATH_TICKS / 6);
+			return (elapsed / half) % 2 == 0;
+		}
+
+		if (isInvincible()) {
+			return (invincibleTicks / 5) % 2 == 0;
+		}
+
+		return true;
+	}
+
 	@Override
 	public Category category() {
 		return Category.FRANK;
