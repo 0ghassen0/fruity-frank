@@ -18,11 +18,13 @@ public class FrankView extends View {
     private final Model model;
     private final FrankSprites sprites;
     private final int cellPx;
+    private final int screenOffsetX;
     private final Set<Entity> tracked = new HashSet<>();
 
-    public FrankView(Game game, Model model, FrankSprites sprites) {
+    public FrankView(Game game, Model model, FrankSprites sprites, int screenOffsetX) {
         this.game = game; this.model = model; this.sprites = sprites;
         this.cellPx = (int) Math.round(game.getCmPerCell() * game.getPixelPerCm());
+        this.screenOffsetX = screenOffsetX;
         sync();
     }
 
@@ -59,6 +61,10 @@ public class FrankView extends View {
     public Model model() { return model; }
     public FrankSprites sprites() {
     	return this.sprites;
+    }
+
+    public int screenOffsetX() {
+        return screenOffsetX;
     }
 
     private int zOrderFor(Category cat) {

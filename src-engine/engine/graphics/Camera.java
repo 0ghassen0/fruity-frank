@@ -24,7 +24,7 @@ public class Camera {
 	private double camX, camY; // camera centre, cm
 	private double tgtX, tgtY; // follow target, cm
 
-	private final double deadZoneHalfX, deadZoneHalfY; // cm
+	private double deadZoneHalfX, deadZoneHalfY; // cm
 	private double lerp = 0.15;
 	
 	private boolean forceCentering = false;
@@ -48,6 +48,10 @@ public class Camera {
 	/** Set the elasticity (0 = frozen, 1 = snap instantly). */
 	public void setLerp(double lerp) {
 		this.lerp = lerp;
+	}
+
+	public void setDeadZoneHalfX(double deadZoneHalfX) {
+		this.deadZoneHalfX = deadZoneHalfX;
 	}
 
 	public void setTarget(double cmX, double cmY) {

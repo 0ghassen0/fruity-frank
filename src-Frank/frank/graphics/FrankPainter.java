@@ -47,7 +47,7 @@ public class FrankPainter extends Painter {
 					if (!cam.isVisible(wx, wy, cmPerCell))
 						continue;
 					int[] s = cam.worldToScreen(wx, wy);
-					g.fillRect(s[0] - cellPx / 2, s[1] - cellPx / 2, cellPx, cellPx);
+					g.fillRect(s[0] - view.screenOffsetX() - cellPx / 2, s[1] - cellPx / 2, cellPx, cellPx);
 				} else
 					g.fillRect(c * cellPx, r * cellPx, cellPx, cellPx);
 			}
@@ -116,7 +116,7 @@ public class FrankPainter extends Painter {
 	        Category cat = Category.of(e);
 	        int[] s = (cam != null) ? cam.worldToScreen(e.center().x(), e.center().y())
 	                : new int[] { (int) e.center().x(), (int) e.center().y() };
-	        int lx = s[0] - 20;
+	        int lx = s[0] - view.screenOffsetX() - 20;
 	        int ly = s[1] - cellPx / 2 - 4;
 
 	        if (cat == Category.FRANK && e instanceof Frank f) {
