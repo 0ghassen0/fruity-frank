@@ -88,7 +88,7 @@ public class GameApp {
 			model.add(apple);
 		}
 
-		FrankBot frankBot = spawnFrank(model, game, map);
+		FrankBot frankBot = spawnFrank(model, game, map, false);
 		FrankController controller = new FrankController(frankBot, model);
 		controller.setRestartAction(() -> resetLevel(model, game, map, controller));
 
@@ -221,7 +221,7 @@ public class GameApp {
 			model.add(apple);
 		}
 
-		FrankBot frankBot = spawnFrank(model, game, map);
+		FrankBot frankBot = spawnFrank(model, game, map, false);
 		controller.setPlayerBot(frankBot);
 
 		Enemy.EnemyType[] types = { Enemy.EnemyType.RED, Enemy.EnemyType.GREEN, Enemy.EnemyType.PURPLE,
@@ -234,11 +234,13 @@ public class GameApp {
 		}
 	}
 
-	private static FrankBot spawnFrank(FruityFrankModel model, FruityFrank game, FruityFrankMap map) {
+	private static FrankBot spawnFrank(FruityFrankModel model, FruityFrank game, FruityFrankMap map,
+			boolean invincible) {
 		FruityFrankMap.Cell sp = map.frankSpawn();
 
 		Frank frank = new Frank("Frank", game, sp.col(), sp.row());
-		frank.makeInvincible();
+		if (invincible)
+			frank.makeInvincible();
 
 		frank.setStunt(new BasicStunt(frank));
 
@@ -346,7 +348,7 @@ public class GameApp {
 			if (!st.isGameOver() && st.frankDied()) {
 				st.clearDeath();
 
-				FrankBot bot = spawnFrank(model, game, map);
+				FrankBot bot = spawnFrank(model, game, map, true);
 				controller.setPlayerBot(bot);
 
 				Frank frank = model.player();

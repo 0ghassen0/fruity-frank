@@ -37,10 +37,6 @@ public final class Hit implements iGALAction {
 
 		if (target instanceof Frank) {
 			model.killFrank();
-			if (state.lives() <= 0)
-				GameApp.audio.gameOver();
-			else
-				GameApp.audio.death();
 			return true;
 		}
 

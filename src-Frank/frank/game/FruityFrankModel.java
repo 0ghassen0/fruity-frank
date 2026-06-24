@@ -241,9 +241,9 @@ public class FruityFrankModel extends Model {
 		}
 	}
 
-	public void killFrank() {
+	public boolean killFrank() {
 		if (player == null || !entities.contains(player) || player.isDying() || player.isInvincible()) {
-			return;
+			return false;
 		}
 
 		boolean end = (state.lives <= 1);
@@ -251,9 +251,13 @@ public class FruityFrankModel extends Model {
 		if (end) {
 			state.killedByEnemy();
 			remove(player);
+			GameApp.audio.gameOver();
 		} else {
 			player.startDying(false);
+			GameApp.audio.death();
 		}
+
+		return true;
 	}
 
 	private void removeBadCherryProjectiles() {
