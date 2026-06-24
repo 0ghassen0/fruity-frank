@@ -17,10 +17,7 @@ public class Rules {
 	private final EnumMap<Category, EnumMap<Category, Outcome>> table = new EnumMap<>(Category.class);
 
 	public Rules() {
-		// Frank touche un ennemi → perd une vie
-		on(Category.FRANK, Category.ENEMY, (m, s, frank, enemy) -> {
-			m.killFrank();
-		});
+		// Frank touche un ennemi → géré par l'automate de l'ennemi (Got(@) ? Hit).
 
 		// Cerise projectile touche un ennemi → ennemi meurt
 		on(Category.CHERRY_PROJECTILE, Category.ENEMY, (m, s, proj, enemy) -> {

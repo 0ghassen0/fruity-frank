@@ -1,5 +1,6 @@
 Fleeing(Flee) {
     * (Flee):
+    | Got(@) ? Hit :(Flee)
     | Closest(A, N) & Cell(S, V) ? Move(S) :(Flee)
     | Closest(A, S) & Cell(N, V) ? Move(N) :(Flee)
     | Closest(A, E) & Cell(W, V) ? Move(W) :(Flee)

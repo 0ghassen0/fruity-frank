@@ -37,10 +37,10 @@ public final class Hit implements iGALAction {
 
 		GameState state = model.state();
 
-		if (target instanceof Frank) {
-			model.killFrank();
-			return true;
-		}
+		// Returns killFrank()'s result so a Got(@)?Hit transition does not fire (enemy keeps
+		// moving) when Frank is invincible or already dying.
+		if (target instanceof Frank)
+			return model.killFrank();
 
 		if (target instanceof Enemy) {
 			model.remove(target);

@@ -1,5 +1,6 @@
 Tracker(Tracking) {
     * (Tracking):
+    | Got(@) ? Hit :(Tracking)
     | Closest(A, E) & Cell(E, V) ? Move(E) :(Tracking)
     | Closest(A, W) & Cell(W, V) ? Move(W) :(Tracking)
     | Closest(A, N) & Cell(N, V) ? Move(N) :(Tracking)

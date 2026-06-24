@@ -1,5 +1,6 @@
 Square(PatrolLeft) {
     * (PatrolLeft):
+    | Got(@) ? Hit :(PatrolLeft)
     | Closest(A, 4) & Closest(A, W) & Cell(W, V) ? Move(W) :(Attack)
     | Closest(A, 4) & Closest(A, E) & Cell(E, V) ? Move(E) :(Attack)
     | Closest(A, 4) & Closest(A, N) & Cell(N, V) ? Move(N) :(Attack)
@@ -13,6 +14,7 @@ Square(PatrolLeft) {
 
 
     * (PatrolUp):
+    | Got(@) ? Hit :(PatrolUp)
     | Closest(A, 4) & Closest(A, W) & Cell(W, V) ? Move(W) :(Attack)
     | Closest(A, 4) & Closest(A, E) & Cell(E, V) ? Move(E) :(Attack)
     | Closest(A, 4) & Closest(A, N) & Cell(N, V) ? Move(N) :(Attack)
@@ -26,6 +28,7 @@ Square(PatrolLeft) {
 
 
     * (PatrolRight):
+    | Got(@) ? Hit :(PatrolRight)
     | Closest(A, 4) & Closest(A, W) & Cell(W, V) ? Move(W) :(Attack)
     | Closest(A, 4) & Closest(A, E) & Cell(E, V) ? Move(E) :(Attack)
     | Closest(A, 4) & Closest(A, N) & Cell(N, V) ? Move(N) :(Attack)
@@ -39,6 +42,7 @@ Square(PatrolLeft) {
 
 
     * (PatrolDown):
+    | Got(@) ? Hit :(PatrolDown)
     | Closest(A, 4) & Closest(A, W) & Cell(W, V) ? Move(W) :(Attack)
     | Closest(A, 4) & Closest(A, E) & Cell(E, V) ? Move(E) :(Attack)
     | Closest(A, 4) & Closest(A, N) & Cell(N, V) ? Move(N) :(Attack)
@@ -52,6 +56,7 @@ Square(PatrolLeft) {
 
 
     * (Attack):
+    | Got(@) ? Hit :(Attack)
     | Closest(A, 5) & Closest(A, W) & Cell(W, V) ? Move(W) :(Attack)
     | Closest(A, 5) & Closest(A, E) & Cell(E, V) ? Move(E) :(Attack)
     | Closest(A, 5) & Closest(A, N) & Cell(N, V) ? Move(N) :(Attack)

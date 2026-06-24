@@ -1,6 +1,7 @@
 // pour une errance intelligente
 EnemyRandom(Roam){
   * (Roam):
+  | Got(@)        ? Hit          :(Roam)
   | Closest(A, 5) ? Move($.d)   :(Roam)
   | Step(F,V)     ? Move(F)     :(Roam)
   | Step(L,V)     ? Turn(L)     :(Roam)
