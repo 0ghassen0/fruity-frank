@@ -67,7 +67,9 @@ public class GameApp {
 		spawnEnemySpawner(model, game, map, galAutomata);
 
 		for (FruityFrankMap.Cell c : map.grassCells()) {
-			model.add(new GrassLow(game, c.col(), c.row()));
+			GrassLow low = new GrassLow(game, c.col(), c.row());
+			low.setBot(reactiveBot(low, "GrassLow", galAutomata));
+			model.add(low);
 			model.add(new GrassHigh(game, c.col(), c.row()));
 		}
 
@@ -75,13 +77,13 @@ public class GameApp {
 		int ti = 0;
 		for (FruityFrankMap.Cell c : map.fruitCells()) {
 			Fruit fruit = new Fruit(game, c.col(), c.row(), ft[ti++ % ft.length]);
-			fruit.setBot(pickupBot(fruit, galAutomata));
+			fruit.setBot(reactiveBot(fruit, "Pickup", galAutomata));
 			model.add(fruit);
 		}
 
 		for (FruityFrankMap.Cell c : map.cherryCells()) {
 			Cherry cherry = new Cherry(game, c.col(), c.row());
-			cherry.setBot(pickupBot(cherry, galAutomata));
+			cherry.setBot(reactiveBot(cherry, "Pickup", galAutomata));
 			model.add(cherry);
 		}
 
@@ -206,7 +208,9 @@ public class GameApp {
 		Map<String, Automaton> galAutomata = loadGalAutomata();
 
 		for (FruityFrankMap.Cell c : map.grassCells()) {
-			model.add(new GrassLow(game, c.col(), c.row()));
+			GrassLow low = new GrassLow(game, c.col(), c.row());
+			low.setBot(reactiveBot(low, "GrassLow", galAutomata));
+			model.add(low);
 			model.add(new GrassHigh(game, c.col(), c.row()));
 		}
 
@@ -214,13 +218,13 @@ public class GameApp {
 		int ti = 0;
 		for (FruityFrankMap.Cell c : map.fruitCells()) {
 			Fruit fruit = new Fruit(game, c.col(), c.row(), ft[ti++ % ft.length]);
-			fruit.setBot(pickupBot(fruit, galAutomata));
+			fruit.setBot(reactiveBot(fruit, "Pickup", galAutomata));
 			model.add(fruit);
 		}
 
 		for (FruityFrankMap.Cell c : map.cherryCells()) {
 			Cherry cherry = new Cherry(game, c.col(), c.row());
-			cherry.setBot(pickupBot(cherry, galAutomata));
+			cherry.setBot(reactiveBot(cherry, "Pickup", galAutomata));
 			model.add(cherry);
 		}
 
@@ -248,9 +252,8 @@ public class GameApp {
 		}
 	}
 
-	/** Build the GAL bot that lets a Fruit/Cherry collect itself when Frank overlaps it. */
-	private static GALBot pickupBot(Entity pickup, Map<String, Automaton> galAutomata) {
-		return new GALBot(pickup, galAutomata.get("Pickup"), 0.0, new FrankCategories());
+	private static GALBot reactiveBot(Entity e, String automatonName, Map<String, Automaton> galAutomata) {
+		return new GALBot(e, galAutomata.get(automatonName), 0.0, new FrankCategories());
 	}
 
 	private static FrankBot spawnFrank(FruityFrankModel model, FruityFrank game, FruityFrankMap map,
@@ -399,7 +402,7 @@ public class GameApp {
 
 		String[] files = { "gal_fsm/Tracking.gal", "gal_fsm/Flee.gal", "gal_fsm/EnemyRandom.gal",
 				"gal_fsm/AppleFall.gal", "gal_fsm/EnemySpawner.gal", "gal_fsm/Digger.gal", "gal_fsm/Square.gal",
-				"gal_fsm/Pickup.gal" };
+				"gal_fsm/Pickup.gal", "gal_fsm/GrassLow.gal" };
 
 		for (String file : files) {
 			try {

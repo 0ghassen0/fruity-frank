@@ -129,11 +129,6 @@ public class FruityFrankModel extends Model {
 		for (Entity e : new ArrayList<>(grid().cellAt(digger.position()).entities()))
 			if (e instanceof GrassHigh gh)
 				gh.startFade();
-
-		for (Grid.Cell cell : new ArrayList<>(digger.getHitbox().occupiedCells()))
-			for (Entity e : new ArrayList<>(cell.entities()))
-				if (e instanceof GrassLow && digger.intersects(e))
-					remove(e);
 	}
 
 	private void updateGrassFade() {

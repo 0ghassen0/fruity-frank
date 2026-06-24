@@ -63,6 +63,10 @@ public class FrankCategories implements CategoryMatcher {
         if (cat == Category.Gate)
             return other instanceof GrassLow;
 
+        // U Digger : Frank or a digging enemy — what clears grass as it passes through.
+        if (cat == Category.Util)
+            return other instanceof Frank || (other instanceof Enemy e && e.canDig());
+
         return false;
     }
 }

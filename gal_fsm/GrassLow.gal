@@ -1,0 +1,7 @@
+GrassLow(Floor){
+  * (Floor):
+  | Got(U) ? :()	// a digger (U = Frank or digging enemy) overlaps me : destroy this thin grass
+  | True   ? :(Floor)
+
+  *()
+}
