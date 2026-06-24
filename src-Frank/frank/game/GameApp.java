@@ -28,74 +28,59 @@ import gal.ast.GalCompiler;
 
 public class GameApp {
 
-	// Ces constantes NE CHANGENT PAS selon la carte → restent en dur
 	private static final int MOTION_TPS = 30;
 	private static final int AI_TPS = 8;
 	private static final int SPAWN_TPS = 2;
 	private static final int RENDER_MS = 33;
 
-	// Ces valeurs viennent de la config → plus de static final
 	private static int viewCols;
 	private static int viewRows;
 	private static double frankSpeed;
 	private static double enemySpeed;
 
-	// Accès statiques pour le toggle debug (F3) géré dans FrankBot
 	public static Debug debug = new Debug();
 	public static FrankPainter painter;
 
 	private static volatile boolean running = true;
 	public static FrankAudio audio = new FrankAudio();
 
-	// Boucles de jeu, gardées en référence pour pouvoir les arrêter à la fermeture
-	// (sinon elles continuent de tourner sur un canvas détruit → NPE / process zombie).
 	private static Ticker motionTicker;
 	private static Ticker aiTicker;
 	private static Ticker spawnTicker;
 
 	public static void main(String[] args) {
 
-		// Charge la config depuis le fichier passé en argument,
-		// ou "config/game.cfg" par défaut
 		String configPath = (args.length > 0) ? args[0] : "game.cfg";
 		GameConfig cfg = new GameConfig(configPath);
 
-		// Lit les paramètres depuis la config (avec valeurs par défaut)
 		viewCols = cfg.getInt("view_cols", 15);
 		viewRows = cfg.getInt("view_rows", 11);
 		frankSpeed = cfg.getDouble("frank_speed", 1.0);
 		enemySpeed = cfg.getDouble("enemy_speed", 0.6);
 
-		// La map lit ses propres paramètres (cols, rows, ratios...) depuis la config
 		FruityFrankMap map = new FruityFrankMap(cfg);
 		FruityFrank game = new FruityFrank(map.cols(), map.rows());
 		FruityFrankModel model = new FruityFrankModel(game, map);
 
-		// Automates GAL chargés depuis les fichiers .gal (pommes + ennemis)
 		Map<String, Automaton> galAutomata = loadGalAutomata();
 
 		spawnEnemySpawner(model, game, map, galAutomata);
 
-		// Gazon
 		for (FruityFrankMap.Cell c : map.grassCells()) {
 			model.add(new GrassLow(game, c.col(), c.row()));
 			model.add(new GrassHigh(game, c.col(), c.row()));
 		}
 
-		// Fruits
 		Fruit.FruitType[] ft = Fruit.FruitType.values();
 		int ti = 0;
 		for (FruityFrankMap.Cell c : map.fruitCells())
 			model.add(new Fruit(game, c.col(), c.row(), ft[ti++ % ft.length]));
 
-		// Cerises
 		for (FruityFrankMap.Cell c : map.cherryCells())
 			model.add(new Cherry(game, c.col(), c.row()));
 
 		model.state().setFruitsRemaining(map.fruitCells().size() + map.cherryCells().size());
 
-		// Pommes : chaque pomme tombe via son automate AppleFall (gravité pilotée par
-		// GAL)
 		for (FruityFrankMap.Cell c : map.appleCells()) {
 			Apple apple = new Apple(game, c.col(), c.row());
 			apple.setStunt(new BasicStunt(apple));
@@ -103,14 +88,10 @@ public class GameApp {
 			model.add(apple);
 		}
 
-		// Frank
 		FrankBot frankBot = spawnFrank(model, game, map);
 		FrankController controller = new FrankController(frankBot, model);
 		controller.setRestartAction(() -> resetLevel(model, game, map, controller));
 
-		// Ennemis : types lus depuis la config
-		// format dans le fichier :
-		// enemy_types = RED,GREEN,PURPLE,ORANGE
 		String typesStr = cfg.getString("enemy_types", "RED,GREEN,PURPLE,ORANGE");
 		String[] typeNames = typesStr.split(",");
 
@@ -128,7 +109,6 @@ public class GameApp {
 			ei++;
 		}
 
-		// Rendu
 		int cellPx = (int) Math.round(game.getCmPerCell() * game.getPixelPerCm());
 		int pxW = viewCols * cellPx;
 		int pxH = viewRows * cellPx + 24;
@@ -141,12 +121,8 @@ public class GameApp {
 
 		painter = new FrankPainter(view, map, model, cellPx, game.getCmPerCell());
 		Brain brain = new Brain(model);
-		// Réveille les bots du bas vers le haut : une colonne de pommes se tasse
-		// proprement (la plus basse décide de tomber avant celles au-dessus).
 		brain.setActivationOrder(Brain.BOTTOM_FIRST);
 
-		// debug est le champ statique ; il démarre éteint et s'active avec F3 (voir
-		// FrankBot)
 		debug.setPixelPerCm(game.getPixelPerCm());
 
 		Runtime.boot(new Dimension(pxW, pxH), new Runnable() {
@@ -156,16 +132,16 @@ public class GameApp {
 				canvas.set(painter);
 				canvas.set((Canvas.KeyListener) controller);
 				canvas.set((Canvas.MouseListener) controller);
-				// Le ticker de mouvement se gère seul (Model.update sort tôt si en pause).
-				// L'IA et le spawner ne le savent pas → on les enveloppe pour qu'ils ne
-				// tournent pas pendant la pause (sinon les automates continuent de penser
-				// et le spawner peut faire réapparaître Frank pendant la pause).
+
 				motionTicker = new Ticker(MOTION_TPS);
 				motionTicker.start(model);
+
 				aiTicker = new Ticker(AI_TPS);
 				aiTicker.start(pauseGated(model, brain));
+
 				spawnTicker = new Ticker(SPAWN_TPS);
 				spawnTicker.start(pauseGated(model, new Spawner(model, game, map, controller, cam)));
+
 				audio.startMusic();
 				Runtime.post(new RenderLoop(canvas), RENDER_MS);
 				installCloseHandler();
@@ -173,16 +149,11 @@ public class GameApp {
 		}, true);
 	}
 
-	/**
-	 * Arrête proprement toutes les boucles (rendu + tickers) puis termine le
-	 * processus. Appelé par le bouton « quitter » des menus du jeu.
-	 */
 	public static void exitGame() {
 		stopLoops();
 		System.exit(0);
 	}
 
-	/** Enveloppe un {@link Ticker.TickListener} pour qu'il soit ignoré tant que le jeu est en pause. */
 	private static Ticker.TickListener pauseGated(FruityFrankModel model, Ticker.TickListener inner) {
 		return dt -> {
 			if (!model.state().isPaused())
@@ -190,7 +161,6 @@ public class GameApp {
 		};
 	}
 
-	/** Stoppe le rendu et les tickers pour qu'aucune tâche ne tourne sur un canvas détruit. */
 	private static void stopLoops() {
 		running = false;
 		if (motionTicker != null)
@@ -201,13 +171,6 @@ public class GameApp {
 			spawnTicker.stop();
 	}
 
-	/**
-	 * Le {@link Canvas} de la lib n'expose pas d'événement de fermeture. On récupère
-	 * donc la fenêtre AWT créée par {@code Runtime.boot} pour : (1) arrêter nos
-	 * boucles dès le clic sur la croix (sinon une tâche de rendu s'exécute après que
-	 * le canvas a été détruit → {@code grabGraphics()} sur {@code null}) ; (2) faire
-	 * terminer la JVM à la fermeture manuelle.
-	 */
 	private static void installCloseHandler() {
 		for (java.awt.Frame f : java.awt.Frame.getFrames()) {
 			if (!(f instanceof javax.swing.JFrame jf))
@@ -249,8 +212,6 @@ public class GameApp {
 
 		Map<String, Automaton> galAutomata = loadGalAutomata();
 
-		// Le spawner d'ennemis a été retiré avec tous les autres entités ci-dessus :
-		// il faut le recréer, sinon il n'apparaît que pour la première partie.
 		spawnEnemySpawner(model, game, map, galAutomata);
 
 		for (FruityFrankMap.Cell c : map.appleCells()) {
@@ -275,12 +236,18 @@ public class GameApp {
 
 	private static FrankBot spawnFrank(FruityFrankModel model, FruityFrank game, FruityFrankMap map) {
 		FruityFrankMap.Cell sp = map.frankSpawn();
+
 		Frank frank = new Frank("Frank", game, sp.col(), sp.row());
+		frank.makeInvincible();
+
 		frank.setStunt(new BasicStunt(frank));
-		FrankBot bot = new FrankBot(frank, frankSpeed); // ← vitesse de la config
+
+		FrankBot bot = new FrankBot(frank, frankSpeed);
 		frank.setBot(bot);
+
 		model.add(frank);
 		model.setPlayer(frank);
+
 		return bot;
 	}
 
@@ -323,12 +290,10 @@ public class GameApp {
 			spawnIndex[0]++;
 
 			Enemy enemy = new Enemy("Enemy_SPAWNED_" + type + "@" + at.x() + "," + at.y(), game, at.x(), at.y(), type);
-
 			enemy.setStunt(new BasicStunt(enemy));
-			
+
 			Automaton enemyAutomaton;
-			if(model.state().fruitsRemaining() > model.state().totalFruit()/2) {
-				// Ennemy plus ou moins passif
+			if (model.state().fruitsRemaining() > model.state().totalFruit() / 2) {
 				enemyAutomaton = switch (type) {
 				case PURPLE -> galAutomata.get("Tracker");
 				case RED -> galAutomata.get("Square");
@@ -336,8 +301,7 @@ public class GameApp {
 				case GREEN -> galAutomata.get("EnemyRandom");
 				default -> throw new IllegalArgumentException();
 				};
-			}else {
-				//Enemy plus agressif en fin de partie
+			} else {
 				enemyAutomaton = switch (type) {
 				case PURPLE -> galAutomata.get("Tracker");
 				case RED -> galAutomata.get("Tracker");
@@ -346,7 +310,6 @@ public class GameApp {
 				default -> throw new IllegalArgumentException();
 				};
 			}
-		
 
 			if (enemyAutomaton != null) {
 				GALBot enemyBot = new GALBot(enemy, enemyAutomaton, enemySpeed, new FrankCategories());
@@ -413,10 +376,8 @@ public class GameApp {
 	private static Map<String, Automaton> loadGalAutomata() {
 		Map<String, Automaton> automata = new LinkedHashMap<>();
 
-		// FruitFall.gal retiré : la chute des pommes est désormais gérée par la
-		// gravité du monde (Game.gravity), plus par un automate.
 		String[] files = { "gal_fsm/Tracking.gal", "gal_fsm/Flee.gal", "gal_fsm/EnemyRandom.gal",
-				"gal_fsm/AppleFall.gal", "gal_fsm/EnemySpawner.gal",  "gal_fsm/Digger.gal" , "gal_fsm/Square.gal"  };
+				"gal_fsm/AppleFall.gal", "gal_fsm/EnemySpawner.gal", "gal_fsm/Digger.gal", "gal_fsm/Square.gal" };
 
 		for (String file : files) {
 			try {
