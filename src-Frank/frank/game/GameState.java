@@ -86,7 +86,7 @@ public class GameState {
 			frankDied = true;
 		}
 	}
-	
+
 	public void setTotalFruits(int n) {
 		totalFruits = n;
 		setFruitsRemaining(n);
@@ -194,4 +194,7 @@ public class GameState {
 		hoveredMenuOption = option;
 	}
 
+	public int totalFruit() {
+		return totalFruits;
+	}
 }
