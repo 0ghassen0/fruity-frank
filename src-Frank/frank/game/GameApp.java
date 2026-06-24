@@ -92,7 +92,7 @@ public class GameApp {
 		for (FruityFrankMap.Cell c : map.cherryCells())
 			model.add(new Cherry(game, c.col(), c.row()));
 
-		model.state().setTotalFruits(map.fruitCells().size() + map.cherryCells().size());
+		model.state().setFruitsRemaining(map.fruitCells().size() + map.cherryCells().size());
 
 		// Pommes : chaque pomme tombe via son automate AppleFall (gravité pilotée par
 		// GAL)
@@ -325,14 +325,28 @@ public class GameApp {
 			Enemy enemy = new Enemy("Enemy_SPAWNED_" + type + "@" + at.x() + "," + at.y(), game, at.x(), at.y(), type);
 
 			enemy.setStunt(new BasicStunt(enemy));
-
-			Automaton enemyAutomaton = switch (type) {
-			case PURPLE -> galAutomata.get("EnemyRandom");
-			case RED -> galAutomata.get("Tracker");
-			case ORANGE -> galAutomata.get("Tracker");
-			case GREEN -> galAutomata.get("Fleeing");
-			default -> throw new IllegalArgumentException();
-			};
+			
+			Automaton enemyAutomaton;
+			if(model.state().fruitsRemaining() > model.state().totalFruit()/2) {
+				// Ennemy plus ou moins passif
+				enemyAutomaton = switch (type) {
+				case PURPLE -> galAutomata.get("Tracker");
+				case RED -> galAutomata.get("Square");
+				case ORANGE -> galAutomata.get("WallFollower");
+				case GREEN -> galAutomata.get("EnemyRandom");
+				default -> throw new IllegalArgumentException();
+				};
+			}else {
+				//Enemy plus agressif en fin de partie
+				enemyAutomaton = switch (type) {
+				case PURPLE -> galAutomata.get("Tracker");
+				case RED -> galAutomata.get("Tracker");
+				case ORANGE -> galAutomata.get("Tracker");
+				case GREEN -> galAutomata.get("Tracker");
+				default -> throw new IllegalArgumentException();
+				};
+			}
+		
 
 			if (enemyAutomaton != null) {
 				GALBot enemyBot = new GALBot(enemy, enemyAutomaton, enemySpeed, new FrankCategories());
@@ -402,7 +416,7 @@ public class GameApp {
 		// FruitFall.gal retiré : la chute des pommes est désormais gérée par la
 		// gravité du monde (Game.gravity), plus par un automate.
 		String[] files = { "gal_fsm/Tracking.gal", "gal_fsm/Flee.gal", "gal_fsm/EnemyRandom.gal",
-				"gal_fsm/AppleFall.gal", "gal_fsm/EnemySpawner.gal" };
+				"gal_fsm/AppleFall.gal", "gal_fsm/EnemySpawner.gal",  "gal_fsm/Digger.gal" , "gal_fsm/Square.gal"  };
 
 		for (String file : files) {
 			try {

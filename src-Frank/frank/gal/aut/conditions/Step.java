@@ -47,11 +47,8 @@ public final class Step implements iGALCondition {
 		Grid.Cell cell = grid.cellAt(target);
 
 		if (cat == Category.Void) {
-			bot.select(null);
-			for (Entity other : cell.entities())
-				if (other != self)
-					return false;
-			return true;
+		    bot.select(null);
+		    return model.canOccupy(self, target);
 		}
 
 		CategoryMatcher matcher = bot.matcher();
