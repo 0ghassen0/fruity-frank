@@ -4,6 +4,7 @@ import engine.entities.Entity;
 import engine.geometry.ISU;
 import engine.graphics.Avatar;
 import engine.graphics.View;
+import frank.entities.Apple;
 import frank.entities.Enemy;
 import frank.entities.Frank;
 import frank.entities.Fruit;
@@ -11,7 +12,6 @@ import frank.entities.GrassHigh;
 import frank.game.Category;
 import oop.graphics.BufferedImage;
 import oop.graphics.Graphics;
-import frank.entities.Frank;
 
 public class FrankAvatar extends Avatar {
 
@@ -272,9 +272,17 @@ public class FrankAvatar extends Avatar {
 	}
 
 	private int[] screen() {
+		double x = entity.center().x();
+		double y = entity.center().y();
+
+		if (entity instanceof Apple apple) {
+			x += apple.visualOffsetX();
+			y += apple.visualOffsetY();
+		}
+
 		if (view.camera() != null)
-			return view.camera().worldToScreen(entity.center().x(), entity.center().y());
-		return new int[] { (int) Math.round(entity.center().x() * pixelPerCm),
-				(int) Math.round(entity.center().y() * pixelPerCm) };
+			return view.camera().worldToScreen(x, y);
+		return new int[] { (int) Math.round(x * pixelPerCm),
+				(int) Math.round(y * pixelPerCm) };
 	}
 }

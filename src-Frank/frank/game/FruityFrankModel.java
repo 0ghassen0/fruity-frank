@@ -60,42 +60,32 @@ public class FruityFrankModel extends Model {
 	// ============================================================
 
 	@Override
-	public void update() {
-		
-		if (state.isStartMenu())
-		    return;
-		
-	    if (state.isEnded()) {
-	        state.tickEndScreenDelay();
-	        
-	        return;
-	    }
+public void update() {
+    if (state.isStartMenu()) return;
+    if (state.isEnded()) { state.tickEndScreenDelay(); return; }
+    if (state.isPaused()) return;
+    if (state.isCountingDown()) { state.tickCountdown(); return; }
 
-	    if (state.isPaused())
-	        return;
+    if (player != null && player.isDying()) {
+        player.tickDying();
+        if (player.dyingDone()) {
+            player.clearDying();
+            state.killedByEnemy();
+            remove(player);
+        }
+        return;
+    }
 
-	    if (state.isCountingDown()) {
-	        state.tickCountdown();
-	        return;
-	    }
-	    //le jeu se fige
-	    if (player != null && player.isDying()) {
-	        player.tickDying();
-	        if (player.dyingDone()) {
-	        	player.clearDying();
-	            state.killedByEnemy();   
-	            remove(player);
-	        }
-	        return; }
+    pushApples();
+    super.update();
+    tick++;
+    updateAppleVisualPushes();
 
-	    super.update();
-	    tick++;
-	    digGrass();
-	    updateGrassFade();
-	    pushApples();
-	    collectUnderFrank();
-	    removeBadCherryProjectiles();
-	}
+    digGrass();
+    updateGrassFade();
+    collectUnderFrank();
+    removeBadCherryProjectiles();
+}
 
 	// ============================================================
 	// CREUSAGE DU GAZON
@@ -181,6 +171,30 @@ public class FruityFrankModel extends Model {
 	// PUSH DES POMMES (glissement continu, basé sur positions réelles)
 	// ============================================================
 
+	private void updateAppleVisualPushes() {
+		for (Entity e : new ArrayList<>(entities())) {
+			if (e instanceof Apple apple) {
+				boolean hadVisualOffset = apple.hasVisualOffset();
+				apple.tickPushVisual();
+				if (hadVisualOffset && !apple.hasVisualOffset() && apple.consumePushFallStep())
+					startFirstFallStepAfterPush(apple);
+			}
+		}
+	}
+
+	private void startFirstFallStepAfterPush(Apple apple) {
+		Grid.Position pos = apple.position();
+		Grid.Position below = grid().new Position(pos.x(), pos.y() + 1);
+
+		if (hasSolidAppleSupport(below, apple)) {
+			apple.setFalling(false);
+			return;
+		}
+
+		apple.setPosition(below);
+		apple.startFallVisual(game.getCmPerCell(), game.gravity());
+	}
+
 	private void pushApples() {
 		if (player == null || !entities().contains(player))
 			return;
@@ -189,9 +203,8 @@ public class FruityFrankModel extends Model {
 		ISU.Vector v = player.getLinearSpeed();
 		boolean horizontal = v != null && v.x() != 0 && v.y() == 0;
 		int dir = horizontal ? (int) Math.signum(v.x()) : 0;
-		boolean wantsH = horizontal;
-		Grid grid = grid();
 		Grid.Position fp = player.position(); // invariant pendant la passe
+		Grid grid = grid();
 
 		for (Entity e : new ArrayList<>(entities())) {
 			if (!(e instanceof Apple apple))
@@ -202,7 +215,7 @@ public class FruityFrankModel extends Model {
 			if (aStunt != null)
 				aStunt.drive(0, 0);
 
-			if (!wantsH)
+			if (!horizontal)
 				continue;
 
 			Grid.Position ap = apple.position();
@@ -211,11 +224,9 @@ public class FruityFrankModel extends Model {
 			if (fp.y() != ap.y())
 				continue;
 
-			// distance réelle (cm) entre Frank et la pomme sur X (torique)
+			// La pomme doit être devant Frank et réellement au contact.
 			double deltaX = player.center().nearestDeltaTo(apple.center()).x();
-
-			// la pomme doit être DEVANT Frank, et au CONTACT (somme des rayons)
-			double contact = 0.35 * cell + 0.40 * cell; // rayon Frank + rayon pomme
+			double contact = 0.35 * cell + 0.40 * cell;
 			boolean appleAhead = Math.signum(deltaX) == dir;
 			boolean touching = Math.abs(deltaX) <= contact + 0.05 * cell;
 			if (!appleAhead || !touching)
@@ -234,8 +245,15 @@ public class FruityFrankModel extends Model {
 					remove(gl);
 			}
 
-			// Déplace la pomme proprement d'une case (alignée sur la grille)
 			apple.setPosition(beyond);
+			Grid.Position below = grid.new Position(beyond.x(), beyond.y() + 1);
+			if (!hasSolidAppleSupport(below, apple)) {
+				apple.disarm();
+				apple.disarmLow();
+				apple.setFalling(true);
+				apple.schedulePushFallStep();
+			}
+			apple.startPushVisual(dir, game.getCmPerCell(), Math.abs(v.x()));
 		}
 	}
 	// ============================================================
@@ -379,7 +397,7 @@ public class FruityFrankModel extends Model {
 		if (map.isWall(target.x(), target.y()))
 			return false;
 
-		Grid grid = grid();
+	Grid grid = grid();
 
 		if (e instanceof Apple falling) {
 			// Une pomme qui tombe est arrêtée par un support solide (gros gazon,
@@ -452,6 +470,17 @@ public class FruityFrankModel extends Model {
 				return false;
 		}
 		return true;
+	}
+
+	private boolean hasSolidAppleSupport(Grid.Position pos, Apple self) {
+		if (map.isWall(pos.x(), pos.y()))
+			return true;
+		if (cellHas(pos, GrassHigh.class) || cellHas(pos, Fruit.class) || cellHas(pos, Cherry.class))
+			return true;
+		for (Entity e : grid().cellAt(pos).entities())
+			if (e instanceof Apple a && a != self)
+				return true;
+		return false;
 	}
 
 	// ============================================================

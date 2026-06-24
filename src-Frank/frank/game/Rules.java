@@ -2,8 +2,10 @@ package frank.game;
 
 import java.util.EnumMap;
 import engine.entities.Entity;
+import engine.geometry.Grid;
 import frank.entities.Apple;
 import frank.entities.Frank;
+import frank.entities.GrassLow;
 
 public class Rules {
 
@@ -37,7 +39,7 @@ public class Rules {
 		// Inoffensive pendant sa pause posée sur un gazon fin (isLowArmed).
 		on(Category.APPLE, Category.FRANK, (m, s, apple, frank) -> {
 			Apple a = (Apple) apple;
-			if (a.isFalling() && !a.isLowArmed()) {
+			if (canCrush(a)) {
 				m.killFrank();
 				if (s.lives() <= 0) {
 					GameApp.audio.gameOver();
@@ -51,7 +53,7 @@ public class Rules {
 		// Inoffensive pendant sa pause posée sur un gazon fin (isLowArmed).
 		on(Category.APPLE, Category.ENEMY, (m, s, apple, enemy) -> {
 			Apple a = (Apple) apple;
-			if (a.isFalling() && !a.isLowArmed()) {
+			if (canCrush(a)) {
 				m.remove(enemy);
 				s.addScore(500);
 				 GameApp.audio.explosion();
@@ -63,12 +65,37 @@ public class Rules {
 		// sont gérés par la garde CanFall ; la règle ne fait qu'armer et stopper.
 		on(Category.APPLE, Category.GRASS_LOW, (m, s, apple, grass) -> {
 			Apple a = (Apple) apple;
-			if (a.isFalling() && !a.isLowArmed()) {
-				a.armLow(Apple.LOW_PAUSE_TICKS);
-				if (a.stunt() != null)
-					a.stunt().drive(0, 0); // s'arrête posée sur le gazon fin
-			}
+
+			if (!a.isFalling() || a.isLowArmed())
+				return;
+
+			var speed = a.getLinearSpeed();
+			boolean movingDown = speed != null && speed.y() > 0;
+			if (!movingDown)
+				return;
+
+			a.setCoord(grass.position().toISUCoordCentered());
+			a.setFalling(false);
+			a.armLow(Apple.LOW_PAUSE_TICKS);
+
+			if (a.stunt() != null)
+				a.stunt().drive(0, 0);
 		});
+	}
+
+	private boolean canCrush(Apple apple) {
+		var speed = apple.getLinearSpeed();
+		boolean movingDown = speed != null && speed.y() > 0;
+		return apple.isFalling() && !apple.isLowArmed() && !apple.hasVisualOffset()
+				&& movingDown && !touchingGrassLow(apple);
+	}
+
+	private boolean touchingGrassLow(Apple apple) {
+		for (Grid.Cell cell : apple.getHitbox().occupiedCells())
+			for (Entity e : cell.entities())
+				if (e instanceof GrassLow && apple.intersects(e))
+					return true;
+		return false;
 	}
 
 	public void resolve(FruityFrankModel model, GameState state, Entity a, Entity b) {

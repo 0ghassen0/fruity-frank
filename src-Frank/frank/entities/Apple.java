@@ -9,12 +9,19 @@ import frank.game.Category;
 
 public class Apple extends Entity implements Categorized {
 
+
+
+
     /** AI ticks the apple pauses on a thin floor (GrassLow) before crushing it (~0.5 s). */
     public static final int LOW_PAUSE_TICKS = 4;
 
     private boolean falling = false;
     private int fallDelay = -1; // -1 = pas armé
     private int lowDelay = -1;  // -1 = pas en train d'écraser une ligne fine
+    private double visualOffsetX = 0;
+    private double visualOffsetY = 0;
+    private double visualSpeed = 0;
+    private boolean pushFallStepPending = false;
 
     public Apple(Game game, int x, int y) {
         super("Apple@" + x + "," + y, game);
@@ -23,6 +30,60 @@ public class Apple extends Entity implements Categorized {
         setPosition(grid.new Position(x, y));
         setBounding(game);
     }
+
+
+    public double visualOffsetX() { return visualOffsetX; }
+    public double visualOffsetY() { return visualOffsetY; }
+
+    public void startPushVisual(int dir, double cellCm, double speed) {
+        visualOffsetX = -dir * cellCm;
+        visualOffsetY = 0;
+        visualSpeed = Math.abs(speed);
+    }
+
+    public void startFallVisual(double cellCm, double speed) {
+        visualOffsetX = 0;
+        visualOffsetY = -cellCm;
+        visualSpeed = Math.abs(speed);
+    }
+
+    public void tickPushVisual() {
+        if (visualOffsetX == 0 && visualOffsetY == 0)
+            return;
+
+        visualOffsetX = moveOffsetTowardZero(visualOffsetX);
+        visualOffsetY = moveOffsetTowardZero(visualOffsetY);
+
+        if (visualOffsetX == 0 && visualOffsetY == 0)
+            visualSpeed = 0;
+    }
+
+    public boolean hasVisualOffset() {
+        return visualOffsetX != 0 || visualOffsetY != 0;
+    }
+
+    public void schedulePushFallStep() {
+        pushFallStepPending = true;
+    }
+
+    public boolean consumePushFallStep() {
+        if (!pushFallStepPending)
+            return false;
+        pushFallStepPending = false;
+        return true;
+    }
+
+    private double moveOffsetTowardZero(double offset) {
+        if (offset == 0)
+            return 0;
+
+        double dir = Math.signum(offset);
+        double next = offset - dir * visualSpeed;
+        if (Math.signum(next) != dir)
+            return 0;
+        return next;
+    }
+
 
     @Override
     protected void setBounding(Game game) {

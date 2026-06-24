@@ -65,9 +65,10 @@ public class FrankView extends View {
         return switch (cat) {
             case GRASS_LOW  -> 0;
             case GRASS_HIGH -> 1;
-            case FRUIT, APPLE, CHERRY, CHERRY_PROJECTILE -> 2;
+            case FRUIT, CHERRY, CHERRY_PROJECTILE -> 2;
             case ENEMY, ENEMY_SPAWNER  -> 3;
             case FRANK      -> 4;
+            case APPLE      -> 5;
             default         -> 2;
         };
     }
