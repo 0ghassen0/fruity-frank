@@ -280,12 +280,8 @@ public class FrankAvatar extends Avatar {
 			y += apple.visualOffsetY();
 		}
 
-		if (view.camera() != null) {
-			int[] screen = view.camera().worldToScreen(x, y);
-			if (view instanceof FrankView frankView)
-				screen[0] -= frankView.screenOffsetX();
-			return screen;
-		}
+		if (view.camera() != null)
+			return view.camera().worldToScreen(x, y);
 		return new int[] { (int) Math.round(x * pixelPerCm),
 				(int) Math.round(y * pixelPerCm) };
 	}
