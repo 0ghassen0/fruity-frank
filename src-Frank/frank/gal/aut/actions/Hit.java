@@ -12,12 +12,7 @@ import frank.game.GameState;
 
 // == HIT ==
 
-/**
- * The Fruity Frank GAL {@code Hit} action: the aggressor running this automaton
- * (a cherry projectile, a falling apple, or an enemy) applies its effect to the
- * {@code $} target a guard such as {@code Got} just selected.
- *
- */
+/** GAL {@code Hit} action: the aggressor running this automaton damages the {@code $} target it is currently touching. */
 public final class Hit implements iGALAction {
 
 	/** The single shared instance — it is stateless. */
@@ -33,6 +28,13 @@ public final class Hit implements iGALAction {
 		Entity target = bot.selected(); // the GAL $ selection
 		if (target == null || !(self.model() instanceof FruityFrankModel model))
 			return false;
+
+		// Guard a stale $: only hit a target that still exists and is actually in contact.
+		if (!model.entities().contains(target) || !self.intersects(target)) {
+			bot.select(null);
+			return false;
+		}
+
 		GameState state = model.state();
 
 		if (target instanceof Frank) {
@@ -44,8 +46,6 @@ public final class Hit implements iGALAction {
 			model.remove(target);
 			state.addScore(self instanceof CherryProjectile ? 300 : 500);
 			GameApp.audio.explosion();
-			if (self instanceof CherryProjectile)
-				model.remove(self); // the shot is spent on impact
 			return true;
 		}
 

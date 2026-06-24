@@ -93,7 +93,6 @@ public class FruityFrankModel extends Model {
 		updateAppleVisualPushes();
 		digGrass();
 		updateGrassFade();
-		collectUnderFrank();
 		removeBadCherryProjectiles();
 	}
 
@@ -237,29 +236,6 @@ public class FruityFrankModel extends Model {
 				apple.schedulePushFallStep();
 			}
 			apple.startPushVisual(dir, game.getCmPerCell(), Math.abs(v.x()));
-		}
-	}
-
-	private void collectUnderFrank() {
-		if (player == null || !entities().contains(player))
-			return;
-
-		Grid.Cell cell = grid().cellAt(player.position());
-		List<Entity> got = new ArrayList<>();
-
-		for (Entity e : cell.entities()) {
-			if (e instanceof Fruit || e instanceof Cherry)
-				got.add(e);
-		}
-
-		for (Entity e : got) {
-			remove(e);
-			awardPickup(e);
-		}
-
-		if (state.isVictory()) {
-			GameApp.audio.win();
-			GameApp.audio.stopMusic();
 		}
 	}
 

@@ -7,11 +7,7 @@ import frank.game.GameApp;
 
 // == PICK ==
 
-/**
- * The Fruity Frank GAL {@code Pick} action: the pickup running this automaton
- * (a {@code Fruit} or {@code Cherry}) awards its value
- *
- */
+/** GAL {@code Pick} action: the pickup running this automaton awards its value; the automaton's {@code :()} target then removes it. */
 public final class Pick implements iGALAction {
 
 	/** The single shared instance — it is stateless. */
