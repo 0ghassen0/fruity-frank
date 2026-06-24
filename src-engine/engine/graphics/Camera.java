@@ -25,6 +25,7 @@ public class Camera {
 	private double tgtX, tgtY; // follow target, cm
 
 	private double deadZoneHalfX, deadZoneHalfY; // cm
+	private int windowOffsetX = 0; // px: left crop of the centered display window within the wider render
 	private double lerp = 0.15;
 	
 	private boolean forceCentering = false;
@@ -52,6 +53,11 @@ public class Camera {
 
 	public void setDeadZoneHalfX(double deadZoneHalfX) {
 		this.deadZoneHalfX = deadZoneHalfX;
+	}
+
+	/** Display only a centered window of {@code windowWpx} within the rendered viewport; world points then map into that window. */
+	public void setWindowWidth(int windowWpx) {
+		this.windowOffsetX = Math.max(0, (viewW - windowWpx) / 2);
 	}
 
 	public void setTarget(double cmX, double cmY) {
@@ -91,11 +97,12 @@ public class Camera {
 	    camY = settle(camY + excess(dy, deadZoneHalfY) * lerp, worldH, torusY, viewH);
 	}
 
-	/** @return the screen pixel {@code {sx, sy}} for a world point (cm). */
+	/** @return the screen pixel {@code {sx, sy}} for a world point (cm), in display-window space. */
 	public int[] worldToScreen(double cmX, double cmY) {
 		double dx = signed(camX, cmX, worldW, torusX);
 		double dy = signed(camY, cmY, worldH, torusY);
-		return new int[] { (int) Math.round(viewW / 2.0 + dx * ppc), (int) Math.round(viewH / 2.0 + dy * ppc) };
+		return new int[] { (int) Math.round(viewW / 2.0 + dx * ppc) - windowOffsetX,
+				(int) Math.round(viewH / 2.0 + dy * ppc) };
 	}
 
 	/**

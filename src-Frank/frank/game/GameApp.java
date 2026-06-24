@@ -113,14 +113,14 @@ public class GameApp {
 		int cameraW = (viewCols + 4) * cellPx;
 		int windowCols = Math.max(1, Math.min(viewCols, map.cols()) - 2);
 		int windowW = windowCols * cellPx;
-		int screenOffsetX = Math.max(0, (cameraW - windowW) / 2);
 		int pxH = viewRows * cellPx + 24;
 
 		FrankSprites sprites = new FrankSprites();
-		FrankView view = new FrankView(game, model, sprites, screenOffsetX);
+		FrankView view = new FrankView(game, model, sprites);
 		Camera cam = new Camera(game.getWidth_cm(), game.getHeight_cm(), game.torusOnX(), game.torusOnY(), cameraW,
 				pxH - 24, game.getPixelPerCm());
 		cam.setDeadZoneHalfX(3.0 * game.getCmPerCell());
+		cam.setWindowWidth(windowW);
 		view.setCamera(cam);
 
 		painter = new FrankPainter(view, map, model, cellPx, game.getCmPerCell());
