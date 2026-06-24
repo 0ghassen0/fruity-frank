@@ -14,15 +14,7 @@ import engine.gal.aut.iGALCondition;
 /**
  * The GAL {@code Step(Direction, [n,] Category)} condition: is there an entity
  * of the given category in the cell {@code n} steps (default 1) away in the
- * given direction? The direction is resolved against the entity's facing
- * ({@code F}, {@code L}, … become cardinals; {@code H} = the entity's own
- * cell).
- *
- * <p>
- * On success the matched entity is bound to the bot's {@code $} variable. The
- * special category {@code V} (Void) is structural: true iff the target cell
- * holds no entity other than the asking one (and binds {@code $} to
- * {@code null}).
+ * given direction?
  */
 public final class Step implements iGALCondition {
 

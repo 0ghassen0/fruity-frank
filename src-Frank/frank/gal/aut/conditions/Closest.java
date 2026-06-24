@@ -13,29 +13,13 @@ import engine.gal.aut.iGALCondition;
 
 /**
  * The GAL {@code Closest(Category[, Direction][, range])} condition. It always
- * <i>selects</i> the nearest matching entity (torus-aware distance) into the
- * bot's {@code $} variable, then returns a boolean:
- *
- * <ul>
- * <li>{@code Closest(cat)} — true iff such an entity exists.</li>
- * <li>{@code Closest(cat, dir)} — true iff the nearest one lies in the
- * {@code dir} quadrant (a 90° cadran). Note the selection is the nearest
- * <i>overall</i>; the direction only gates the boolean — this is the
- * interpretation the spec's flee example relies on.</li>
- * <li>a {@code range} (in steps/cells) limits the candidates to those within
- * that radius; beyond it the condition is inoperative (false,
- * {@code $ = null}).</li>
- * </ul>
- *
- * <p>
- * Naive O(n) scan per evaluation. The spec's region/cache optimisation (hosted
- * in the {@code Brain}, refreshed on movement) is a later performance
- * refinement; the behaviour here is the reference semantics it must match.
+ * elects the nearest matching entity into the bot's {@code $} variable,
+ * then returns a boolean:
  */
 public final class Closest implements iGALCondition {
 
 	private final Category cat;
-	private final Direction dir; // null = any direction (boolean = "exists")
+	private final Direction dir; // null = any direction
 	private final int rangeSteps; // <= 0 = unlimited
 
 	public Closest(Category cat) {

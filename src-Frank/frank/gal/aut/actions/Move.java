@@ -12,12 +12,6 @@ import engine.geometry.ISU;
 
 /**
  * The GAL {@code Move(direction)} action.
- *
- * If the entity is already moving and the requested direction is perpendicular
- * to the current motion, the turn is buffered through {@link Stunt#request}.
- * The stunt will apply it only when the entity reaches the center of a cell.
- *
- * This avoids enemies changing lane between two cells.
  */
 public final class Move implements iGALAction {
 
@@ -72,7 +66,6 @@ public final class Move implements iGALAction {
 		boolean requestedHorizontal = vx != 0 && vy == 0;
 		boolean requestedVertical = vy != 0 && vx == 0;
 
-		return (currentlyHorizontal && requestedVertical)
-				|| (currentlyVertical && requestedHorizontal);
+		return (currentlyHorizontal && requestedVertical) || (currentlyVertical && requestedHorizontal);
 	}
 }

@@ -10,9 +10,7 @@ import engine.gal.aut.iGALAction;
 
 /**
  * The GAL {@code Turn(direction)} action: reorients the entity to face the
- * resolved direction <i>without</i> moving. Relative arguments
- * ({@code Turn(L)}, {@code Turn(B)}, …) are resolved against the current facing
- * by the {@link DirArg}
+ * resolved direction
  */
 public final class Turn implements iGALAction {
 
