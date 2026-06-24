@@ -92,7 +92,7 @@ public class GameApp {
 		for (FruityFrankMap.Cell c : map.cherryCells())
 			model.add(new Cherry(game, c.col(), c.row()));
 
-		model.state().setFruitsRemaining(map.fruitCells().size() + map.cherryCells().size());
+		model.state().setTotalFruits(map.fruitCells().size() + map.cherryCells().size());
 
 		// Pommes : chaque pomme tombe via son automate AppleFall (gravité pilotée par
 		// GAL)

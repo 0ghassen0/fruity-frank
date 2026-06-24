@@ -14,12 +14,7 @@ import engine.gal.aut.iGALAction;
 /**
  * The GAL {@code Egg} action: create a new entity on the cell in the given
  * direction (default resolved by the {@link DirArg}, typically {@code F}). The
- * concrete entity is built by the game's {@link EntityFactory} for the
- * requested {@link Category} (or the creator's default offspring when
- * {@code category} is {@code null}). Reports failure if there is no
- * factory/model or the game makes nothing for that category — so
- * {@code | Step(F,V) ? Egg(F) :(…)} only advances when an egg was actually
- * laid.
+ * entity is built by the game's {@link EntityFactory} 
  */
 public final class Egg implements iGALAction {
 
