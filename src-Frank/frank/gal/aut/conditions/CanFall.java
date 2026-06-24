@@ -16,18 +16,10 @@ import frank.game.FruityFrankModel;
 // == CAN FALL ==
 
 /**
- * Frank-specific GAL guard, wired to the spare {@code Struck} keyword in
- * {@code GalCompiler}.
+ * Frank-specific GAL guard, uses Struck token in GalCompiler
  *
- * <p>
- * True iff the apple may take a downward step this tick. The apple free-falls
- * through anything non-solid; a thin floor ({@code GrassLow}) is NOT a support,
- * so the apple keeps falling into it. The brief pause on a thin floor is armed
- * by the {@code APPLE × GRASS_LOW} collision rule (which fires at the moment of
- * contact — i.e. at the correct resting height — and halts the apple); this
- * guard then counts the pause down and crushes the floor, after which the apple
- * resumes falling. Driving the pause off the contact event avoids any
- * cell-snapping or coast logic and so cannot leave the apple stuck.
+ * True iff the apple can fall (no large block or fruit under it). Thin blocks
+ * only stop the apple for a short pause.
  */
 public final class CanFall implements iGALCondition {
 
@@ -46,9 +38,6 @@ public final class CanFall implements iGALCondition {
 		Grid.Position south = grid.new Position(pos.x(), pos.y() + 1);
 		Stunt stunt = apple.stunt();
 
-		// (1) Paused on a thin floor (armed on contact by the crush rule): hold in
-		// place, count the pause down, then crush the floor under us. Driven by the
-		// lowDelay state alone, so it can never get stuck.
 		if (apple.isLowArmed()) {
 			if (stunt != null)
 				stunt.drive(0, 0);
@@ -60,22 +49,11 @@ public final class CanFall implements iGALCondition {
 			return false;
 		}
 
-		// (2) Solid support directly below (wall / GrassHigh / apple / fruit / cherry):
-		// come to rest on it.
-		boolean solidSupport = model.map().isWall(south.x(), south.y())
-				|| cellHas(grid, south, GrassHigh.class)
-				|| cellHasOtherApple(grid, south, apple)
-				|| cellHas(grid, south, Fruit.class)
+		boolean solidSupport = model.map().isWall(south.x(), south.y()) || cellHas(grid, south, GrassHigh.class)
+				|| cellHasOtherApple(grid, south, apple) || cellHas(grid, south, Fruit.class)
 				|| cellHas(grid, south, Cherry.class);
 
 		if (solidSupport) {
-			// position() flips to cell Y the instant the apple's CENTRE crosses the top
-			// edge of Y (toGridPosition floors), so support below (Y+1) is detected while
-			// the apple is still up to a cell above its resting height. Halting here would
-			// freeze it in mid-air, half a block too high. Instead keep falling and let
-			// the stunt's own wall-clearance (canOccupy + snapToLaneCellAlong, at 30Hz)
-			// carry the apple down and rest it flush on the support; only once its centre
-			// has reached the cell-centre line do we finalise the landing.
 			if (apple.center().y() < pos.toISUCoordCentered().y())
 				return true; // not yet at resting height: keep descending
 
@@ -87,9 +65,6 @@ public final class CanFall implements iGALCondition {
 			return false;
 		}
 
-		// (3) Nothing solid below (open space or a thin floor): hang briefly, then
-		// free-fall. GrassLow is not a support — the apple falls through it and the
-		// contact rule arms the pause at the floor.
 		if (apple.isFalling())
 			return true;
 
