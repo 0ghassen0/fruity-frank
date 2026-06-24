@@ -11,6 +11,7 @@ public class GameState {
 	private boolean frankDied;
 
 	private int fruitsRemaining;
+	private int totalFruits;
 	private boolean victory;
 
 	private int countdownTicks = 90;
@@ -84,6 +85,11 @@ public class GameState {
 		} else {
 			frankDied = true;
 		}
+	}
+	
+	public void setTotalFruits(int n) {
+		totalFruits = n;
+		setFruitsRemaining(n);
 	}
 
 	public void setFruitsRemaining(int n) {
