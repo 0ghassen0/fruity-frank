@@ -26,16 +26,18 @@ public final class FruityFrankMap {
 		this.rows = cfg.getInt("rows", 15);
 		this.wall = new boolean[cols][rows];
 
-		// Murs haut et bas
 		for (int c = 0; c < cols; c++) {
 			wall[c][0] = true;
 			wall[c][rows - 1] = true;
 		}
 
 		frankSpawn = new Cell(cols / 2, rows / 2);
+
 		int spawnerX = cfg.getInt("spawnerx", 2);
 		int spawnerY = cfg.getInt("spawnery", 2);
-		enemySpawns.add(new Cell(spawnerX, spawnerY));
+		int enemyCount = Math.max(1, cfg.getInt("enemy_count", 4));
+
+		addEnemySpawns(spawnerX, spawnerY, enemyCount);
 
 		Set<Cell> reserved = new HashSet<>(enemySpawns);
 		reserved.add(frankSpawn);
@@ -55,12 +57,10 @@ public final class FruityFrankMap {
 
 		Set<Cell> grassSet = new HashSet<>(grassCells);
 
-		// Tous les ratios viennent de la config
 		int fruitRatio = cfg.getInt("fruit_ratio", 5);
 		int appleRatio = cfg.getInt("apple_ratio", 25);
 		int cherryRatio = cfg.getInt("cherry_ratio", 18);
 
-		// Fruits
 		Random rf = new Random(42L);
 		Set<Cell> used = new HashSet<>();
 		int targetFruit = grassCells.size() / fruitRatio;
@@ -70,7 +70,6 @@ public final class FruityFrankMap {
 				fruitCells.add(c);
 		}
 
-		// Pommes : case du dessous doit être du gazon
 		Random ra = new Random(999L);
 		int targetApple = Math.max(2, grassCells.size() / appleRatio);
 		for (int a = 0; appleCells.size() < targetApple && a < 100000; a++) {
@@ -80,7 +79,6 @@ public final class FruityFrankMap {
 				appleCells.add(c);
 		}
 
-		// Cerises
 		Random rc = new Random(777L);
 		int targetCherry = Math.max(3, grassCells.size() / cherryRatio);
 		for (int a = 0; cherryCells.size() < targetCherry && a < 100000; a++) {
@@ -88,9 +86,40 @@ public final class FruityFrankMap {
 			if (used.add(c))
 				cherryCells.add(c);
 		}
+
 		grassCells.removeAll(fruitCells);
 		grassCells.removeAll(cherryCells);
 		grassCells.removeAll(appleCells);
+	}
+
+	private void addEnemySpawns(int spawnerX, int spawnerY, int enemyCount) {
+		enemySpawns.add(new Cell(spawnerX, spawnerY));
+
+		for (int offset = 1; enemySpawns.size() < enemyCount && offset < cols; offset++) {
+			addSpawnIfPossible(Math.floorMod(spawnerX + offset, cols), spawnerY);
+			if (enemySpawns.size() >= enemyCount)
+				break;
+			addSpawnIfPossible(Math.floorMod(spawnerX - offset, cols), spawnerY);
+		}
+
+		for (int offset = 1; enemySpawns.size() < enemyCount && offset < rows; offset++) {
+			addSpawnIfPossible(spawnerX, spawnerY + offset);
+			if (enemySpawns.size() >= enemyCount)
+				break;
+			addSpawnIfPossible(spawnerX, spawnerY - offset);
+		}
+	}
+
+	private void addSpawnIfPossible(int col, int row) {
+		if (row <= 0 || row >= rows - 1)
+			return;
+
+		Cell c = new Cell(Math.floorMod(col, cols), row);
+		if (c.equals(frankSpawn))
+			return;
+
+		if (!enemySpawns.contains(c))
+			enemySpawns.add(c);
 	}
 
 	public boolean isWall(int col, int row) {

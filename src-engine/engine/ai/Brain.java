@@ -12,33 +12,33 @@ import engine.entities.Entity;
 // == BRAIN ==
 
 /**
- * The AI scheduler: on each AI tick it wakes every {@link Bot} via
+ * The AI scheduler: on each AI tick it wakes every active {@link Bot} via
  * {@link Bot#tick(double)} so it can re-decide.
  *
  * <p>
  * {@code Brain} is the sibling of the motion {@link Ticker}: motion advances
  * the world ({@code Ticker -> Model.update()}), the brain advances the bots
  * ({@code Brain.onTick -> bot.tick()}).
- * 
+ *
  * <p>
  * It is itself a {@link Ticker.TickListener}, so it reuses the {@code Ticker}'s
  * drift-compensated loop: run it with {@code new Ticker(aiTps).start(brain)}.
- *
  */
 public class Brain implements Ticker.TickListener {
 
 	/**
-	 * Bottom-to-top activation order (largest grid {@code y} first, since {@code y}
-	 * grows downward). The deterministic order gravity needs: the lowest fallable
-	 * entity decides before the ones stacked above it, so a column settles cleanly.
+	 * Bottom-to-top activation order (largest grid {@code y} first, since
+	 * {@code y} grows downward). The deterministic order gravity needs: the
+	 * lowest fallable entity decides before the ones stacked above it, so a
+	 * column settles cleanly.
 	 */
 	public static final Comparator<Entity> BOTTOM_FIRST = Comparator.comparingInt((Entity e) -> -e.position().y())
 			.thenComparingInt(e -> e.position().x());
 
 	private final Model model;
+
 	/**
-	 * Optional deterministic activation order; {@code null} = unspecified (set)
-	 * order.
+	 * Optional deterministic activation order; {@code null} = unspecified order.
 	 */
 	private Comparator<Entity> activationOrder;
 
@@ -47,27 +47,36 @@ public class Brain implements Ticker.TickListener {
 	}
 
 	/**
-	 * Fix the order in which bots are woken each tick (e.g. {@link #BOTTOM_FIRST}
-	 * for gravity). {@code null} restores the unspecified iteration order.
+	 * Fix the order in which bots are woken each tick, for example
+	 * {@link #BOTTOM_FIRST} for gravity. {@code null} restores the unspecified
+	 * iteration order.
 	 */
 	public void setActivationOrder(Comparator<Entity> order) {
 		this.activationOrder = order;
 	}
 
 	/**
-	 * One AI tick: wake every entity's bot so it can re-decide. Iterates a snapshot
-	 * so a {@code tick} that spawns or removes an entity cannot wreck the
-	 * iteration; the snapshot is sorted by {@link #activationOrder} when one is
-	 * set.
+	 * One AI tick: wake every active entity's bot so it can re-decide.
+	 *
+	 * <p>
+	 * If the model has a simulation camera configured, bots outside the active
+	 * camera zone are not ticked. This avoids simulating far-away entities.
 	 */
 	@Override
 	public void onTick(double deltaTime) {
-		List<Entity> snapshot = new ArrayList<>(model.entities());
+		List<Entity> snapshot = new ArrayList<>();
+
+		for (Entity e : model.entities()) {
+			if (model.isActiveForSimulation(e))
+				snapshot.add(e);
+		}
+
 		if (activationOrder != null)
 			snapshot.sort(activationOrder);
+
 		for (Entity e : snapshot) {
 			Bot bot = e.bot();
-			if (bot != null) // inert props (e.g. a gum) have no bot
+			if (bot != null)
 				bot.tick(deltaTime);
 		}
 	}
