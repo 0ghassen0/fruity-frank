@@ -1,6 +1,7 @@
 package frank.entities;
 
 import engine.core.Game;
+import engine.entities.AlwaysSimulated;
 import engine.entities.Bounding;
 import engine.entities.Entity;
 import engine.shapes.Circle;
@@ -8,7 +9,7 @@ import frank.game.Categorized;
 import frank.game.Category;
 
 
-public class EnemySpawnerEntity extends Entity implements Categorized {
+public class EnemySpawnerEntity extends Entity implements Categorized, AlwaysSimulated {
 
 	public EnemySpawnerEntity(Game game, int x, int y) {
 		super("EnemySpawner@" + x + "," + y, game);

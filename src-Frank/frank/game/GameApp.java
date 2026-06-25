@@ -131,9 +131,9 @@ public class GameApp {
 		cam.setWindowWidth(windowW);
 		view.setCamera(cam);
 
-		// Active simulation zone:
-		// entities outside the camera plus this margin are not simulated.
-		model.setSimulationCamera(cam, 10.0 * game.getCmPerCell());
+		// Only simulate entities inside the camera plus a small margin.
+		double simMarginCm = cfg.getInt("sim_margin_cells", 2) * game.getCmPerCell();
+		model.setActiveRegion((x, y) -> cam.isVisible(x, y, simMarginCm));
 
 		painter = new FrankPainter(view, map, model, cellPx, game.getCmPerCell());
 		Brain brain = new Brain(model);

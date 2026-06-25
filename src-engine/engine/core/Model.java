@@ -7,27 +7,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import engine.entities.AlwaysSimulated;
 import engine.entities.Entity;
 import engine.entities.Stunt;
 import engine.geometry.Grid;
 import engine.geometry.ISU;
-import engine.graphics.Camera;
+import engine.geometry.ActiveRegion;
 
 // == MODEL ==
 
-/**
- * A {@code Model} owns and manages the game world: the {@link Entity entities}
- * that live in it, the {@link Grid} they move on, and the <i>physics</i> that
- * govern how they may move.
- *
- * <p>
- * It is the simulation itself. On each {@link #update() tick} every active
- * managed entity is given the chance to move — via its
- * {@code engine.entities.Stunt} — while the model enforces the world rules.
- *
- * <p>
- * Concrete subclasses specialise the world rules for a particular game.
- */
+/** Owns the game world — its entities, grid, and movement rules — and runs the simulation. */
 public abstract class Model implements Ticker.TickListener {
 
 	// FIELDS
@@ -40,20 +29,8 @@ public abstract class Model implements Ticker.TickListener {
 
 	protected final Set<Entity> entities;
 
-	/**
-	 * Optional camera used to limit the simulated zone.
-	 *
-	 * <p>
-	 * If null, all entities are simulated as before. If set, only entities visible
-	 * in the camera plus a margin are simulated.
-	 */
-	private Camera simulationCamera = null;
-
-	/**
-	 * Extra margin around the camera viewport where entities are still simulated.
-	 * This avoids freezing entities exactly at the border of the screen.
-	 */
-	private double simulationMarginCm = 0.0;
+	/** Optional zone limiting what gets simulated; null means simulate everything. */
+	private ActiveRegion activeRegion = null;
 
 	// Per-tick scratch buffers
 
@@ -66,10 +43,7 @@ public abstract class Model implements Ticker.TickListener {
 	/** Stable index of each entity within {@link #collisionSnapshot}. */
 	private final Map<Entity, Integer> collisionIndex = new HashMap<>();
 
-	/**
-	 * Candidate colliding pairs, encoded as {@code (loIndex << 32) | hiIndex}. A
-	 * long holds a pair of ints (32 bits * 2) -> indexes of collisionSnapshot.
-	 */
+	/** Candidate colliding pairs, encoded as {@code (loIndex << 32) | hiIndex}. */
 	private final ArrayList<Long> candidatePairs = new ArrayList<>();
 
 	/** De-duplicates pairs that surface via more than one shared cell. */
@@ -102,61 +76,34 @@ public abstract class Model implements Ticker.TickListener {
 
 	// ACTIVE SIMULATION ZONE
 
-	/**
-	 * Enables simulation culling around a camera.
-	 *
-	 * @param camera   the camera defining the visible zone
-	 * @param marginCm extra active margin around the camera, in cm
-	 */
-	public void setSimulationCamera(Camera camera, double marginCm) {
-		this.simulationCamera = camera;
-		this.simulationMarginCm = Math.max(0.0, marginCm);
+	/** Restricts simulation to the given zone. */
+	public void setActiveRegion(ActiveRegion region) {
+		this.activeRegion = region;
 	}
 
-	/**
-	 * Disables simulation culling. All entities are simulated again.
-	 */
-	public void clearSimulationCamera() {
-		this.simulationCamera = null;
-		this.simulationMarginCm = 0.0;
+	/** Re-enables simulation of every entity. */
+	public void clearActiveRegion() {
+		this.activeRegion = null;
 	}
 
-	/**
-	 * Returns whether an entity is inside the active simulation zone.
-	 *
-	 * <p>
-	 * Default behaviour stays unchanged when no camera is configured.
-	 */
+	/** Tells whether an entity should be simulated this tick. */
 	public boolean isActiveForSimulation(Entity e) {
-		if (simulationCamera == null)
+		if (activeRegion == null)
 			return true;
 
-		if (e == null || e.center() == null)
+		if (e instanceof AlwaysSimulated)
 			return true;
 
-		String className = e.getClass().getSimpleName();
-
-		if (className.equals("Frank"))
+		ISU.Coord c = (e == null) ? null : e.center();
+		if (c == null)
 			return true;
 
-		if (className.equals("EnemySpawnerEntity"))
-			return true;
-
-		if (className.equals("Enemy"))
-			return true;
-
-		return simulationCamera.isVisible(e.center().x(), e.center().y(), simulationMarginCm);
+		return activeRegion.contains(c.x(), c.y());
 	}
 
 	// SIMULATION
 
-	/**
-	 * One motion tick, sub-stepped to keep fast entities honest. Each stunt does
-	 * its once-per-tick prep (rotation, buffered turns) and reports how many
-	 * micro-steps it needs so no micro exceeds half a cell; the model then advances
-	 * every active stunt by the same number of micro-steps {@code n} in lockstep,
-	 * resolving collisions after each one.
-	 */
+	/** Runs one motion tick over the active entities, resolving collisions after each sub-step. */
 	public void update() {
 		tickBuffer.clear();
 
@@ -189,10 +136,7 @@ public abstract class Model implements Ticker.TickListener {
 		tickBuffer.clear();
 	}
 
-	/**
-	 * {@link Ticker.TickListener} entry point: one motion tick is one
-	 * {@link #update()}. The {@code Ticker} owns the cadence.
-	 */
+	/** Ticker entry point: runs one motion tick. */
 	@Override
 	public void onTick(double deltaTime) {
 		update();
@@ -200,17 +144,7 @@ public abstract class Model implements Ticker.TickListener {
 
 	// COLLISIONS
 
-	/**
-	 * Detect every pair of currently intersecting active entities and hand each
-	 * confirmed collision to {@link #onCollision(Entity, Entity)} for the game to
-	 * resolve.
-	 *
-	 * <p>
-	 * Broad phase: cell occupancy.
-	 *
-	 * <p>
-	 * Narrow phase: reject or accept candidates.
-	 */
+	/** Detects intersecting active entities and resolves each collision. */
 	public void resolveCollisions() {
 		collisionSnapshot.clear();
 		collisionIndex.clear();
@@ -272,9 +206,7 @@ public abstract class Model implements Ticker.TickListener {
 		seenPairs.clear();
 	}
 
-	/**
-	 * Tell {@code e}'s bot and stunt that it collided with {@code impactor}.
-	 */
+	/** Notifies {@code e}'s bot and stunt that it collided with {@code impactor}. */
 	private void notifyCollision(Entity e, Entity impactor) {
 		engine.entities.Bot bot = e.bot();
 		if (bot != null)
@@ -285,17 +217,12 @@ public abstract class Model implements Ticker.TickListener {
 			stunt.collision(impactor);
 	}
 
-	/**
-	 * Apply the game-specific outcome of a confirmed collision between {@code a}
-	 * and {@code b}. The pair is unordered.
-	 */
+	/** Applies the game-specific outcome of a collision between two entities. */
 	protected abstract void onCollision(Entity a, Entity b);
 
 	// PHYSICS
 
-	/**
-	 * @return true if the move into {@code target} is allowed.
-	 */
+	/** Tells whether {@code e} may move into {@code target}. */
 	public abstract boolean canOccupy(Entity e, Grid.Position target);
 
 	// GETTERS
@@ -308,9 +235,7 @@ public abstract class Model implements Ticker.TickListener {
 		return isu;
 	}
 
-	/**
-	 * @return an unmodifiable view of the entities currently in the world.
-	 */
+	/** Unmodifiable view of the live entities. */
 	public Set<Entity> entities() {
 		return Collections.unmodifiableSet(entities);
 	}

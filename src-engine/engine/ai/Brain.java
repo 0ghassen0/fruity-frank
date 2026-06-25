@@ -11,57 +11,28 @@ import engine.entities.Entity;
 
 // == BRAIN ==
 
-/**
- * The AI scheduler: on each AI tick it wakes every active {@link Bot} via
- * {@link Bot#tick(double)} so it can re-decide.
- *
- * <p>
- * {@code Brain} is the sibling of the motion {@link Ticker}: motion advances
- * the world ({@code Ticker -> Model.update()}), the brain advances the bots
- * ({@code Brain.onTick -> bot.tick()}).
- *
- * <p>
- * It is itself a {@link Ticker.TickListener}, so it reuses the {@code Ticker}'s
- * drift-compensated loop: run it with {@code new Ticker(aiTps).start(brain)}.
- */
+/** AI scheduler: each tick wakes every active bot so it can re-decide. */
 public class Brain implements Ticker.TickListener {
 
-	/**
-	 * Bottom-to-top activation order (largest grid {@code y} first, since
-	 * {@code y} grows downward). The deterministic order gravity needs: the
-	 * lowest fallable entity decides before the ones stacked above it, so a
-	 * column settles cleanly.
-	 */
+	/** Bottom-to-top order (largest grid {@code y} first) so gravity settles a column cleanly. */
 	public static final Comparator<Entity> BOTTOM_FIRST = Comparator.comparingInt((Entity e) -> -e.position().y())
 			.thenComparingInt(e -> e.position().x());
 
 	private final Model model;
 
-	/**
-	 * Optional deterministic activation order; {@code null} = unspecified order.
-	 */
+	/** Optional order in which bots are woken; null = unspecified. */
 	private Comparator<Entity> activationOrder;
 
 	public Brain(Model model) {
 		this.model = model;
 	}
 
-	/**
-	 * Fix the order in which bots are woken each tick, for example
-	 * {@link #BOTTOM_FIRST} for gravity. {@code null} restores the unspecified
-	 * iteration order.
-	 */
+	/** Sets the order bots are woken each tick. */
 	public void setActivationOrder(Comparator<Entity> order) {
 		this.activationOrder = order;
 	}
 
-	/**
-	 * One AI tick: wake every active entity's bot so it can re-decide.
-	 *
-	 * <p>
-	 * If the model has a simulation camera configured, bots outside the active
-	 * camera zone are not ticked. This avoids simulating far-away entities.
-	 */
+	/** Wakes each active entity's bot once for this AI tick. */
 	@Override
 	public void onTick(double deltaTime) {
 		List<Entity> snapshot = new ArrayList<>();
