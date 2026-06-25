@@ -118,8 +118,8 @@ public class GameApp {
 		}
 
 		int cellPx = (int) Math.round(game.getCmPerCell() * game.getPixelPerCm());
-		int cameraW = (viewCols + 4) * cellPx;
-		int windowCols = Math.max(1, Math.min(viewCols, map.cols()) - 2);
+		int cameraW = viewCols * cellPx;
+		int windowCols = Math.max(1, Math.min(viewCols, map.cols()) +5);
 		int windowW = windowCols * cellPx;
 		int pxH = viewRows * cellPx + 24;
 
@@ -130,6 +130,10 @@ public class GameApp {
 		cam.setDeadZoneHalfX(3.0 * game.getCmPerCell());
 		cam.setWindowWidth(windowW);
 		view.setCamera(cam);
+
+		// Active simulation zone:
+		// entities outside the camera plus this margin are not simulated.
+		model.setSimulationCamera(cam, 10.0 * game.getCmPerCell());
 
 		painter = new FrankPainter(view, map, model, cellPx, game.getCmPerCell());
 		Brain brain = new Brain(model);
