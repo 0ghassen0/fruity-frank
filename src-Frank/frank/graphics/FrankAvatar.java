@@ -247,11 +247,6 @@ public class FrankAvatar extends Avatar {
 		return sprites.cherry();
 	}
 
-	private void drawImg(Graphics g, BufferedImage im, int cx, int cy, int size) {
-		int h = size / 2;
-		g.drawImage(im, cx - h, cy - h, size, size);
-	}
-
 	private void dot(Graphics g, int cx, int cy, int rad, int r, int gg, int b) {
 		g.setColor(g.getColor(255, r, gg, b));
 		g.fillOval(cx - rad, cy - rad, rad * 2, rad * 2);

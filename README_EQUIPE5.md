@@ -1,5 +1,8 @@
 # Fruity Frank — PLE 2026, Équipe 5
 
+## Vidéo demo
+
+https://medal.tv/games/imported-clips/clips/n02h6w0ygun8mt-cG?invite=cr-MSx5OWEsMjgwMDY4NjEy
 
 ## Aperçu du projet
 

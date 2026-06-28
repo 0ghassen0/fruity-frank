@@ -22,7 +22,6 @@ public class FruityFrankModel extends Model {
 	private int tick = 0;
 
 	private static final double CHERRY_SPEED = 4.0;
-	private boolean gameOverSoundPlayed = false;
 
 	public FruityFrankModel(Game game, FruityFrankMap map) {
 		super(game);
