@@ -1,12 +1,20 @@
-# Eclipse
+# University assignment files
+CONTRAT_T5_VERSION_FINALE.md
+PARTICIPATION.md
+README_EQUIPE5.md
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
 .classpath
 .project
-.settings/
-.metadata
+.DS_Store
 
-# Compilation
+# Build artifacts
 bin/
 *.class
-
-# Autres
-docs/
+*.jar
+*~
