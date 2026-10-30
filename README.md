@@ -1,10 +1,5 @@
 # Fruity Frank - Custom Game Engine and 2D Puzzle Game
 
-[![Game Demo Video](https://medal.tv/thumbnails/cdn/2026/10/30/n02h6w0ygun8mt-cG-thumb.jpg)](https://medal.tv/games/imported-clips/clips/n02h6w0ygun8mt-cG?invite=cr-MSx5OWEsMjgwMDY4NjEy)
-*Click the image above to watch the gameplay demo on Medal.tv*
-
----
-
 ## Project Overview
 
 This project consists of two major components:
@@ -168,7 +163,7 @@ All enemy behaviors are defined in GAL (Game Automaton Language) files:
 Originally developed as a university project (PLE 2026) at Universite Grenoble Alpes.
 
 **Team Members**:
-- Ghassen Rouatbi (Engine + Game)
+- Ghassen Rouatbi
 - Gbedolo Morel Ahoueya
 - Aya Hardabbou
 - Djibrilla Elh Yaou Boureima
