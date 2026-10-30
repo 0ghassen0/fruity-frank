@@ -1,6 +1,6 @@
 # Fruity Frank - Custom Game Engine and 2D Puzzle Game
 
-[![Game Demo Video](https://medal.tv/thumbnails/cdn/2026/10/30/1234567890abcdef1234567890abcdef-thumb.jpg)](https://medal.tv/clips/1234567890abcdef1234567890abcdef)
+[![Game Demo Video](https://medal.tv/thumbnails/cdn/2026/10/30/n02h6w0ygun8mt-cG-thumb.jpg)](https://medal.tv/games/imported-clips/clips/n02h6w0ygun8mt-cG?invite=cr-MSx5OWEsMjgwMDY4NjEy)
 *Click the image above to watch the gameplay demo on Medal.tv*
 
 ---
@@ -43,7 +43,7 @@ The engine was designed from scratch to support entity-component systems, GAL (G
 
 ## Demo
 
-Watch the full gameplay demo on Medal.tv: [https://medal.tv/clips/1234567890abcdef1234567890abcdef](https://medal.tv/clips/1234567890abcdef1234567890abcdef)
+Watch the full gameplay demo on Medal.tv: [https://medal.tv/games/imported-clips/clips/n02h6w0ygun8mt-cG?invite=cr-MSx5OWEsMjgwMDY4NjEy](https://medal.tv/games/imported-clips/clips/n02h6w0ygun8mt-cG?invite=cr-MSx5OWEsMjgwMDY4NjEy)
 
 The demo showcases:
 - Frank digging through the two-layer terrain
