@@ -7,8 +7,6 @@ This project consists of two major components:
 1. A custom Java game engine (my initial contribution) implementing the MVCB (Model-View-Controller-Bot) architecture
 2. Fruity Frank, a complete 2D action-puzzle game built on top of the engine
 
-> Note: I created the base engine architecture at the start of the project, which the team then used and extended while developing the Fruity Frank game.
-
 The engine was designed from scratch to support entity-component systems, GAL (Game Automaton Language) for AI behaviors, and flexible game configuration. The Fruity Frank game demonstrates the engine's capabilities with complex mechanics like two-layer terrain, apple physics, and dynamic enemy AI.
 
 ---
